@@ -1,10 +1,10 @@
-# home-infra-k8s-flux
+# mj-infra-flux
 
-This is my Kubernetes [Flux](https://fluxcd.io/) repository. It contains everything installed in my kubernetes cluster and keeps the cluster up to date with this repo.
+This is our Kubernetes [Flux](https://fluxcd.io/) repository. It WILL(?) everything installed in my kubernetes cluster and keeps the cluster up to date with this repo.
 
-NOTE: IN PROGRESS. Still converting my old repo containing kubernetes resources – https://github.com/activescott/home-infra – to this one. It's great that this can be gradual and isn't an all-in moment on Flux. So far so good though!
+> NOTE: IN PROGRESS. Still converting my old repo containing kubernetes resources – https://github.com/activescott/home-infra – to this one. It's great that this can be gradual and isn't an all-in moment on Flux. So far so good though!
 
-## Apps:
+## Apps
 
 - Monitoring: See [apps/base/monitoring/kube-state-metrics/README.md](apps/base/monitoring/kube-state-metrics/README.md) (there is more monitoring in https://github.com/activescott/home-infra that isn't yet moved over)
 
