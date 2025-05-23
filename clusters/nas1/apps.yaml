@@ -1,0 +1,23 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: apps
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  # infra-configs can contain some infra changes we assume in apps:
+  dependsOn:
+    - name: infra-configs
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  # unlike kustomize resource paths, these paths are relative to the repo
+  path: ./apps/production
+  prune: true
+  wait: true
+  timeout: 5m0s
+  # https://fluxcd.io/flux/components/kustomize/api/v1/#kustomize.toolkit.fluxcd.io/v1.Decryption
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age

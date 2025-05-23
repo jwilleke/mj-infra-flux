@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-receiver
+spec:
+  # Exposes the Service on a cluster-internal IP. Choosing this value makes the Service only reachable from within the cluster
+  # We expose it externally via an Ingress so that we can match requested domain/url to map here.
+  type: ClusterIP
+  selector:
+    app: notification-controller
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 9292
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webhook-receiver
+spec:
+  tls:
+    - hosts:
+        - flux-webhook.activescott.com
+      # There must a a Certificate resource created that saves to this secret name
+      secretName: flux-webhook-activescott-com-tls
+
+  rules:
+    - host: flux-webhook.activescott.com
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: webhook-receiver
+                # port of the referenced service. A port name or port number is required for a IngressServiceBackend.
+                port:
+                  number: 80
+---
+# policy that permits the traffic from into the challenge pod per https://fluxcd.io/flux/guides/webhook-receivers/
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-cert-manager-resolver
+  namespace: "flux-system"
+spec:
+  ingress:
+    # This empty rule allows all sources
+    - from:
+        - namespaceSelector: {}
+  podSelector:
+    matchLabels:
+      acme.cert-manager.io/http01-solver: "true"
+  policyTypes:
+    - Ingress
+---
+apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Receiver
+metadata:
+  name: webhook-receiver-image
+spec:
+  type: github
+  events:
+    - "ping"
+    - "package"
+  secretRef:
+    name: webhook-token
+  resources:
+    - kind: ImageRepository
+      name: repo-tayle-app
+      namespace: tayle-prod
+    - kind: ImageRepository
+      name: repo-tayle-worker
+      namespace: tayle-prod

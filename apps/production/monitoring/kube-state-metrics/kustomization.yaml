@@ -1,0 +1,13 @@
+resources:
+  - ../../../base/monitoring/kube-state-metrics
+
+# NOTE: fine to leave this in kube-system namespace. we tag everything with app.activescott.com/name anyway
+#namespace: monitoring-kube-state-metrics
+
+buildMetadata: [originAnnotations, transformerAnnotations]
+
+labels:
+  - pairs:
+      # NOTE: metrics-server seems to label all of their resources with `k8s-app: metrics-server`
+      # use `app.activescott.com/name` to avoid conflicts with other people's resources using "app" label.
+      app.activescott.com/name: kube-state-metrics

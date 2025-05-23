@@ -1,0 +1,20 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infra-configs
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  # unlike kustomize resource paths, these paths are relative to the repo
+  path: ./infrastructure/prod/configs
+  prune: true
+  wait: true
+  timeout: 5m0s
+  # https://fluxcd.io/flux/components/kustomize/api/v1/#kustomize.toolkit.fluxcd.io/v1.Decryption
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age

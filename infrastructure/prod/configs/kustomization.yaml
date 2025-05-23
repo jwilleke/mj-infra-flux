@@ -1,0 +1,3 @@
+resources:
+  - ../../base/configs/secret-name-reference
+  - ../../base/configs/image-scanning-webhook-receiver

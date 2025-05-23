@@ -1,0 +1,31 @@
+resources:
+  - ./authorize-prometheus-to-k8s.yaml
+  - ./prometheus-statefulset.yaml
+  - ./prometheus-service.yaml
+  - ./certificate.yaml
+  - ./prometheus-ingress.yaml
+
+secretGenerator:
+  - name: prometheus-secrets
+    envs:
+      # secrets for the prometheus scrape config:
+      - .env.secret.prometheus-self-scrape.encrypted
+
+# kustomize help on configMapGenerator: https://kubectl.docs.kubernetes.io/references/kustomize/builtins/#_configmapgenerator_
+configMapGenerator:
+  - name: prometheus-config
+    files:
+      - config/prometheus.yaml
+      - config/web.yaml
+      # scrape configs:
+      - config/scrape-configs.coinpoet.yaml
+      - config/scrape-configs.prometheus.yaml
+      - config/alerting-rules.coinpoet.yaml
+      - config/alerting-rules.tayle.yaml
+
+labels:
+  - pairs:
+      # use `app.activescott.com/name` to avoid conflicts with other people's resources using "app" label.
+      app.activescott.com/name: prometheus
+      # NOTE: tenet is specified in the overlays
+      #app.activescott.com/tenant:

@@ -1,0 +1,19 @@
+resources:
+  - ./alertmanager-deployment.yaml
+  - ./alertmanager-service.yaml
+
+configMapGenerator:
+  # the alertmanager's config:
+  - name: alertmanager-config
+    files:
+      - ./config/alertmanager.yaml
+
+secretGenerator:
+  - name: alertmanager-secrets
+    envs:
+      - .env.secret.alertmanager.encrypted
+
+labels:
+  - pairs:
+      # use `app.activescott.com/name` to avoid conflicts with other people's resources using "app" label.
+      app.activescott.com/name: alertmanager

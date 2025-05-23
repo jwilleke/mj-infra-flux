@@ -1,0 +1,16 @@
+resources:
+  - namespace.yaml
+  - ../../../base/photoprism
+  # cert-manager-issued photos.scott.willeke.com
+  - certificate-photos-scott-willeke-com.yaml
+
+patches:
+  - path: patch-mariadb-volume.yaml
+  - path: patch-photoprism-statefulset.yaml
+  - path: patch-photoprism-ingress.yaml
+
+namespace: photoprism-scott
+
+labels:
+  - pairs:
+      app.activescott.com/tenant: scott

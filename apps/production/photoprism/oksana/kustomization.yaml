@@ -1,0 +1,15 @@
+resources:
+  - namespace.yaml
+  - ../../../base/photoprism
+  - certificate.yaml
+
+patches:
+  - path: patch-mariadb-volume.yaml
+  - path: patch-photoprism-statefulset.yaml
+  - path: patch-photoprism-ingress.yaml
+
+namespace: photoprism-oksana
+
+labels:
+  - pairs:
+      app.activescott.com/tenant: oksana
