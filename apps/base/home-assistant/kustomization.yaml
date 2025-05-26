@@ -1,7 +1,0 @@
-resources:
-  - certificate.yaml
-  - home-assistant-ingress.yaml
-  - home-assistant-service.yaml
-  - home-assistant-statefulset.yaml
-  - zwavejs-service.yaml
-  - zwavejs-statefulset.yaml

@@ -12,7 +12,7 @@ spec:
     metadata:
       labels:
         app: rabbitmq
-        app.activescott.com/component: rabbitmq
+        app.jimwilleke.com/component: rabbitmq
     spec:
       containers:
         - name: rabbitmq

@@ -6,7 +6,7 @@ resources:
 
 labels:
   - pairs:
-      # use `app.activescott.com/name` to avoid conflicts with other people's resources using "app" label.
-      app.activescott.com/name: grafana
+      # use `app.jimwilleke.com/name` to avoid conflicts with other people's resources using "app" label.
+      app.jimwilleke.com/name: grafana
       # NOTE: tenet is specified in the overlays
-      #app.activescott.com/tenant:
+      #app.jimwilleke.com/tenant:

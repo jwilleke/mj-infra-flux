@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-service # This name is referenced by the Ingress
+  labels:
+    app: nextcloud
+spec:
+  selector:
+    app: nextcloud # Matches the labels of your StatefulSet pods
+  ports:
+    - protocol: TCP
+      port: 80 # The port the Ingress will connect to on this service
+      targetPort: 80 # The port your Nextcloud container listens on
+      name: http

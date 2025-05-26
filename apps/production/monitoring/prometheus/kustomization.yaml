@@ -25,7 +25,7 @@ configMapGenerator:
 
 labels:
   - pairs:
-      # use `app.activescott.com/name` to avoid conflicts with other people's resources using "app" label.
-      app.activescott.com/name: prometheus
+      # use `app.jimwilleke.com/name` to avoid conflicts with other people's resources using "app" label.
+      app.jimwilleke.com/name: prometheus
       # NOTE: tenet is specified in the overlays
-      #app.activescott.com/tenant:
+      #app.jimwilleke.com/tenant:

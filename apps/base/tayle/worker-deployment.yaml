@@ -11,7 +11,7 @@ spec:
     metadata:
       labels:
         app: worker
-        app.activescott.com/component: worker
+        app.jimwilleke.com/component: worker
     spec:
       imagePullSecrets:
         - name: github-container-registry-secret

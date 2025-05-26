@@ -13,4 +13,4 @@ namespace: photoprism-scott
 
 labels:
   - pairs:
-      app.activescott.com/tenant: scott
+      app.jimwilleke.com/tenant: scott

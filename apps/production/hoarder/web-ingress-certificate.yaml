@@ -5,13 +5,13 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: hoard-activescott-com
+  name: hoard-nerdsbythehour-com
 spec:
   # the secret is put here and matches a value in the ingress
-  secretName: hoard-activescott-com
+  secretName: hoard-nerdsbythehour-com
   issuerRef:
     name: letsencrypt-production
     kind: ClusterIssuer
-  commonName: hoard.activescott.com
+  commonName: hoard.jimwilleke.com
   dnsNames:
-    - hoard.activescott.com
+    - hoard.jimwilleke.com

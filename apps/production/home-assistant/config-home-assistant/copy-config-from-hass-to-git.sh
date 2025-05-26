@@ -2,7 +2,7 @@
 THISDIR=$(cd $(dirname "$0"); pwd) #this script's directory
 
 GIT_DIR=$THISDIR
-HASS_DIR=scott@nas.activescott.com:/mnt/thedatapool/app-data/home-assistant
+HASS_DIR=scott@nas.jimwilleke.com:/mnt/thedatapool/app-data/home-assistant
 
 RSYNC_OPTIONS='-v --recursive --delete --times --exclude-from=rsync-excluded-files'
 rsync --dry-run $RSYNC_OPTIONS "$HASS_DIR/" "$GIT_DIR/"

@@ -11,7 +11,7 @@ spec:
   #     ingress: photoprism-ingress
   #     domains:
   #       - domain: photos.scott.willeke.com
-  #       - photos.activescott.com
+  #       - photos.jimwilleke.com
   #     backend:
   #       name: photoprism-service
   #       port: web-ui

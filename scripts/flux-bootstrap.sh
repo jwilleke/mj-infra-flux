@@ -21,7 +21,7 @@ GITHUB_TOKEN=$GITHUB_TOKEN \
   flux bootstrap github \
   --components-extra=image-reflector-controller,image-automation-controller \
   --token-auth \
-  --owner=activescott \
+  --owner=jimwilleke \
   --repository=home-infra-k8s-flux \
   --branch=main \
   --path=clusters/nas1 \

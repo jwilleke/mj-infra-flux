@@ -12,4 +12,4 @@ namespace: photoprism-oksana
 
 labels:
   - pairs:
-      app.activescott.com/tenant: oksana
+      app.jimwilleke.com/tenant: oksana

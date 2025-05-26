@@ -12,7 +12,7 @@ spec:
     metadata:
       labels:
         app: db
-        app.activescott.com/component: db
+        app.jimwilleke.com/component: db
     spec:
       containers:
         - name: db

@@ -33,7 +33,7 @@ spec:
             - "--config.file=/etc/prometheus/prometheus.yaml"
             # for basic auth:
             - "--web.config.file=/etc/prometheus/web.yaml"
-            # enables `curl -X POST https://prometheus.activescott.com/-/reload` to reload configs per https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
+            # enables `curl -X POST https://prometheus.jimwilleke.com/-/reload` to reload configs per https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
             - "--web.enable-lifecycle"
 
           ports:

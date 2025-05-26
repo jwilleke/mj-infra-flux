@@ -12,7 +12,7 @@ namespace: monitoring
 buildMetadata: [originAnnotations, transformerAnnotations]
 # setting commonLabels in each of grafana and prometheus folders above
 #commonLabels:
-# use `app.activescott.com/name` to avoid conflicts with other people's resources using "app" label.
-# app.activescott.com/name: monitoring
+# use `app.jimwilleke.com/name` to avoid conflicts with other people's resources using "app" label.
+# app.jimwilleke.com/name: monitoring
 # NOTE: tenet is specified in the overlays
-#app.activescott.com/tenant:
+#app.jimwilleke.com/tenant:

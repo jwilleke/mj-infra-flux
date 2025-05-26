@@ -15,5 +15,5 @@ secretGenerator:
 
 labels:
   - pairs:
-      # use `app.activescott.com/name` to avoid conflicts with other people's resources using "app" label.
-      app.activescott.com/name: alertmanager
+      # use `app.jimwilleke.com/name` to avoid conflicts with other people's resources using "app" label.
+      app.jimwilleke.com/name: alertmanager

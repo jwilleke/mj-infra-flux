@@ -60,10 +60,10 @@ secretGenerator:
 # the imagepolicy markers: https://fluxcd.io/flux/guides/image-update/#configure-image-update-for-custom-resources
 images:
   - name: tayle-image-app
-    newName: ghcr.io/activescott/tayle/app # {"$imagepolicy": "tayle-prod:policy-tayle-app:name"}
+    newName: ghcr.io/jimwilleke/tayle/app # {"$imagepolicy": "tayle-prod:policy-tayle-app:name"}
     newTag: 1.28.0 # {"$imagepolicy": "tayle-prod:policy-tayle-app:tag"}
   - name: tayle-image-worker
-    newName: ghcr.io/activescott/tayle/worker # {"$imagepolicy": "tayle-prod:policy-tayle-worker:name"}
+    newName: ghcr.io/jimwilleke/tayle/worker # {"$imagepolicy": "tayle-prod:policy-tayle-worker:name"}
     newTag: 1.28.0 # {"$imagepolicy": "tayle-prod:policy-tayle-worker:tag"}
   - name: tayle-image-db
     newName: postgres

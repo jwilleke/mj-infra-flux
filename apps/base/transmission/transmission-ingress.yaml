@@ -8,12 +8,12 @@ metadata:
 spec:
   tls:
     - hosts:
-        - transmission.activescott.com
+        - transmission.jimwilleke.com
       # There must a a Certificate resource created that saves to this secret name
-      secretName: transmission-activescott-com-tls
+      secretName: transmission-nerdsbythehour-com-tls
 
   rules:
-    - host: transmission.activescott.com
+    - host: transmission.jimwilleke.com
       http:
         paths:
           - path: /

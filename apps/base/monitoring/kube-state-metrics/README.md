@@ -22,7 +22,7 @@ Then we need to patch a couple things:
 
 ### 2. Metrics Scrape Endpoints
 
-As described in my metrics setup for prometheus at https://github.com/activescott/home-infra/blob/main/k8s/apps/monitoring/README.md, we can add a couple annotations to the service. Kube State Metrics [explains](https://github.com/kubernetes/kube-state-metrics#overview) that that their _metrics are exported on the HTTP endpoint `/metrics` on the listening port (default 8080)._
+As described in my metrics setup for prometheus at https://github.com/jimwilleke/home-infra/blob/main/k8s/apps/monitoring/README.md, we can add a couple annotations to the service. Kube State Metrics [explains](https://github.com/kubernetes/kube-state-metrics#overview) that that their _metrics are exported on the HTTP endpoint `/metrics` on the listening port (default 8080)._
 So:
 
 ```yaml

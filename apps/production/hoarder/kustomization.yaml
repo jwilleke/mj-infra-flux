@@ -11,7 +11,7 @@ secretGenerator:
 configMapGenerator:
   - name: hoarder-configuration
     literals:
-      - NEXTAUTH_URL=https://hoard.activescott.com
+      - NEXTAUTH_URL=https://hoard.jimwilleke.com
       - DISABLE_SIGNUPS=true
 
 resources:

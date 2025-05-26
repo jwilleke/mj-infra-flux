@@ -6,11 +6,11 @@ metadata:
 spec:
   tls:
     - hosts:
-        - hoard.activescott.com
+        - hoard.jimwilleke.com
       # There must be a Certificate resource created that saves to this secret name
-      secretName: hoard-activescott-com
+      secretName: hoard-nerdsbythehour-com
   rules:
-    - host: "hoard.activescott.com"
+    - host: "hoard.jimwilleke.com"
       http:
         paths:
           - path: "/"

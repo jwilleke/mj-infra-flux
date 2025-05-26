@@ -5,13 +5,13 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: transmission-activescott-com
+  name: transmission-nerdsbythehour-com
 spec:
   # the secret is put here and matches a value in the ingress
-  secretName: transmission-activescott-com-tls
+  secretName: transmission-nerdsbythehour-com-tls
   issuerRef:
     name: letsencrypt-production
     kind: ClusterIssuer
-  commonName: transmission.activescott.com
+  commonName: transmission.jimwilleke.com
   dnsNames:
-    - transmission.activescott.com
+    - transmission.jimwilleke.com
