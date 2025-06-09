@@ -1,6 +1,0 @@
-resources:
-  - nextcloud-statefulset.yaml
-  - nextcloud-headless-service.yaml
-  - nextcloud-service.yaml # Add the ClusterIP service
-  - nextcloud-ingress.yaml # Add the Ingress
-

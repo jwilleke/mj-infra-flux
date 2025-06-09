@@ -4,7 +4,7 @@
 
 This is our Kubernetes [Flux](https://fluxcd.io/) repository. It WILL(?) everything installed in my kubernetes cluster and keeps the cluster up to date with this repo.
 
-I stole this from [jimwilleke](https://github.com/jimwilleke/home-infra-k8s-flux)
+I stole this from [Activescott](https://github.com/activescott/home-infra-k8s-flux)
 
 > NOTE: IN PROGRESS. Still converting my old repo containing kubernetes resources – <https://github.com/jimwilleke/home-infra> – to this one. It's great that this can be gradual and isn't an all-in moment on Flux. So far so good though!
 

@@ -1,0 +1,150 @@
+resources:
+  - ./namespace.yaml
+
+# Kustomize helmCharts: https://kubectl.docs.kubernetes.io/references/kustomize/builtins/#_helmchartinflationgenerator_
+helmCharts:
+  - name: traefik
+    repo: https://traefik.github.io/charts
+    version: v23.0.1
+    namespace: traefik
+    # traefik includes a `Middleware` CRD that we need
+    includeCRDs: true
+    # Traefik helm chart at https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml
+    valuesInline:
+      podAnnotations:
+        # the prometheus config is configured to look for this
+        prometheus.io/scrape: "true"
+
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "50Mi"
+        limits:
+          cpu: "2.0"
+          memory: "1Gi"
+
+      rbac:
+        enabled: true
+        #namespaced: false # false = allow traefik to be used across namespaces
+      ports:
+        websecure: # i.e. port 443
+          tls:
+            enabled: true
+          ## -- Trust forwarded  headers information (X-Forwarded-*).
+          forwardedHeaders:
+            trustedIPs:
+              - "127.0.0.1/32"
+              - "192.168.68.0/24"
+            insecure: false
+        web: # i.e. port 80
+          # Port Redirections
+          # Added in 2.2, you can make permanent redirects via entrypoints.
+          # https://docs.traefik.io/routing/entrypoints/#redirection
+          # redirectTo: websecure
+      providers:
+        kubernetesIngress:
+          publishedService:
+            enabled: true
+
+      ## TLS ##
+      # mounting default cert vols like this in k8s just seemed ignored.
+      #  Add volume to the pod; make available to containers:
+      #deployment:
+      #  additionalVolumes:
+      #    - name: cert-activescott-com
+      #      hostPath:
+      #        path: /mnt/thedatapool/app-data/letsencrypt
+      #        type: Directory
+      # now add the volumeMount to the traefik container
+      #additionalVolumeMounts:
+      #  - name: cert-activescott-com
+      #    mountPath: /etc/letsencrypt
+      #    readOnly: true
+
+      ## Set TLS at the entrypoint
+      ## https://doc.traefik.io/traefik/routing/entrypoints/#tls
+      tls:
+        enabled: true
+        # setting certificates from files doesn't work. Docs said somewhere it's not permitted in k8s.
+        #certificates:
+        #  - certFile: /etc/letsencrypt/live/activescott.com/fullchain.pem
+        #    keyFile: /etc/letsencrypt/live/activescott.com/privkey.pem
+
+        # apparently required to prevent error "No store is defined to add the certificate"?
+        stores:
+          default: {}
+    
+      # You'll also need to ensure persistent storage for /data/acme.json
+      # The Traefik Helm chart typically has options for this.
+      # Look for settings like:
+      # persistence:
+      #   enabled: true
+      #   size: 128Mi # Adjust size as needed
+      #   storageClassName: standard # Or your cluster's default storage class
+      #   path: /data # This will make Traefik store acme.json in /data
+      # For the `persistence` block, it needs to be at the same level as `ports` and `providers`,
+      # so add it *outside* of `tls` and `certificatesResolvers` directly under `valuesInline`.
+      persistence:
+        enabled: true
+        accessMode: ReadWriteOnce
+        size: 128Mi
+        name: acme-volume # Name of the volume for the PVC
+        storageClassName: standard # Replace with your default storage class if different
+        # Use `mountPath` and `subPath` to ensure acme.json is stored correctly
+        # The Helm chart typically defaults to /data for ACME storage if persistence is enabled.
+        # Double check the chart's values.yaml for the exact persistence configuration.
+        # Often, setting persistence.enabled: true is enough if the default path is /data.
+
+# NEW: Explicitly add Traefik command-line arguments
+      deployment:
+        args:
+          # Standard arguments from the chart (you might want to retain what's auto-generated,
+          # or if these are already in your 'describe pod' output, the chart adds them)
+          # Make sure these don't duplicate arguments the chart already provides
+          - --global.checknewversion=false # Example: disable telemetry if desired
+          - --global.sendanonymoususage=false
+          - --entrypoints.metrics.address=:9100/tcp
+          - --entrypoints.traefik.address=:9000/tcp
+          - --entrypoints.web.address=:80/tcp # Use standard HTTP port
+          - --entrypoints.websecure.address=:443/tcp # Use standard HTTPS port
+          - --api.dashboard=false # You had this disabled previously, keep it consistent
+          - --ping=true
+          - --metrics.prometheus=true
+          - --metrics.prometheus.entrypoint=metrics
+          - --providers.kubernetescrd=true # If you use IngressRoutes
+          - --providers.kubernetesingress=true # If you use standard Ingresses
+          - --providers.kubernetesingress.ingressendpoint.publishedservice=traefik/release-name-traefik
+          - --entrypoints.websecure.http.tls=true
+          - --entrypoints.websecure.forwardedHeaders.trustedIPs=127.0.0.1/32,192.168.68.0/24
+          - --log.level=DEBUG
+          - --accesslog=true
+          - --accesslog.fields.defaultmode=keep
+          - --accesslog.fields.headers.defaultmode=drop
+          # IMPORTANT: Add the ACME configuration as direct arguments here!
+          - --certificatesresolvers.le.acme.email=jim@willeke.dom # <--- Your email
+          - --certificatesresolvers.le.acme.storage=/data/acme.json # <--- Path on the volume
+          - --certificatesresolvers.le.acme.httpchallenge=true
+          - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+          - --certificatesresolvers.le.acme.caserver=https://acme-v02.api.letsencrypt.org/directory # Production CA
+
+      ## Disable route to the traefik dashboard:
+      ingressRoute:
+        dashboard:
+          enabled: false # Ensure this matches --api.dashboard=false above if you go this route
+      ## LOGS ##
+      # These might be redundant if you add --log.level and --accesslog to deployment.args
+      # But you can keep them if you want the chart to manage them
+      logs:
+        general:
+          level: DEBUG
+        access:
+          enabled: true
+
+namespace: traefik
+
+buildMetadata: [originAnnotations, transformerAnnotations]
+
+commonLabels:
+  # use `app.activescott.com/name` to avoid conflicts with other people's resources using "app" label.
+  app.jwilleke.com/name: traefik
+  app.jwilleke.com/tenant: everyone

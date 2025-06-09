@@ -1,3 +1,0 @@
-resources:
-  - plex-statefulset.yaml
-  - plex-service.yaml
