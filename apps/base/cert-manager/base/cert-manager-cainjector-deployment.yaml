@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-manager-cainjector
+  namespace: cert-manager
+  labels:
+    app: cainjector
+    app.jwilleke.com/name: cert-manager
+    app.jwilleke.com/tenant: anyone
+    app.kubernetes.io/component: cainjector
+    app.kubernetes.io/instance: cert-manager
+    app.kubernetes.io/name: cainjector
+    app.kubernetes.io/version: v1.16.3
+  annotations:
+    prometheus.io/path: /metrics
+    prometheus.io/port: "9402"
+    prometheus.io/scrape: "true"
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.jwilleke.com/name: cert-manager
+      app.jwilleke.com/tenant: anyone
+      app.kubernetes.io/component: cainjector
+      app.kubernetes.io/instance: cert-manager
+      app.kubernetes.io/name: cainjector
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: cainjector
+        app.jwilleke.com/name: cert-manager
+        app.jwilleke.com/tenant: anyone
+        app.kubernetes.io/component: cainjector
+        app.kubernetes.io/instance: cert-manager
+        app.kubernetes.io/name: cainjector
+        app.kubernetes.io/version: v1.16.3
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "9402"
+        prometheus.io/scrape: "true"
+    spec:
+      containers:
+      - name: cert-manager-cainjector
+        image: quay.io/jetstack/cert-manager-cainjector:v1.16.3
+        imagePullPolicy: IfNotPresent
+        args:
+        - --v=2
+        - --leader-election-namespace=kube-system
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        ports:
+        - containerPort: 9402
+          name: http-metrics
+          protocol: TCP
+        resources:
+          limits:
+            memory: 64Mi
+          requests:
+            memory: 32Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ "ALL" ]
+          readOnlyRootFilesystem: true
+      enableServiceLinks: false
+      nodeSelector:
+        kubernetes.io/os: linux
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: cert-manager-cainjector
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30

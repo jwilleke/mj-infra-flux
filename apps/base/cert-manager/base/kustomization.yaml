@@ -1,3 +1,5 @@
 resources:
-- ./cert-manager-import
+resources:
+  - cert-manager-deployment.yaml
+  - cert-manager-cainjector-deployment.yaml
 - ./other

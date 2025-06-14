@@ -2,6 +2,8 @@
 
 ## cert-manager prep
 
+kubectl get deployment cert-manager-5ff58bc8db-csx7b -o yaml > deployment.yaml
+
 Must have externally resolvable host name for this to work.
 
 ## Internal Certs do not work
