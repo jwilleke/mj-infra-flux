@@ -4,4 +4,5 @@
 #   namespace).
 resources:
 #- https://github.com/cert-manager/cert-manager/releases/download/v1.12.3/cert-manager.yaml
-- https://github.com/cert-manager/cert-manager/releases/download/v1.16.3/cert-manager.yaml
+# - https://github.com/cert-manager/cert-manager/releases/download/v1.16.3/cert-manager.yaml
+- https://github.com/cert-manager/cert-manager/releases/download/v1.17.2/cert-manager.yaml
