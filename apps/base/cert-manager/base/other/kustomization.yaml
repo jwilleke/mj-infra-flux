@@ -1,10 +1,8 @@
 resources:
   - cert-manager-deployment.yaml
   - cert-manager-cainjector-deployment.yaml
-
-# - ./cloudflare-api-token.yaml
-- ./letsencrypt-staging-clusterissuer.yaml
-- ./letsencrypt-production-clusterissuer.yaml
+  - ./letsencrypt-staging-clusterissuer.yaml
+  - ./letsencrypt-production-clusterissuer.yaml
 # - ./letsencrypt-staging-certificate-photos.scott.willeke.com.yaml
 #- ./test-certificateissuer.yaml # for testing only
 

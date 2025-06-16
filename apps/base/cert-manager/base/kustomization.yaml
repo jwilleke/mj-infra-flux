@@ -1,5 +1,4 @@
 resources:
-resources:
   - cert-manager-deployment.yaml
   - cert-manager-cainjector-deployment.yaml
-- ./other
+  - ./other
