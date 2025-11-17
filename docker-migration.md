@@ -66,22 +66,47 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
   - Security: Runs as root (nginx requirement)
 - Commit: d069dd4
 
-### ⏳ Phase 2 Pending: Stateful Applications
+### ✅ Phase 2 Complete: Shared Infrastructure & TeslaMate
 
-**PostgreSQL** (Shared Instance)
-- Status: Not started
-- Purpose: Shared database for teslamate and future apps
-- Location: /home/jim/docs/data/systems/mj-infra-flux/postgresql
+**PostgreSQL** (Shared Instance) ✅ COMPLETE
+- Status: Deployed to k3s
+- Namespace: `database`
+- Service: `postgresql.database.svc.cluster.local:5432`
+- Storage: `/mnt/local-k3s-data/postgresql` (local disk for permissions)
+- Databases: teslamate (+ future apps)
+- Commit: 6d1dd39
 
-**teslamate**
-- Status: Not started
-- Components: app, postgresql, grafana, mosquitto
-- Data: Docker volumes to be migrated to PVCs
+**Mosquitto MQTT** (Shared Broker) ✅ COMPLETE
+- Status: Deployed to k3s
+- Namespace: `messaging`
+- Service: `mosquitto.messaging.svc.cluster.local:1883`
+- Storage: NFS at `/home/jim/docs/data/systems/mj-infra-flux/mosquitto/`
+- Topics: teslamate/* (+ future apps)
+- Commit: 6d1dd39
 
-**jimswiki**
+**Grafana** (Shared Dashboards) ✅ COMPLETE
+- Status: Deployed to k3s
+- Namespace: `monitoring`
+- URL: https://grafana.jimwilleke.com
+- Storage: `/mnt/local-k3s-data/grafana`
+- Ready for TeslaMate datasource
+- Commit: 3db228c
+
+**TeslaMate** ✅ COMPLETE
+- Status: Deployed to k3s
+- Namespace: `teslamate`
+- URL: https://teslamate.nerdsbythehour.com
+- Connected to: Shared PostgreSQL + Shared MQTT
+- Data migration: Ready (instructions in README)
+- Commit: 3db228c
+
+### ⏳ Phase 3 Remaining: jimswiki
+
+**jimswiki** ⏳ PENDING
 - Status: Not started
 - Data: Host mount at /home/jim/docs/data/systems/wikis/jimswiki
 - Complexity: Custom image, Tomcat, requires careful migration
+- Decision: Can migrate later or keep in Docker
 
 ### 🗑️ To Be Removed from Docker
 
@@ -105,17 +130,26 @@ sudo kubectl get ingress -A  # Shows k3s ingresses active
 
 ### 📝 Next Steps
 
-1. **Immediate**:
-   - Configure Authentik ForwardAuth middleware for /members route
-   - Test all migrated services (landingpage, whoami, openspeedtest)
+1. **TeslaMate Data Migration** (Optional):
+   - Export data from Docker PostgreSQL: `docker exec teslamate-db pg_dump...`
+   - Import to k3s PostgreSQL (see `apps/production/teslamate/README.md`)
+   - Or start fresh with new Tesla data
 
-2. **Phase 2 - Stateful Apps**:
-   - Set up shared PostgreSQL instance in k3s
-   - Migrate teslamate with data preservation
-   - Migrate jimswiki with host mount
+2. **Grafana Configuration**:
+   - Add TeslaMate datasource to Grafana
+   - Import TeslaMate dashboards
+   - Verify dashboard functionality
 
-3. **Cleanup** (after Phase 2 complete):
+3. **Authentik ForwardAuth**:
+   - Configure Authentik middleware for protected routes
+   - Enable on: /members, teslamate, grafana, jimswiki (when migrated)
+
+4. **Phase 3 - jimswiki** (Optional):
+   - Migrate jimswiki to k3s OR
+   - Keep in Docker if complexity not worth it
+
+5. **Final Cleanup**:
+   - Test all services thoroughly
    - Remove Docker containers: `docker rm $(docker ps -aq)`
-   - Remove Docker images for migrated apps
-   - Keep /opt/traefik for source code and reference
-   - Archive docker-compose.yml
+   - Remove unused Docker images
+   - Archive /opt/traefik for reference
