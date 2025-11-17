@@ -1,10 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ./transmission
-  - ./tayle
-  - ./home-assistant
+  # Commented out - missing base directories (apps/base/{name})
+  # - ./transmission
+  # - ./tayle
+  # - ./home-assistant
+  # - ./plex
+
+  # Working apps (no base dependencies or base exists)
   - ./photoprism
   - ./monitoring
   - ./hoarder
-  - ./plex
