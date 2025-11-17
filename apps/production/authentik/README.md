@@ -22,9 +22,14 @@
 
 ## Configure OAuth2/Proxy Provider for Traefik ForwardAuth
 
+**To access the Admin Interface:**
+- Click on your username in the top right corner
+- Select **Admin Interface** from the dropdown
+- OR directly access: https://auth.nerdsbythehour.com/if/admin/
+
 ### Step 1: Create Provider
 
-1. Go to **Admin Interface** → **Applications** → **Providers**
+1. In the Admin Interface, go to **Applications** → **Providers**
 2. Click **Create** → Select **Proxy Provider**
 3. Configure:
    - **Name**: `Traefik Forward Auth`
