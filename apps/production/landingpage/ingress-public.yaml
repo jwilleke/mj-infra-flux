@@ -1,0 +1,44 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: landingpage-public
+  namespace: landingpage
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - nerdsbythehour.com
+    - www.nerdsbythehour.com
+    secretName: landingpage-tls
+  rules:
+  - host: nerdsbythehour.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: landingpage
+            port:
+              number: 3000
+      - path: /guest
+        pathType: Prefix
+        backend:
+          service:
+            name: landingpage
+            port:
+              number: 3000
+  - host: www.nerdsbythehour.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: landingpage
+            port:
+              number: 3000

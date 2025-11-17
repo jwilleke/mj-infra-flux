@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: landingpage
+
+resources:
+  - base/namespace.yaml
+  - base/deployment.yaml
+  - base/service.yaml
+  - ingress-public.yaml
+  - ingress-members.yaml
+  - certificate.yaml
+
+patches:
+  # Use apps:apps (3003:3003) for security context
+  - target:
+      kind: Deployment
+      name: landingpage
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: landingpage
+      spec:
+        template:
+          spec:
+            securityContext:
+              runAsUser: 3003
+              runAsGroup: 3003
+              fsGroup: 3003
+
+# The image will be built locally from /opt/traefik/landingpage
+# and loaded into k3s using: k3s ctr images import landingpage.tar
+images:
+  - name: landingpage
+    newName: landingpage
+    newTag: latest

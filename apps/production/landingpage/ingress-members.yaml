@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: landingpage-members
+  namespace: landingpage
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.priority: "100"
+    # Authentik ForwardAuth - will be configured after Authentik middleware is set up
+    # traefik.ingress.kubernetes.io/router.middlewares: authentik-authentik-forwardauth@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - nerdsbythehour.com
+    secretName: landingpage-tls
+  rules:
+  - host: nerdsbythehour.com
+    http:
+      paths:
+      - path: /members
+        pathType: Prefix
+        backend:
+          service:
+            name: landingpage
+            port:
+              number: 3000
