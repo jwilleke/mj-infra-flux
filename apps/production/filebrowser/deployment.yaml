@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smb-filebrowser
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smb-filebrowser
+  template:
+    metadata:
+      labels:
+        app: smb-filebrowser
+    spec:
+      containers:
+      - name: filebrowser
+        image: filebrowser/filebrowser:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: data
+          mountPath: /srv
+      volumes:
+      - name: config
+        emptyDir: {}
+      - name: data
+        emptyDir: {}
