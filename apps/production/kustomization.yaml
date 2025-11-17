@@ -3,3 +3,6 @@ kind: Kustomization
 resources:
   # Infrastructure - Traefik ingress controller and cert-manager
   # These are in apps/base/ and work properly
+
+  # Authentication & Identity Provider
+  - ./authentik

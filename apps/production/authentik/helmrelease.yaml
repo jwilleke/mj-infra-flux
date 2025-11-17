@@ -1,0 +1,54 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: authentik
+  namespace: authentik
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: authentik
+      version: '2025.10.1'
+      sourceRef:
+        kind: HelmRepository
+        name: authentik
+        namespace: flux-system
+      interval: 12h
+  values:
+    authentik:
+      secret_key: "xKwUZWsW+yMzjkpl6BwAs+KR871aFpwAiYwcLTNSBy4ruwFCh4PR/htHREbRUgBEpnuWwZ9OgD8viy+Q"
+      error_reporting:
+        enabled: false
+      postgresql:
+        password: "3oWxVoNyvK7jXY1p47CgRTPgXLJ4tWwYRyLdgJbZiHL23yVpdXQaPw=="
+
+    server:
+      ingress:
+        enabled: true
+        ingressClassName: traefik
+        hosts:
+          - auth.nerdsbythehour.com
+        tls:
+          - secretName: authentik-tls
+            hosts:
+              - auth.nerdsbythehour.com
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-production
+
+    postgresql:
+      enabled: true
+      auth:
+        password: "3oWxVoNyvK7jXY1p47CgRTPgXLJ4tWwYRyLdgJbZiHL23yVpdXQaPw=="
+      primary:
+        persistence:
+          enabled: true
+          size: 8Gi
+
+    redis:
+      enabled: true
+      auth:
+        enabled: false
+      master:
+        persistence:
+          enabled: true
+          size: 2Gi
