@@ -136,15 +136,15 @@ sudo kubectl get pods -A  # Shows all k3s services running
 
 ### 📝 Next Steps
 
-1. **TeslaMate Data Migration** (Optional):
-   - Export data from Docker PostgreSQL: `docker exec teslamate-db pg_dump...`
-   - Import to k3s PostgreSQL (see `apps/production/teslamate/README.md`)
-   - Or start fresh with new Tesla data
+1. **TeslaMate Data Migration** ✅ COMPLETE:
+   - Exported 409MB database from Docker PostgreSQL
+   - Imported to k3s PostgreSQL: 1,002 drives, 51,816 charges, 2,976,634 positions
+   - TeslaMate running with historical data
 
-2. **Grafana Configuration**:
-   - Add TeslaMate datasource to Grafana
-   - Import TeslaMate dashboards
-   - Verify dashboard functionality
+2. **Grafana Configuration** ✅ READY:
+   - Comprehensive setup guide: `apps/production/monitoring/GRAFANA-TESLAMATE-SETUP.md`
+   - Downloaded 19 TeslaMate dashboards to `/tmp/teslamate-dashboards/`
+   - Manual steps required: Add datasource via Grafana UI, import dashboards
 
 3. **Authentik ForwardAuth**:
    - Configure Authentik middleware for protected routes
