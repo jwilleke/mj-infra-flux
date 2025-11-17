@@ -6,3 +6,6 @@ resources:
 
   # Authentication & Identity Provider
   - ./authentik
+
+  # Protected Applications
+  - ./filebrowser
