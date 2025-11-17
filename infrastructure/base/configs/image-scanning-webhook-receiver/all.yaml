@@ -21,12 +21,12 @@ metadata:
 spec:
   tls:
     - hosts:
-        - flux-webhook.jimwilleke.com
+        - flux-webhook.nerdsbythehour.com
       # There must a a Certificate resource created that saves to this secret name
       secretName: flux-webhook-nerdsbythehour-com-tls
 
   rules:
-    - host: flux-webhook.jimwilleke.com
+    - host: flux-webhook.nerdsbythehour.com
       http:
         paths:
           - pathType: Prefix

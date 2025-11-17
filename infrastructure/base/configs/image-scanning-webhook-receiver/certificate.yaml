@@ -12,6 +12,6 @@ spec:
   issuerRef:
     name: letsencrypt-production
     kind: ClusterIssuer
-  commonName: flux-webhook.jimwilleke.com
+  commonName: flux-webhook.nerdsbythehour.com
   dnsNames:
-    - flux-webhook.jimwilleke.com
+    - flux-webhook.nerdsbythehour.com

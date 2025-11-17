@@ -16,8 +16,3 @@ spec:
   prune: true
   wait: true
   timeout: 5m0s
-  # https://fluxcd.io/flux/components/kustomize/api/v1/#kustomize.toolkit.fluxcd.io/v1.Decryption
-  decryption:
-    provider: sops
-    secretRef:
-      name: sops-age
