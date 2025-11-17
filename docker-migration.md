@@ -90,12 +90,32 @@ After all migrations complete:
 - Remove: authelia, dashy, traefik containers
 - Archive: /opt/traefik directory for reference
 
+### 📝 Current Status
+
+**Docker Services**: All stopped (as of 10 hours ago)
+- Running on same host with same IP (192.168.68.71)
+- k3s Traefik ingress handling all traffic
+- No DNS changes needed - seamless cutover
+
+**Verification**:
+```bash
+docker ps -a  # Shows all containers exited
+sudo kubectl get ingress -A  # Shows k3s ingresses active
+```
+
 ### 📝 Next Steps
 
-1. Configure Authentik ForwardAuth middleware for /members route
-2. Set up shared PostgreSQL instance in k3s
-3. Migrate teslamate with data preservation
-4. Migrate jimswiki with host mount
-5. Test all services
-6. Shut down Docker services
-7. Clean up old Docker resources
+1. **Immediate**:
+   - Configure Authentik ForwardAuth middleware for /members route
+   - Test all migrated services (landingpage, whoami, openspeedtest)
+
+2. **Phase 2 - Stateful Apps**:
+   - Set up shared PostgreSQL instance in k3s
+   - Migrate teslamate with data preservation
+   - Migrate jimswiki with host mount
+
+3. **Cleanup** (after Phase 2 complete):
+   - Remove Docker containers: `docker rm $(docker ps -aq)`
+   - Remove Docker images for migrated apps
+   - Keep /opt/traefik for source code and reference
+   - Archive docker-compose.yml
