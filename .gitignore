@@ -20,3 +20,4 @@ scripts/ghcr.dockeronfigjson.encrypted
 
 # .vscode
 .vscode/*
+dev-notes.md
