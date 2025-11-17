@@ -101,3 +101,20 @@ Unprotected (accessible without login):
 All DNS records are configured in Cloudflare with Proxy enabled (orange cloud):
 - auth.nerdsbythehour.com → Cloudflare Proxy → 174.105.183.192 → 192.168.68.71
 - filebrowser.nerdsbythehour.com → Cloudflare Proxy → 174.105.183.192 → 192.168.68.71
+
+## Troubleshooting
+
+### "Not Found" Error from Authentik
+
+If you see an Authentik-branded "Not Found" page when accessing a protected service:
+- ✅ **Good**: ForwardAuth middleware is working and intercepting requests
+- ❌ **Issue**: OAuth2/Proxy Provider configuration is incomplete or missing
+
+**Solution**: Complete the provider, application, and outpost setup in the Admin Interface.
+
+### Version-Specific UI Differences
+
+You're running Authentik **2025.10.1**. The UI and options may differ from older guides:
+- Look for "Proxy" or "Forward auth" when creating providers
+- Some versions have "Forward auth (single application)" vs "Forward auth (domain level)"
+- Use "Forward auth (single application)" if available
