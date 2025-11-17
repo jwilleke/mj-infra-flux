@@ -76,4 +76,5 @@ spec:
       volumes:
         - name: grafana-pv
           hostPath:
-            path: /mnt/thedatapool/app-data/grafana/var-lib-grafana
+            # Updated to use local storage for better performance
+            path: /mnt/local-k3s-data/grafana

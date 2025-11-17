@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: teslamate-tls
+  namespace: teslamate
+spec:
+  secretName: teslamate-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+  - teslamate.nerdsbythehour.com

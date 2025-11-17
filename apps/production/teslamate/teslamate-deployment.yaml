@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teslamate
+  namespace: teslamate
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teslamate
+  template:
+    metadata:
+      labels:
+        app: teslamate
+    spec:
+      containers:
+      - name: teslamate
+        image: teslamate/teslamate:latest
+        ports:
+        - containerPort: 4000
+          name: http
+        env:
+        # Database connection (shared PostgreSQL)
+        - name: DATABASE_USER
+          value: "teslamate"
+        - name: DATABASE_PASS
+          valueFrom:
+            secretKeyRef:
+              name: teslamate-secret
+              key: database-password
+        - name: DATABASE_NAME
+          value: "teslamate"
+        - name: DATABASE_HOST
+          value: "postgresql.database.svc.cluster.local"
+        - name: DATABASE_PORT
+          value: "5432"
+
+        # MQTT connection (shared Mosquitto)
+        - name: MQTT_HOST
+          value: "mosquitto.messaging.svc.cluster.local"
+        - name: MQTT_PORT
+          value: "1883"
+
+        # Encryption
+        - name: ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: teslamate-secret
+              key: encryption-key
+
+        # Grafana integration
+        - name: GRAFANA_URL
+          value: "https://grafana.jimwilleke.com"
+
+        # Timezone
+        - name: TZ
+          value: "America/New_York"
+
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 4000
+          initialDelaySeconds: 10
+          periodSeconds: 10
