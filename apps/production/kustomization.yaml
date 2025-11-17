@@ -7,6 +7,9 @@ resources:
   # Authentication & Identity Provider
   - ./authentik
 
+  # Public Applications (Guest Services)
+  - ./guest-services
+
   # Public & Protected Applications
   - ./landingpage
 
