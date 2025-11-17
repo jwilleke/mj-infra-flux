@@ -19,7 +19,11 @@
    - **External host**: `https://auth.nerdsbythehour.com`
    - **Token validity**: `hours=24` (or your preference)
 4. Click **Finish**
-5. **Note the Client ID and Client Secret** (you'll need these)
+5. **IMPORTANT**: Client ID and Client Secret will be displayed
+   - **DO NOT commit these to the repository**
+   - **DO NOT share these credentials**
+   - Store them securely if needed for other integrations
+   - For Traefik ForwardAuth, these are NOT required in the middleware configuration
 
 ### Step 2: Create Application
 
