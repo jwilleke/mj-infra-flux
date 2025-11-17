@@ -141,10 +141,11 @@ sudo kubectl get pods -A  # Shows all k3s services running
    - Imported to k3s PostgreSQL: 1,002 drives, 51,816 charges, 2,976,634 positions
    - TeslaMate running with historical data
 
-2. **Grafana Configuration** ✅ READY:
-   - Comprehensive setup guide: `apps/production/monitoring/GRAFANA-TESLAMATE-SETUP.md`
-   - Downloaded 19 TeslaMate dashboards to `/tmp/teslamate-dashboards/`
-   - Manual steps required: Add datasource via Grafana UI, import dashboards
+2. **Grafana Configuration** ✅ COMPLETE:
+   - TeslaMate PostgreSQL datasource configured in Grafana
+   - All 19 TeslaMate dashboards imported and working
+   - Historical data visible in dashboards
+   - Setup guide: `apps/production/monitoring/GRAFANA-TESLAMATE-SETUP.md`
 
 3. **Authentik ForwardAuth**:
    - Configure Authentik middleware for protected routes

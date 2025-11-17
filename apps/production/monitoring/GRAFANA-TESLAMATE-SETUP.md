@@ -25,12 +25,15 @@ This guide walks through configuring Grafana to visualize TeslaMate data.
    | Field | Value |
    |-------|-------|
    | **Name** | `TeslaMate` |
-   | **Host** | `postgresql.database.svc.cluster.local:5432` |
+   | **Host** | `10.43.136.252:5432` (PostgreSQL ClusterIP) |
    | **Database** | `teslamate` |
    | **User** | `teslamate` |
    | **Password** | `teslamate_db_password_changeme` |
    | **TLS/SSL Mode** | `disable` (internal cluster traffic) |
-   | **Version** | `17.0` |
+   | **Version** | `15.0` (or highest available) |
+
+   **Note**: We use the ClusterIP directly due to DNS resolution issues in the Grafana container.
+   To find the current ClusterIP: `kubectl get svc -n database postgresql -o jsonpath='{.spec.clusterIP}'`
 
 5. Click **Save & Test** - you should see "Database Connection OK"
 
