@@ -11,5 +11,5 @@ spec:
   # unlike kustomize resource paths, these paths are relative to the repo
   path: ./infrastructure/prod/configs
   prune: true
-  wait: true
+  wait: false
   timeout: 5m0s
