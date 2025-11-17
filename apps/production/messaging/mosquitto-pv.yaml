@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mosquitto-data-pv
+  labels:
+    app: mosquitto
+    type: data
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /home/jim/docs/data/systems/mj-infra-flux/mosquitto/data
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mosquitto-config-pv
+  labels:
+    app: mosquitto
+    type: config
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /home/jim/docs/data/systems/mj-infra-flux/mosquitto/config
+    type: DirectoryOrCreate

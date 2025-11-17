@@ -4,6 +4,10 @@ resources:
   # Infrastructure - Traefik ingress controller and cert-manager
   # These are in apps/base/ and work properly
 
+  # Shared Infrastructure
+  - ./database       # Shared PostgreSQL
+  - ./messaging      # Shared Mosquitto MQTT
+
   # Authentication & Identity Provider
   - ./authentik
 
