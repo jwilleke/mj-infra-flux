@@ -13,6 +13,6 @@ spec:
   issuerRef:
     name: letsencrypt-production
     kind: ClusterIssuer
-  commonName: grafana.jimwilleke.com
+  commonName: grafana.nerdsbythehour.com
   dnsNames:
-  - grafana.jimwilleke.com
+  - grafana.nerdsbythehour.com

@@ -8,7 +8,7 @@ TeslaMate is a self-hosted data logger for Tesla vehicles with real-time trackin
 - **URL**: https://teslamate.nerdsbythehour.com
 - **Database**: Shared PostgreSQL in `database` namespace
 - **MQTT**: Shared Mosquitto in `messaging` namespace
-- **Grafana**: Monitoring namespace (datasource to be configured)
+- **Grafana**: https://grafana.nerdsbythehour.com (monitoring namespace)
 
 ## Architecture
 
@@ -100,7 +100,7 @@ sudo kubectl exec -n database postgresql-0 -- psql -U teslamate -d teslamate -c 
 
 ### Add TeslaMate Data Source
 
-1. Access Grafana: https://grafana.jimwilleke.com
+1. Access Grafana: https://grafana.nerdsbythehour.com
 2. Configuration → Data Sources → Add data source → PostgreSQL
 3. Settings:
    - **Name**: TeslaMate

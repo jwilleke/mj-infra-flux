@@ -50,7 +50,7 @@ spec:
 
         # Grafana integration
         - name: GRAFANA_URL
-          value: "https://grafana.jimwilleke.com"
+          value: "https://grafana.nerdsbythehour.com"
 
         # Timezone
         - name: TZ

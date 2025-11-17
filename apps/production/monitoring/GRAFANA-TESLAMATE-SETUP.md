@@ -4,13 +4,13 @@ This guide walks through configuring Grafana to visualize TeslaMate data.
 
 ## Prerequisites
 
-- Grafana deployed and accessible at https://grafana.jimwilleke.com
+- Grafana deployed and accessible at https://grafana.nerdsbythehour.com
 - TeslaMate deployed with data in shared PostgreSQL
 - PostgreSQL database `teslamate` with data migrated
 
 ## Step 1: Access Grafana
 
-1. Open https://grafana.jimwilleke.com
+1. Open https://grafana.nerdsbythehour.com
 2. Default credentials:
    - Username: `admin`
    - Password: `admin` (you'll be prompted to change this)

@@ -9,12 +9,12 @@ spec:
   tls:
   # The patches in kustomize are ugly here (the patch is basically the whole Ingress). This could probably be made cleaner using a configMap + configMapGenerator or something to grab these values from a simple property file or labels or something
   - hosts:
-      - grafana.jimwilleke.com # e.g. photos.example.com
+      - grafana.nerdsbythehour.com
     # secretName must match the Certificate resource's secretName
-    secretName: grafana-nerdsbythehour-com-cert #e.g. cert-example-com
+    secretName: grafana-nerdsbythehour-com-cert
   rules:
   # don't forget to set this up in DNS
-  - host: grafana.jimwilleke.com # e.g. photos.example.com
+  - host: grafana.nerdsbythehour.com
     http:
       paths:
       - path: /
