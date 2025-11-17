@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: guest-services
 
 resources:
-  - namespace.yaml
-  - whoami
-  - openspeedtest
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - certificate.yaml

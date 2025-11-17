@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openspeedtest
+  namespace: guest-services
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.priority: "100"
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - nerdsbythehour.com
+    secretName: openspeedtest-tls
+  rules:
+  - host: nerdsbythehour.com
+    http:
+      paths:
+      - path: /speed
+        pathType: Prefix
+        backend:
+          service:
+            name: openspeedtest
+            port:
+              number: 80
