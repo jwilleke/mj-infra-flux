@@ -1,5 +1,19 @@
 # Authentik SSO Setup Guide
 
+## Current Status
+
+✅ **Completed:**
+- Authentik deployed via Flux at https://auth.nerdsbythehour.com
+- PostgreSQL and Redis persistence configured
+- Let's Encrypt certificate issued
+- Traefik ForwardAuth middleware created
+- Filebrowser application deployed at https://filebrowser.nerdsbythehour.com
+- DNS records configured for auth and filebrowser subdomains
+
+🔧 **Pending Configuration:**
+- Complete OAuth2/Proxy Provider setup in Authentik UI (steps below)
+- Test authentication flow
+
 ## Initial Setup
 
 1. Access Authentik at: https://auth.nerdsbythehour.com/if/flow/initial-setup/
@@ -57,14 +71,28 @@ The ForwardAuth middleware has been created in the cluster. To protect a service
 
 ## Protected Services
 
-Currently protected:
-- filebrowser (filebrowser.nerdsbythehour.com)
+Currently protected (requires authentication once OAuth2 provider is configured):
+- **Filebrowser**: https://filebrowser.nerdsbythehour.com
+  - Default credentials: admin/admin (change after first login)
+  - Deployment, Service, and Ingress managed by Flux
+  - ForwardAuth middleware applied
 
 Unprotected (accessible without login):
-- whoami (nerdsbythehour.com, deby.nerdsbythehour.com)
+- **Whoami**: https://nerdsbythehour.com and https://deby.nerdsbythehour.com
 
-## Credentials
+## Important URLs
 
-- **Default Admin**: `akadmin`
-- **Setup URL**: https://auth.nerdsbythehour.com/if/flow/initial-setup/
-- **Admin Portal**: https://auth.nerdsbythehour.com/if/admin/
+- **Authentik Setup**: https://auth.nerdsbythehour.com/if/flow/initial-setup/
+- **Authentik Admin Portal**: https://auth.nerdsbythehour.com/if/admin/
+- **Filebrowser**: https://filebrowser.nerdsbythehour.com
+
+## Default Credentials
+
+- **Authentik Admin**: `akadmin` (set password on first login)
+- **Filebrowser**: `admin` / `admin` (change after first login)
+
+## DNS Configuration
+
+All DNS records are configured in Cloudflare with Proxy enabled (orange cloud):
+- auth.nerdsbythehour.com → Cloudflare Proxy → 174.105.183.192 → 192.168.68.71
+- filebrowser.nerdsbythehour.com → Cloudflare Proxy → 174.105.183.192 → 192.168.68.71
