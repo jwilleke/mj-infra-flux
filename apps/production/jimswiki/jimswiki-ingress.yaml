@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jimswiki
+  namespace: jimswiki
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # Higher priority to ensure /jimswiki routes here before landing page
+    traefik.ingress.kubernetes.io/router.priority: "100"
+    # TODO: Enable Authentik ForwardAuth in Phase 3 final step
+    # traefik.ingress.kubernetes.io/router.middlewares: authentik-forwardauth-jimswiki@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - nerdsbythehour.com
+    secretName: jimswiki-tls
+  rules:
+  - host: nerdsbythehour.com
+    http:
+      paths:
+      - path: /jimswiki
+        pathType: Prefix
+        backend:
+          service:
+            name: jimswiki
+            port:
+              number: 8080

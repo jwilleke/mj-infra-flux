@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jimswiki
+  namespace: jimswiki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jimswiki
+  template:
+    metadata:
+      labels:
+        app: jimswiki
+    spec:
+      # Note: Running as root to match Docker behavior
+      # The jimswiki image requires root to move webapp files
+      initContainers:
+      - name: setup-webapp
+        image: aug12018/jimswiki:latest
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          # Copy webapp files from image to shared volume and rename to jimswiki context
+          echo "Copying webapp files from image to shared volume..."
+          cp -r /usr/local/tomcat/webapps/ROOT /webapps-shared/jimswiki
+
+          # Copy custom properties file to WEB-INF/classes where JSPWiki expects it
+          if [ -f "/var/jspwiki/etc/jspwiki-custom.properties" ]; then
+              echo "Copying jspwiki-custom.properties to WEB-INF/classes..."
+              cp /var/jspwiki/etc/jspwiki-custom.properties /webapps-shared/jimswiki/WEB-INF/classes/jspwiki-custom.properties
+              echo "Copying log4j2.xml to WEB-INF/classes..."
+              cp /var/jspwiki/etc/log4j2.xml /webapps-shared/jimswiki/WEB-INF/classes/log4j2.xml
+          fi
+
+          echo "Setup complete"
+        volumeMounts:
+        - name: wiki-config
+          mountPath: /var/jspwiki/etc
+        - name: webapps
+          mountPath: /webapps-shared
+
+      containers:
+      - name: jimswiki
+        image: aug12018/jimswiki:latest
+        imagePullPolicy: IfNotPresent
+        command: ["/usr/local/tomcat/bin/catalina.sh", "run"]
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: JAVA_HOME
+          value: "/opt/java/openjdk"
+        - name: CATALINA_OPTS
+          value: "-Djspwiki.baseURL=https://nerdsbythehour.com/jimswiki -Dlog4j.configurationFile=file:///var/jspwiki/etc/log4j2.xml"
+        # Override Dockerfile ENV vars with values from jspwiki-custom.properties
+        - name: jspwiki_fileSystemProvider_pageDir
+          value: "/home/jim/docs/data/systems/wikis/jimswiki"
+        - name: jspwiki_basicAttachmentProvider_storageDir
+          value: "/home/jim/docs/data/systems/wikis/jimswiki"
+        - name: jspwiki_applicationName
+          value: "JimsWiki"
+
+        volumeMounts:
+        # CRITICAL: Wiki pages - MUST preserve exact path for 38,000+ existing pages
+        - name: wiki-pages
+          mountPath: /home/jim/docs/data/systems/wikis/jimswiki
+
+        # Configuration files from host
+        - name: wiki-config
+          mountPath: /var/jspwiki/etc
+
+        # Logs directory on host
+        - name: wiki-logs
+          mountPath: /usr/local/tomcat/logs
+
+        # JSPWiki work directory (cache, index, refmgr.ser)
+        - name: wiki-work
+          mountPath: /var/jspwiki/work
+
+        # Tomcat work directory
+        - name: tomcat-work
+          mountPath: /usr/local/tomcat/work
+
+        # Webapps directory (shared with initContainer)
+        - name: webapps
+          mountPath: /usr/local/tomcat/webapps
+
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2000m"
+            memory: "2Gi"
+
+        livenessProbe:
+          httpGet:
+            path: /jimswiki/
+            port: 8080
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+
+        readinessProbe:
+          httpGet:
+            path: /jimswiki/
+            port: 8080
+          initialDelaySeconds: 90
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
+
+      volumes:
+      # CRITICAL: NFS mount with 38,004 wiki pages - path MUST remain exactly as is
+      - name: wiki-pages
+        hostPath:
+          path: /home/jim/docs/data/systems/wikis/jimswiki
+          type: Directory
+
+      # Configuration files from Docker host
+      - name: wiki-config
+        hostPath:
+          path: /opt/traefik/jimswiki/config
+          type: Directory
+
+      # Logs directory on Docker host
+      - name: wiki-logs
+        hostPath:
+          path: /opt/traefik/jimswiki/logs
+          type: Directory
+
+      # JSPWiki work directory on Docker host (contains refmgr.ser cache)
+      - name: wiki-work
+        hostPath:
+          path: /opt/traefik/jimswiki/work
+          type: Directory
+
+      # Tomcat work directory (separate from JSPWiki work)
+      - name: tomcat-work
+        emptyDir: {}
+
+      # Webapps directory (shared between initContainer and main container)
+      - name: webapps
+        emptyDir: {}

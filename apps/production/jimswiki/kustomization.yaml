@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: jimswiki
+resources:
+  - namespace.yaml
+  - jimswiki-configmap.yaml
+  - jimswiki-deployment.yaml
+  - jimswiki-service.yaml
+  - jimswiki-ingress.yaml
+  - jimswiki-certificate.yaml
