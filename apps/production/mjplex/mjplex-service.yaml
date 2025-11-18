@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mjplex
+  namespace: mjplex
+spec:
+  selector:
+    app: mjplex
+  ports:
+  # Web interface
+  - name: plex-web
+    port: 32400
+    targetPort: 32400
+    protocol: TCP
+  # Plex Companion
+  - name: companion
+    port: 3005
+    targetPort: 3005
+    protocol: TCP
+  # Roku Companion
+  - name: roku
+    port: 8324
+    targetPort: 8324
+    protocol: TCP
+  # DLNA
+  - name: dlna-tcp
+    port: 32469
+    targetPort: 32469
+    protocol: TCP
+  - name: dlna-udp
+    port: 1900
+    targetPort: 1900
+    protocol: UDP
+  # GDM Discovery
+  - name: gdm-1
+    port: 32410
+    targetPort: 32410
+    protocol: UDP
+  - name: gdm-2
+    port: 32412
+    targetPort: 32412
+    protocol: UDP
+  - name: gdm-3
+    port: 32413
+    targetPort: 32413
+    protocol: UDP
+  - name: gdm-4
+    port: 32414
+    targetPort: 32414
+    protocol: UDP
+  type: ClusterIP
