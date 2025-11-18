@@ -100,13 +100,22 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 - Data migration: Ready (instructions in README)
 - Commit: 3db228c
 
-### ⏳ Phase 3 Remaining: jimswiki
+### ✅ Phase 3 Complete: jimswiki
 
-**jimswiki** ⏳ PENDING
-- Status: Not started
-- Data: Host mount at /home/jim/docs/data/systems/wikis/jimswiki
-- Complexity: Custom image, Tomcat, requires careful migration
-- Decision: Can migrate later or keep in Docker
+**jimswiki** ✅ COMPLETE
+- Status: Deployed to k3s
+- Namespace: `jimswiki`
+- URL: https://nerdsbythehour.com/jimswiki/
+- Data: Host mount at /home/jim/docs/data/systems/wikis/jimswiki (38,004 pages, 3.4GB)
+- Image: `aug12018/jimswiki:latest` (imported to k3s)
+- Context: Webapp deployed at `/jimswiki` (not ROOT)
+- Startup: ~30 seconds with 38K pages
+- Implementation:
+  - InitContainer copies webapp from ROOT to jimswiki context
+  - Shared emptyDir volume for webapps
+  - HostPath mounts preserve all data locations
+  - Running as root (matches Docker behavior)
+- Commit: 1c1ab7e
 
 ### 🗑️ To Be Removed from Docker
 
@@ -117,10 +126,10 @@ After all migrations complete:
 
 ### 📝 Current Status
 
-**Migration Status**: Phase 2 COMPLETE ✅
-- All stateless apps migrated (landingpage, openspeedtest, whoami)
-- All shared infrastructure deployed (PostgreSQL, Mosquitto MQTT, Grafana)
-- TeslaMate deployed and connected to shared services
+**Migration Status**: Phase 3 COMPLETE ✅ - ALL MIGRATIONS DONE!
+- ✅ Phase 1: Stateless apps (landingpage, openspeedtest, whoami)
+- ✅ Phase 2: Shared infrastructure (PostgreSQL, Mosquitto, Grafana) + TeslaMate
+- ✅ Phase 3: jimswiki (38,004 pages migrated)
 
 **Docker Services**: All stopped
 - Running on same host with same IP (192.168.68.71)
@@ -147,15 +156,17 @@ sudo kubectl get pods -A  # Shows all k3s services running
    - Historical data visible in dashboards
    - Setup guide: `apps/production/monitoring/GRAFANA-TESLAMATE-SETUP.md`
 
-3. **Authentik ForwardAuth**:
+3. **jimswiki Migration** ✅ COMPLETE:
+   - Deployed to k3s with all 38,004 pages
+   - Running at https://nerdsbythehour.com/jimswiki/
+   - All data paths preserved
+   - Details: `apps/production/jimswiki/README.md`
+
+4. **Authentik ForwardAuth** (Optional):
    - Configure Authentik middleware for protected routes
-   - Enable on: /members, teslamate, grafana, jimswiki (when migrated)
+   - Enable on: /members, teslamate, grafana, jimswiki
 
-4. **Phase 3 - jimswiki** (Optional):
-   - Migrate jimswiki to k3s OR
-   - Keep in Docker if complexity not worth it
-
-5. **Final Cleanup**:
+5. **Final Cleanup** (Ready to execute):
    - Test all services thoroughly
    - Remove Docker containers: `docker rm $(docker ps -aq)`
    - Remove unused Docker images
