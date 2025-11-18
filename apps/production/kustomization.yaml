@@ -23,4 +23,3 @@ resources:
   - ./teslamate
   - ./jimswiki
   - ./home-assistant-proxy
-  - ./mjplex
