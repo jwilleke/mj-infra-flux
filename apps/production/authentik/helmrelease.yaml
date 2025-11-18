@@ -14,13 +14,28 @@ spec:
         name: authentik
         namespace: flux-system
       interval: 12h
+  # IMPORTANT: Secrets are stored in 'authentik-secrets' Secret (not in git)
+  # Create manually: kubectl create secret generic authentik-secrets -n authentik \
+  #   --from-literal=secret_key="<generated-key>" \
+  #   --from-literal=postgresql_password="<generated-password>"
+  valuesFrom:
+    - kind: Secret
+      name: authentik-secrets
+      valuesKey: secret_key
+      targetPath: authentik.secret_key
+    - kind: Secret
+      name: authentik-secrets
+      valuesKey: postgresql_password
+      targetPath: authentik.postgresql.password
+    - kind: Secret
+      name: authentik-secrets
+      valuesKey: postgresql_password
+      targetPath: postgresql.auth.password
+
   values:
     authentik:
-      secret_key: "xKwUZWsW+yMzjkpl6BwAs+KR871aFpwAiYwcLTNSBy4ruwFCh4PR/htHREbRUgBEpnuWwZ9OgD8viy+Q"
       error_reporting:
         enabled: false
-      postgresql:
-        password: "3oWxVoNyvK7jXY1p47CgRTPgXLJ4tWwYRyLdgJbZiHL23yVpdXQaPw=="
 
     server:
       ingress:
@@ -37,8 +52,6 @@ spec:
 
     postgresql:
       enabled: true
-      auth:
-        password: "3oWxVoNyvK7jXY1p47CgRTPgXLJ4tWwYRyLdgJbZiHL23yVpdXQaPw=="
       primary:
         persistence:
           enabled: true
