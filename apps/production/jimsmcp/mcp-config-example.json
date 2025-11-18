@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "jimsmcp": {
+      "command": "node",
+      "args": ["/home/jim/Documents/mj-infra-flux/apps/production/jimsmcp/dist/index.js"]
+    }
+  }
+}

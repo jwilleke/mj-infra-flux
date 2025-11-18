@@ -1,0 +1,32 @@
+{
+  "name": "jimsmcp",
+  "version": "1.0.0",
+  "description": "MCP server for managing mj-infra-flux Kubernetes applications",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "jimsmcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "dev": "npm run build && node dist/index.js",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "kubernetes",
+    "flux",
+    "infrastructure"
+  ],
+  "author": "Jim Willeke",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@kubernetes/client-node": "^0.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.2"
+  }
+}
