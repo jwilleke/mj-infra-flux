@@ -120,23 +120,25 @@ spec:
           path: /home/jim/docs/data/systems/wikis/jimswiki
           type: Directory
 
-      # Configuration files from Docker host
+      # Configuration files (NFS mount - editable)
       - name: wiki-config
         hostPath:
-          path: /opt/traefik/jimswiki/config
+          path: /home/jim/docs/data/systems/mj-infra-flux/jimswiki/config
           type: Directory
 
-      # Logs directory on Docker host
+      # Logs directory (local fast disk - ephemeral, use kubectl logs for debugging)
       - name: wiki-logs
         hostPath:
-          path: /opt/traefik/jimswiki/logs
-          type: Directory
+          path: /mnt/local-k3s-data/jimswiki-logs
+          type: DirectoryOrCreate
 
-      # JSPWiki work directory on Docker host (contains refmgr.ser cache)
+      # JSPWiki work directory (local fast disk - cache, regenerated on startup)
+      # Contains: refmgr.ser, lucene index, page counts
+      # Can be safely deleted - will rebuild in ~15-30 seconds
       - name: wiki-work
         hostPath:
-          path: /opt/traefik/jimswiki/work
-          type: Directory
+          path: /mnt/local-k3s-data/jimswiki-work
+          type: DirectoryOrCreate
 
       # Tomcat work directory (separate from JSPWiki work)
       - name: tomcat-work
