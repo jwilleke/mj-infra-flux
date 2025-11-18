@@ -22,3 +22,4 @@ resources:
   - ./filebrowser
   - ./teslamate
   - ./jimswiki
+  - ./home-assistant-proxy
