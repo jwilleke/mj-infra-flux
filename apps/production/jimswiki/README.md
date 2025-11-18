@@ -15,24 +15,35 @@ Migrated from Docker (/opt/traefik/jimswiki) to k3s while preserving all wiki da
 
 ## Critical Data Paths
 
+### Persistent Data (NFS - Must Be Preserved)
+
 **⚠️ IMPORTANT: These paths MUST NOT change - 38,004 wiki pages depend on them!**
 
 - **Wiki Pages:** `/home/jim/docs/data/systems/wikis/jimswiki`
   - NFS mount: `192.168.68.41:/volume/.../jims/.data` → `/home/jim/docs`
   - Contains 38,004+ .txt files
   - Total size: 3.4GB
+  - **CRITICAL:** Cannot be changed without breaking all wiki links
 
-- **Configuration:** `/opt/traefik/jimswiki/config`
-  - jspwiki-custom.properties
+- **Configuration:** `/home/jim/docs/data/systems/mj-infra-flux/jimswiki/config`
+  - NFS mount (editable configuration)
+  - jspwiki-custom.properties (main config - edit this!)
   - userdatabase.xml, groupdatabase.xml
   - log4j2.xml, jspwiki-ehcache.xml
+  - **To edit:** `nano /home/jim/docs/data/systems/mj-infra-flux/jimswiki/config/jspwiki-custom.properties`
 
-- **Logs:** `/opt/traefik/jimswiki/logs`
+### Ephemeral Data (Local SSD - Can Be Deleted)
+
+- **Work Directory:** `/mnt/local-k3s-data/jimswiki-work`
+  - Local fast disk (not NFS)
+  - Contains: refmgr.ser (reference manager cache), lucene index, page counts
+  - Size: ~921MB
+  - **Can be safely deleted** - will rebuild in ~15-30 seconds on next startup
+
+- **Logs:** `/mnt/local-k3s-data/jimswiki-logs`
+  - Local fast disk (not NFS)
   - Tomcat catalina logs
-
-- **Work Directory:** `/opt/traefik/jimswiki/work`
-  - Tomcat work directory (cache, compiled JSPs)
-  - Contains refmgr.ser (reference manager cache for 38K pages)
+  - **Ephemeral** - use `kubectl logs` for debugging instead
 
 ## Architecture
 
@@ -40,41 +51,42 @@ Migrated from Docker (/opt/traefik/jimswiki) to k3s while preserving all wiki da
 
 ```yaml
 Replicas: 1
-Security Context: apps:apps (3003:3003)
+Security Context: Running as root (required by jimswiki image)
 Resources:
   Requests: 500m CPU, 1Gi RAM
   Limits: 2000m CPU, 2Gi RAM
+Startup Time: ~30 seconds with 38K pages
 ```
 
 ### Volume Mounts
 
 All volumes use `hostPath` to mount from the k3s node:
 
-1. **Wiki Pages** (Critical - 38,004 files):
+1. **Wiki Pages** (Critical - 38,004 files - NFS):
    ```yaml
    hostPath: /home/jim/docs/data/systems/wikis/jimswiki
    mountPath: /home/jim/docs/data/systems/wikis/jimswiki
    ```
 
-2. **Configuration Files**:
+2. **Configuration Files** (Editable - NFS):
    ```yaml
-   hostPath: /opt/traefik/jimswiki/config
+   hostPath: /home/jim/docs/data/systems/mj-infra-flux/jimswiki/config
    mountPath: /var/jspwiki/etc
    ```
 
-3. **Logs**:
+3. **Logs** (Ephemeral - Local SSD):
    ```yaml
-   hostPath: /opt/traefik/jimswiki/logs
+   hostPath: /mnt/local-k3s-data/jimswiki-logs
    mountPath: /usr/local/tomcat/logs
    ```
 
-4. **Work Directory**:
+4. **Work Directory** (Cache - Local SSD):
    ```yaml
-   hostPath: /opt/traefik/jimswiki/work
-   mountPath: /usr/local/tomcat/work
+   hostPath: /mnt/local-k3s-data/jimswiki-work
+   mountPath: /var/jspwiki/work
    ```
 
-5. **Startup Script** (from ConfigMap):
+5. **Webapps** (Shared emptyDir):
    ```yaml
    configMap: jimswiki-startup
    mountPath: /startup.sh
@@ -157,6 +169,81 @@ sudo kubectl get ingress -n jimswiki
 curl -k https://nerdsbythehour.com/jimswiki/
 ```
 
+## Common Operations
+
+### Edit Configuration
+
+Configuration is stored on NFS and can be edited directly:
+
+```bash
+# Edit main configuration (located on NFS)
+nano /home/jim/docs/data/systems/mj-infra-flux/jimswiki/config/jspwiki-custom.properties
+
+# Or edit user database
+nano /home/jim/docs/data/systems/mj-infra-flux/jimswiki/config/userdatabase.xml
+
+# Restart to apply changes
+kubectl rollout restart deployment jimswiki -n jimswiki
+
+# Watch restart
+kubectl get pods -n jimswiki -w
+```
+
+**Configuration files:**
+- `jspwiki-custom.properties` - Main JSPWiki configuration
+- `userdatabase.xml` - User accounts
+- `groupdatabase.xml` - User groups
+- `log4j2.xml` - Logging configuration
+- `jspwiki-ehcache.xml` - Cache settings
+
+### View Logs
+
+```bash
+# Kubernetes logs (recommended)
+kubectl logs -n jimswiki -l app=jimswiki --tail=100 -f
+
+# Tomcat logs on disk (ephemeral - local SSD)
+ls -lah /mnt/local-k3s-data/jimswiki-logs/
+```
+
+### Restart the Application
+
+```bash
+# Restart deployment
+kubectl rollout restart deployment jimswiki -n jimswiki
+
+# Check status
+kubectl rollout status deployment jimswiki -n jimswiki
+```
+
+### Clear Cache (if needed)
+
+If the work cache becomes corrupted or you want to force a rebuild:
+
+```bash
+# Delete the work directory (local SSD)
+sudo rm -rf /mnt/local-k3s-data/jimswiki-work/*
+
+# Restart to rebuild cache (~30 seconds)
+kubectl rollout restart deployment jimswiki -n jimswiki
+```
+
+### Check Application Status
+
+```bash
+# Check pod status
+kubectl get pods -n jimswiki
+
+# Check ingress
+kubectl get ingress -n jimswiki
+
+# Test from inside pod
+kubectl exec -n jimswiki -it deployment/jimswiki -- curl -s http://localhost:8080/jimswiki/ | head -20
+
+# Test from outside
+curl https://nerdsbythehour.com/jimswiki/
+```
+
 ## Important Notes
 
 ### First Startup Time
@@ -183,12 +270,17 @@ JSPWiki is deployed at `/jimswiki` context (not ROOT):
 - No StripPrefix middleware needed
 - All URLs are: `/jimswiki/...`
 
-### File Permissions
+### Storage Performance
 
-The container runs as `apps:apps` (3003:3003):
-- All hostPath volumes must be readable by uid 3003
-- Config files: owned by apps:apps
-- Wiki pages: owned by napp-it:unifi-drive (but readable by all)
+**Persistent Data (NFS):**
+- Wiki pages: `/home/jim/docs/data/systems/wikis/jimswiki`
+- Configuration: `/home/jim/docs/data/systems/mj-infra-flux/jimswiki/config`
+
+**Ephemeral Data (Local SSD - Fast):**
+- Work cache: `/mnt/local-k3s-data/jimswiki-work` (~921MB cache)
+- Logs: `/mnt/local-k3s-data/jimswiki-logs`
+
+The work cache is on fast local SSD for optimal performance and can be safely deleted.
 
 ## Authentication
 
