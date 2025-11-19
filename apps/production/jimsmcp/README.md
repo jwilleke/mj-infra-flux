@@ -13,6 +13,10 @@ jimsmcp provides programmatic access to your k3s cluster through the Model Conte
 - Perform health checks on applications
 - Get application URLs and endpoints
 - Query Authentik deployment information
+- **Manage Authentik applications and providers** (NEW!)
+  - Create proxy providers for applications
+  - Set up complete Authentik applications
+  - List applications and providers
 
 ## Features
 
@@ -31,6 +35,11 @@ jimsmcp provides programmatic access to your k3s cluster through the Model Conte
 - **app_health_check** - Comprehensive health check (pods + service + ingress)
 - **app_get_urls** - List all application URLs
 - **authentik_get_info** - Get Authentik API and admin URLs
+
+### Authentik Management (NEW!)
+- **authentik_create_homeassistant_app** - Create complete Home Assistant Authentik setup
+- **authentik_list_applications** - List all Authentik applications
+- **authentik_list_providers** - List all Authentik providers
 
 ## Installation
 

@@ -10,6 +10,7 @@ import {
 import * as k8s from "@kubernetes/client-node";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { AuthentikClient } from "./authentik.js";
 
 const execAsync = promisify(exec);
 
@@ -182,6 +183,30 @@ const TOOLS: Tool[] = [
   {
     name: "authentik_get_info",
     description: "Get information about Authentik deployment and API endpoint",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "authentik_create_homeassistant_app",
+    description: "Create Home Assistant proxy provider and application in Authentik (complete setup)",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "authentik_list_applications",
+    description: "List all applications configured in Authentik",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "authentik_list_providers",
+    description: "List all providers configured in Authentik",
     inputSchema: {
       type: "object",
       properties: {},
@@ -553,6 +578,72 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return {
           content: [{ type: "text", text: JSON.stringify(info, null, 2) }],
         };
+      }
+
+      case "authentik_create_homeassistant_app": {
+        try {
+          const authentikClient = new AuthentikClient();
+          const result = await authentikClient.createHomeAssistantApp();
+
+          return {
+            content: [{
+              type: "text",
+              text: `✅ Successfully created Home Assistant application in Authentik!\n\n${JSON.stringify(result, null, 2)}\n\nNext steps:\n1. Configure Home Assistant trusted proxies\n2. Edit /homeassistant/configuration.yaml on 192.168.68.20\n3. Add trusted_proxies for k3s networks\n4. Restart Home Assistant`
+            }],
+          };
+        } catch (error: any) {
+          return {
+            content: [{
+              type: "text",
+              text: `❌ Error creating Home Assistant app: ${error.message}`
+            }],
+            isError: true,
+          };
+        }
+      }
+
+      case "authentik_list_applications": {
+        try {
+          const authentikClient = new AuthentikClient();
+          const apps = await authentikClient.listApplications();
+
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify(apps, null, 2)
+            }],
+          };
+        } catch (error: any) {
+          return {
+            content: [{
+              type: "text",
+              text: `❌ Error listing applications: ${error.message}`
+            }],
+            isError: true,
+          };
+        }
+      }
+
+      case "authentik_list_providers": {
+        try {
+          const authentikClient = new AuthentikClient();
+          const providers = await authentikClient.listProviders();
+
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify(providers, null, 2)
+            }],
+          };
+        } catch (error: any) {
+          return {
+            content: [{
+              type: "text",
+              text: `❌ Error listing providers: ${error.message}`
+            }],
+            isError: true,
+          };
+        }
       }
 
       default:

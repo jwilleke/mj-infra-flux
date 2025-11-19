@@ -1,6 +1,6 @@
 # jimsmcp Tool Reference
 
-Complete reference for all 10 tools provided by jimsmcp.
+Complete reference for all 13 tools provided by jimsmcp.
 
 ## Kubernetes Tools
 
@@ -277,6 +277,91 @@ Get information about Authentik deployment and API endpoint.
   "apiUrl": "https://auth.nerdsbythehour.com/api/v3/",
   "adminUrl": "https://auth.nerdsbythehour.com/if/admin/"
 }
+```
+
+---
+
+## Authentik Management Tools
+
+### authentik_create_homeassistant_app
+
+Create a complete Authentik setup for Home Assistant (proxy provider + application).
+
+**Parameters:** None (uses hardcoded configuration for ha.nerdsbythehour.com)
+
+**What it does:**
+1. Creates a Proxy Provider with:
+   - External host: `https://ha.nerdsbythehour.com`
+   - Internal host: `https://192.168.68.20:8123`
+   - Forward auth mode enabled
+   - SSL validation disabled (for self-signed cert)
+2. Creates an Application linked to the provider
+3. Returns URLs for admin configuration
+
+**Returns:**
+```json
+{
+  "provider": {
+    "pk": 123,
+    "name": "Home Assistant Provider",
+    "external_host": "https://ha.nerdsbythehour.com"
+  },
+  "application": {
+    "pk": "...",
+    "slug": "homeassistant",
+    "name": "Home Assistant"
+  },
+  "urls": {
+    "app": "https://auth.nerdsbythehour.com/if/admin/#/core/applications/homeassistant",
+    "provider": "https://auth.nerdsbythehour.com/if/admin/#/core/providers/123"
+  }
+}
+```
+
+**Example:**
+```json
+{}
+```
+
+---
+
+### authentik_list_applications
+
+List all applications configured in Authentik.
+
+**Parameters:** None
+
+**Returns:**
+```json
+[
+  {
+    "pk": "...",
+    "name": "Home Assistant",
+    "slug": "homeassistant",
+    "provider": 123,
+    "meta_launch_url": ""
+  }
+]
+```
+
+---
+
+### authentik_list_providers
+
+List all providers configured in Authentik.
+
+**Parameters:** None
+
+**Returns:**
+```json
+[
+  {
+    "pk": 123,
+    "name": "Home Assistant Provider",
+    "type": "proxy",
+    "external_host": "https://ha.nerdsbythehour.com"
+  }
+]
 ```
 
 ---
