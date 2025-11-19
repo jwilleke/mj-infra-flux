@@ -69,22 +69,60 @@ curl -I https://ha.nerdsbythehour.com
 
 ## Authentik Integration
 
-**Current Status:** Authentik ForwardAuth is commented out
+**Current Status:** Authentik ForwardAuth is ENABLED
 
-**To Enable:**
+### Architecture
 
-1. Configure Authentik application for Home Assistant
-2. Create ForwardAuth middleware (if not already exists)
-3. Uncomment annotation in `ingress.yaml`:
+This setup uses Authentik as a forward authentication proxy:
+1. User requests https://ha.nerdsbythehour.com
+2. Traefik forwards authentication to Authentik
+3. If authenticated, Authentik passes request to Home Assistant with user headers
+4. Home Assistant trusts the headers from Authentik
+
+### Configuration Steps
+
+#### 1. Configure Authentik Application
+
+Create a Proxy Provider application in Authentik:
+
+1. Log into Authentik at https://auth.nerdsbythehour.com
+2. Navigate to **Applications > Applications**
+3. Click **Create with Provider**
+4. Select **Proxy** as provider type
+5. Configure:
+   - **Name:** Home Assistant
+   - **External host:** `https://ha.nerdsbythehour.com`
+   - **Internal host:** `http://home-assistant-external.home-assistant-proxy.svc.cluster.local:8123`
+   - **Authorization flow:** Default (implicit consent)
+6. Create the application
+
+#### 2. Configure Home Assistant
+
+Home Assistant needs to trust the proxy headers from Authentik:
+
+1. SSH to the Home Assistant host (192.168.68.20)
+2. Edit `/homeassistant/configuration.yaml`:
    ```yaml
-   traefik.ingress.kubernetes.io/router.middlewares: authentik-forwardauth-homeassistant@kubernetescrd
+   http:
+     use_x_forwarded_for: true
+     trusted_proxies:
+       - 10.42.0.0/16  # k3s pod network
+       - 10.43.0.0/16  # k3s service network
+       - 192.168.68.71 # k3s host (deby)
    ```
-4. Apply: `kubectl apply -k apps/production/home-assistant-proxy/`
+3. Restart Home Assistant
 
-**Important:** Home Assistant has its own authentication. You can choose:
-- Use Authentik as first layer (SSO)
-- Disable Authentik and use HA's native auth
-- Use both (SSO + HA auth)
+#### 3. (Optional) Install hass-auth-header Component
+
+For automatic user matching based on Authentik username:
+
+1. Install the `hass-auth-header` custom component
+2. Configure it to use `X-authentik-username` header
+3. Users will auto-login if their HA username matches Authentik username
+
+Reference: https://integrations.goauthentik.io/miscellaneous/home-assistant/
+
+**Important:** Home Assistant will still require its own user accounts. Authentik provides SSO layer, but users must exist in HA.
 
 ## Home Assistant Configuration
 

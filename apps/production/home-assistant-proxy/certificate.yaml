@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: home-assistant-tls
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-production
     kind: ClusterIssuer
   dnsNames:
   - ha.nerdsbythehour.com

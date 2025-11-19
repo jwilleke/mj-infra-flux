@@ -4,9 +4,8 @@ metadata:
   name: home-assistant
   namespace: home-assistant-proxy
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    # TODO: Enable Authentik ForwardAuth protection
-    # traefik.ingress.kubernetes.io/router.middlewares: authentik-forwardauth-homeassistant@kubernetescrd
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
+    traefik.ingress.kubernetes.io/router.middlewares: authentik-authentik-forwardauth@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:
