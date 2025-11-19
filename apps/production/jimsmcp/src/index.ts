@@ -212,6 +212,32 @@ const TOOLS: Tool[] = [
       properties: {},
     },
   },
+  {
+    name: "authentik_list_outposts",
+    description: "List all outposts in Authentik",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "authentik_bind_provider_to_outpost",
+    description: "Bind a provider to an outpost (usually the embedded outpost). Required for ForwardAuth to work.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        providerId: {
+          type: "number",
+          description: "The provider ID to bind",
+        },
+        outpostId: {
+          type: "string",
+          description: "The outpost ID (optional, defaults to embedded outpost)",
+        },
+      },
+      required: ["providerId"],
+    },
+  },
 ];
 
 // Create server instance
@@ -640,6 +666,53 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [{
               type: "text",
               text: `❌ Error listing providers: ${error.message}`
+            }],
+            isError: true,
+          };
+        }
+      }
+
+      case "authentik_list_outposts": {
+        try {
+          const authentikClient = new AuthentikClient();
+          const outposts = await authentikClient.listOutposts();
+
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify(outposts, null, 2)
+            }],
+          };
+        } catch (error: any) {
+          return {
+            content: [{
+              type: "text",
+              text: `❌ Error listing outposts: ${error.message}`
+            }],
+            isError: true,
+          };
+        }
+      }
+
+      case "authentik_bind_provider_to_outpost": {
+        try {
+          const authentikClient = new AuthentikClient();
+          const providerId = args?.providerId as number;
+          const outpostId = args?.outpostId as string | undefined;
+
+          const outpost = await authentikClient.bindProviderToOutpost(providerId, outpostId);
+
+          return {
+            content: [{
+              type: "text",
+              text: `✅ Provider ${providerId} bound to outpost: ${outpost.name}\n\n${JSON.stringify(outpost, null, 2)}`
+            }],
+          };
+        } catch (error: any) {
+          return {
+            content: [{
+              type: "text",
+              text: `❌ Error binding provider to outpost: ${error.message}`
             }],
             isError: true,
           };

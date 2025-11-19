@@ -193,4 +193,85 @@ export class AuthentikClient {
     const response = await this.client.get('/providers/all/');
     return response.data.results;
   }
+
+  /**
+   * List all outposts
+   */
+  async listOutposts() {
+    const response = await this.client.get('/outposts/instances/');
+    return response.data.results;
+  }
+
+  /**
+   * Get embedded outpost (usually the first one)
+   */
+  async getEmbeddedOutpost() {
+    const outposts = await this.listOutposts();
+    // Find the embedded outpost (usually named "authentik Embedded Outpost")
+    const embeddedOutpost = outposts.find((o: any) =>
+      o.name.toLowerCase().includes('embedded') || o.managed === 'goauthentik.io/outposts/embedded'
+    );
+
+    if (!embeddedOutpost) {
+      throw new Error('No embedded outpost found');
+    }
+
+    return embeddedOutpost;
+  }
+
+  /**
+   * Bind a provider to an outpost
+   */
+  async bindProviderToOutpost(providerId: number, outpostId?: string) {
+    try {
+      // If no outpost ID provided, use embedded outpost
+      const outpost = outpostId
+        ? await this.client.get(`/outposts/instances/${outpostId}/`).then(r => r.data)
+        : await this.getEmbeddedOutpost();
+
+      // Get current providers for this outpost
+      const currentProviders = outpost.providers || [];
+
+      // Add the new provider if not already included
+      if (!currentProviders.includes(providerId)) {
+        currentProviders.push(providerId);
+
+        // Update the outpost with the new provider list
+        const response = await this.client.patch(`/outposts/instances/${outpost.pk}/`, {
+          providers: currentProviders,
+        });
+
+        return response.data;
+      }
+
+      return outpost;
+    } catch (error: any) {
+      throw new Error(`Failed to bind provider to outpost: ${error.message || error}`);
+    }
+  }
+
+  /**
+   * Create Home Assistant application and bind to outpost (complete setup)
+   */
+  async createHomeAssistantAppComplete() {
+    try {
+      // Create the application
+      const result = await this.createHomeAssistantApp();
+
+      // Bind the provider to the embedded outpost
+      console.log(`🔗 Binding provider ${result.provider.pk} to embedded outpost...`);
+      const outpost = await this.bindProviderToOutpost(result.provider.pk);
+      console.log(`✅ Provider bound to outpost: ${outpost.name}`);
+
+      return {
+        ...result,
+        outpost: {
+          id: outpost.pk,
+          name: outpost.name,
+        },
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to create complete Home Assistant setup: ${error.message || error}`);
+    }
+  }
 }
