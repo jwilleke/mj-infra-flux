@@ -8,3 +8,4 @@ resources:
   - service.yaml
   - ingress.yaml
   - certificate.yaml
+  - middleware.yaml
