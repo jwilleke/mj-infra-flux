@@ -22,7 +22,7 @@
   "author": "Jim Willeke",
   "license": "MIT",
   "dependencies": {
-    "@kubernetes/client-node": "^0.22.0",
+    "@kubernetes/client-node": "^1.4.0",
     "@modelcontextprotocol/sdk": "^1.0.4",
     "axios": "^1.13.2"
   },
