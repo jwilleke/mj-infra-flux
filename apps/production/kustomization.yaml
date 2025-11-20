@@ -8,6 +8,7 @@ resources:
   - ./database       # Shared PostgreSQL
   - ./messaging      # Shared Mosquitto MQTT
   - ./monitoring     # Grafana & Prometheus
+  - ./shared-resources  # Static file server for icons, logos, and shared assets
 
   # Authentication & Identity Provider
   - ./authentik
@@ -22,4 +23,5 @@ resources:
   - ./filebrowser
   - ./teslamate
   - ./jimswiki
+  - ./amdwiki
   - ./home-assistant-proxy

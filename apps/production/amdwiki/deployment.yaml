@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: amdwiki
+  namespace: amdwiki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: amdwiki
+  template:
+    metadata:
+      labels:
+        app: amdwiki
+    spec:
+      containers:
+      - name: amdwiki
+        image: amdwiki:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          value: "production"
+
+        volumeMounts:
+        # Wiki pages from existing amdWiki data
+        - name: wiki-pages
+          mountPath: /app/pages
+
+        # Required pages (bundled with app, but can be overridden)
+        - name: required-pages
+          mountPath: /app/required-pages
+
+        # Configuration directory
+        - name: wiki-config
+          mountPath: /app/config
+
+        # Data directory (attachments, versions, users)
+        - name: wiki-data
+          mountPath: /app/data
+
+        # Logs directory
+        - name: wiki-logs
+          mountPath: /app/logs
+
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
+
+      volumes:
+      # Wiki pages from existing amdWiki directory
+      - name: wiki-pages
+        hostPath:
+          path: /home/jim/docs/data/systems/wikis/amdWiki
+          type: Directory
+
+      # Required pages (system pages)
+      - name: required-pages
+        hostPath:
+          path: /home/jim/docs/data/systems/mj-infra-flux/amdwiki/required-pages
+          type: DirectoryOrCreate
+
+      # Configuration directory
+      - name: wiki-config
+        hostPath:
+          path: /home/jim/docs/data/systems/mj-infra-flux/amdwiki/config
+          type: Directory
+
+      # Data directory (attachments, versions, users)
+      - name: wiki-data
+        hostPath:
+          path: /home/jim/docs/data/systems/mj-infra-flux/amdwiki/data
+          type: Directory
+
+      # Logs directory
+      - name: wiki-logs
+        hostPath:
+          path: /home/jim/docs/data/systems/mj-infra-flux/amdwiki/logs
+          type: DirectoryOrCreate
