@@ -9,6 +9,7 @@ resources:
   - base/service.yaml
   - ingress-public.yaml
   - ingress-members.yaml
+  - middleware-redirect-members.yaml
   - certificate.yaml
 
 patches:

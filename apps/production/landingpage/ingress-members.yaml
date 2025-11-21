@@ -8,8 +8,8 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.priority: "100"
-    # Authentik ForwardAuth - will be configured after Authentik middleware is set up
-    # traefik.ingress.kubernetes.io/router.middlewares: authentik-authentik-forwardauth@kubernetescrd
+    # Redirect /members to Authentik user library instead of serving a separate Members page
+    traefik.ingress.kubernetes.io/router.middlewares: landingpage-redirect-to-authentik-library@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:

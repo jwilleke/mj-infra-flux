@@ -9,8 +9,9 @@ The landing page serves three main routes:
 - `/guest` - Guest access page with links to:
   - OpenSpeedTest at `/speed`
   - whoami at `deby.nerdsbythehour.com`
-- `/members` - Protected page requiring Authentik authentication
-  - Links to authenticated services (JimsWiki, TeslaMate, Grafana, Authentik User Library)
+- `/members` - Redirects to Authentik User Library
+  - Automatically redirects to `https://auth.nerdsbythehour.com/if/user/#/library`
+  - Users can see and access all applications they're authorized to use
 
 ## Deployment
 
@@ -59,21 +60,17 @@ When you make changes to the React source code:
   - `nerdsbythehour.com/guest` → Guest page
   - `www.nerdsbythehour.com/` → Landing page
 
-- **Protected routes** (`ingress-members.yaml`):
-  - `nerdsbythehour.com/members` → Members page (requires Authentik)
+- **Redirect routes** (`ingress-members.yaml`):
+  - `nerdsbythehour.com/members` → Redirects to Authentik User Library
 
-### Authentik ForwardAuth
+### Members Page Redirect
 
-The `/members` route is protected by Authentik ForwardAuth middleware.
-To enable authentication, uncomment the middleware annotation in `ingress-members.yaml`:
+The `/members` route uses a Traefik middleware to redirect users directly to the Authentik User Library at `https://auth.nerdsbythehour.com/if/user/#/library`. This eliminates the need for a separate Members page since Authentik already provides a user portal showing all authorized applications.
 
-```yaml
-traefik.ingress.kubernetes.io/router.middlewares: authentik-authentik-forwardauth@kubernetescrd
-```
-
-**Prerequisites**:
-- Authentik must be configured with a ForwardAuth provider
-- Traefik Middleware CRD must be created in the `authentik` namespace
+**Implementation**:
+- `middleware-redirect-members.yaml` - Traefik redirectRegex middleware
+- Permanent (301) redirect to Authentik library
+- Users authenticate at Authentik and see their application library
 
 ## Security
 
@@ -96,7 +93,7 @@ The React application source is located at `/opt/traefik/landingpage/` on the ho
 - `src/App.tsx` - React Router configuration
 - `src/pages/LandingPage.tsx` - Main landing page
 - `src/pages/GuestPage.tsx` - Guest access page
-- `src/pages/MembersPage.tsx` - Protected members page
+- `src/pages/MembersPage.tsx` - Members page (now bypassed by redirect)
 - `Dockerfile` - Multi-stage build (Node 20 Alpine)
 
 ## Migration Status
@@ -104,14 +101,14 @@ The React application source is located at `/opt/traefik/landingpage/` on the ho
 - ✅ Kubernetes manifests created
 - ✅ Source code updated (Authelia → Authentik)
 - ✅ Guest page updated with whoami link
+- ✅ Members page redirect configured (redirects to Authentik library)
 - ⏳ Docker image needs to be built and imported
-- ⏳ Authentik ForwardAuth middleware needs configuration
 - ⏳ SSL certificate needs to be issued by cert-manager
 
 ## Next Steps
 
-1. Build and import the Docker image
-2. Deploy to k3s
+1. Build and import the Docker image (if React source changes are needed)
+2. Deploy to k3s: `kubectl apply -k apps/production/landingpage/`
 3. Verify public routes work (/, /guest)
-4. Configure Authentik ForwardAuth for /members route
-5. Test authentication flow
+4. Test /members redirect to Authentik library
+5. Verify SSL certificate is issued

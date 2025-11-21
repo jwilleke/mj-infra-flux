@@ -19,9 +19,9 @@ Complete Kubernetes (k3s) infrastructure running on `192.168.68.71` (deby) with 
 
 ### Authenticated Access (Authentik SSO)
 
-**Members Portal:** `https://nerdsbythehour.com/members`
+**Members Portal:** `https://nerdsbythehour.com/members` → Redirects to Authentik User Library
 
-Protected services accessible after Authentik login:
+Protected services accessible after Authentik login at `https://auth.nerdsbythehour.com/if/user/#/library`:
 - **Home Assistant** - `https://ha.nerdsbythehour.com` (private DNS only)
 - **JimsWiki** - `https://nerdsbythehour.com/jimswiki` (38,004 pages)
 - **TeslaMate** - `https://teslamate.nerdsbythehour.com` (vehicle tracking)
@@ -105,8 +105,10 @@ Public Services (No Auth)
 ├── /speed
 └── deby.nerdsbythehour.com
 
+Redirect to Authentik
+└── /members → https://auth.nerdsbythehour.com/if/user/#/library
+
 Authentik Protected (ForwardAuth - TO BE ENABLED)
-├── /members (landing page)
 ├── jimswiki
 ├── teslamate
 ├── grafana
@@ -151,13 +153,15 @@ Services on local IPs:
 ```
 k3s Traefik Ingress (192.168.68.71)
 ├── Public Services (no auth)
-│   ├── Landing page
-│   ├── Guest page
-│   ├── OpenSpeedTest
+│   ├── Landing page (/)
+│   ├── Guest page (/guest)
+│   ├── OpenSpeedTest (/speed)
 │   └── Shared Resources CDN (cdn.nerdsbythehour.com)
 │
+├── Redirect Services
+│   └── /members → Authentik User Library
+│
 ├── Authentik-Protected Services
-│   ├── Members page
 │   ├── jimswiki (38K pages)
 │   ├── TeslaMate
 │   ├── Grafana
