@@ -80,6 +80,7 @@ export class AuthentikClient {
     const providerData = {
       name: options.name,
       authorization_flow: await this.getDefaultAuthorizationFlow(),
+      invalidation_flow: await this.getInvalidationFlow(),
       external_host: options.externalHost,
       internal_host: options.internalHost,
       internal_host_ssl_validation: options.internalHostSslValidation ?? false,
@@ -89,6 +90,24 @@ export class AuthentikClient {
 
     const response = await this.client.post('/providers/proxy/', providerData);
     return response.data;
+  }
+
+  /**
+   * Get invalidation flow
+   */
+  private async getInvalidationFlow(): Promise<string> {
+    try {
+      const response = await this.client.get('/flows/instances/?designation=invalidation');
+      const flows = response.data.results;
+
+      if (flows.length === 0) {
+        throw new Error('No invalidation flow found');
+      }
+
+      return flows[0].pk;
+    } catch (error) {
+      throw new Error(`Failed to get invalidation flow: ${error}`);
+    }
   }
 
   /**
