@@ -10,9 +10,11 @@ I stole this from [Activescott](https://github.com/activescott/home-infra-k8s-fl
 
 ## Apps
 
-- Monitoring: See [apps/base/monitoring/kube-state-metrics/README.md](apps/base/monitoring/kube-state-metrics/README.md) (there is more monitoring in <https://github.com/jimwilleke/home-infra> that isn't yet moved over)
+- **Monitoring**: See [apps/base/monitoring/kube-state-metrics/README.md](apps/base/monitoring/kube-state-metrics/README.md) (there is more monitoring in <https://github.com/jimwilleke/home-infra> that isn't yet moved over)
 
-- Transmission: Runs a transmission torrent seeder
+- **Transmission**: Runs a transmission torrent seeder
+
+- **Shared Resources CDN** (`cdn.nerdsbythehour.com`): Static file server for shared assets (icons, logos) - See [apps/production/shared-resources/README.md](apps/production/shared-resources/README.md)
 
 ## Usage
 
@@ -159,8 +161,8 @@ I prefer plain "kubectl yaml" and Kustomize over helm. Helm is great for packagi
 
 - [x] Setup transmission with secrets
 - [x] Setup image updates for tayle: <https://fluxcd.io/flux/guides/image-update/> & <https://fluxcd.io/flux/components/image/imageupdateautomations/>
-- [ ] Expose webhook receiver for tayle main events: <https://fluxcd.io/flux/guides/webhook-receivers/>
-- [ ] Setup transmission with image updates and
+- NOT DOING THIS [ ] Expose webhook receiver for tayle main events: <https://fluxcd.io/flux/guides/webhook-receivers/>
+- NOT DOING THIS [ ] Setup transmission with image updates and
 
 ## Posterity / Done
 

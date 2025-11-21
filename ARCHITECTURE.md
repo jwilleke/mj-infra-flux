@@ -14,6 +14,9 @@ Complete Kubernetes (k3s) infrastructure running on `192.168.68.71` (deby) with 
   - OpenSpeedTest (`/speed`)
   - whoami (`https://deby.nerdsbythehour.com`)
 
+**CDN:** `https://cdn.nerdsbythehour.com`
+- Static asset server for icons, logos, and shared resources
+
 ### Authenticated Access (Authentik SSO)
 
 **Members Portal:** `https://nerdsbythehour.com/members`
@@ -43,6 +46,7 @@ Protected services accessible after Authentik login:
 | **Mosquitto** | messaging | MQTT broker | NFS: `/home/jim/docs/data/systems/mj-infra-flux/mosquitto` |
 | **Grafana** | monitoring | Dashboards | `/mnt/local-k3s-data/grafana` |
 | **Authentik** | authentik | SSO/IdP | PostgreSQL + Redis |
+| **Shared Resources** | shared-resources | CDN for static assets | NFS: `/home/jim/docs/data/systems/shared-resources` |
 
 ### Applications
 
@@ -73,6 +77,9 @@ Following the standard: All external data under `/home/jim/docs/data/systems/mj-
 │       ├── config/         # ✓ jspwiki-custom.properties (EDITABLE)
 │       ├── logs/           # (moved to local disk)
 │       └── work/           # (moved to local disk)
+├── shared-resources/       # CDN static assets
+│   ├── icons/              # Application icons
+│   └── icons-logos/        # Application logos and branding
 └── wikis/
     └── jimswiki/           # 38,004 wiki pages (3.4GB) - CRITICAL PATH
 ```
@@ -146,7 +153,8 @@ k3s Traefik Ingress (192.168.68.71)
 ├── Public Services (no auth)
 │   ├── Landing page
 │   ├── Guest page
-│   └── OpenSpeedTest
+│   ├── OpenSpeedTest
+│   └── Shared Resources CDN (cdn.nerdsbythehour.com)
 │
 ├── Authentik-Protected Services
 │   ├── Members page
@@ -167,7 +175,7 @@ k3s Traefik Ingress (192.168.68.71)
 
 Points to your public IP:
 - `nerdsbythehour.com` → Public IP
-- `*.nerdsbythehour.com` → Public IP
+- `*.nerdsbythehour.com` → Public IP (includes cdn.nerdsbythehour.com)
 - Port forward 443 → 192.168.68.71:443
 
 ### Private DNS (Local Network Only)
@@ -282,6 +290,7 @@ After verification period:
 | Landing page | <5s | 100m CPU, 128Mi RAM |
 | OpenSpeedTest | <5s | 100m CPU, 128Mi RAM |
 | whoami | <1s | 10m CPU, 32Mi RAM |
+| Shared Resources CDN | <2s | 50m CPU, 64Mi RAM |
 | TeslaMate | ~10s | 250m CPU, 512Mi RAM |
 | jimswiki | ~30s | 500m CPU, 1Gi RAM (rebuilds cache) |
 | Grafana | ~15s | 200m CPU, 512Mi RAM |
