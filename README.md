@@ -8,13 +8,38 @@ I stole this from [Activescott](https://github.com/activescott/home-infra-k8s-fl
 
 > NOTE: IN PROGRESS. Still converting my old repo containing kubernetes resources – <https://github.com/jimwilleke/home-infra> – to this one. It's great that this can be gradual and isn't an all-in moment on Flux. So far so good though!
 
-## Apps
+## Documentation
 
-- **Monitoring**: See [apps/base/monitoring/kube-state-metrics/README.md](apps/base/monitoring/kube-state-metrics/README.md) (there is more monitoring in <https://github.com/jimwilleke/home-infra> that isn't yet moved over)
+### Key Documentation Files
 
-- **Transmission**: Runs a transmission torrent seeder
+- **[CLAUDE.md](CLAUDE.md)** - Instructions for Claude Code when working with this repository
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Complete architecture documentation
+- **[DEPLOYMENT-GUIDELINES.md](DEPLOYMENT-GUIDELINES.md)** - Deployment best practices
+- **[SECURITY-INCIDENT.md](SECURITY-INCIDENT.md)** - Security lessons learned
+- **[docker-migration.md](docker-migration.md)** - Migration strategy from Docker to Kubernetes
 
-- **Shared Resources CDN** (`cdn.nerdsbythehour.com`): Static file server for shared assets (icons, logos) - See [apps/production/shared-resources/README.md](apps/production/shared-resources/README.md)
+### Infrastructure
+
+- **[Traefik Ingress](apps/base/traefik-ingress/README.md)** - Ingress controller configuration
+- **[Image Scanning Webhook Receiver](infrastructure/base/configs/image-scanning-webhook-receiver/README.md)** - Webhook receiver for GitHub push events
+- **[MariaDB Library](apps/lib/mariadb/README.md)** - Shared MariaDB configuration
+
+### Production Applications
+
+- **[Authentik](apps/production/authentik/README.md)** - SSO/IdP for all protected services
+- **[JimsWiki](apps/production/jimswiki/README.md)** - 38,004 pages wiki (JSPWiki)
+- **[AMDWiki](apps/production/amdwiki/README.md)** - AMD Technologies wiki
+- **[TeslaMate](apps/production/teslamate/README.md)** - Vehicle tracking
+- **[Home Assistant](apps/production/home-assistant/README.md)** - Home automation
+- **[Home Assistant Proxy](apps/production/home-assistant-proxy/README.md)** - Authentik-protected proxy for Home Assistant
+- **[Hoarder](apps/production/hoarder/README.md)** - Bookmark and content management
+- **[Landing Page](apps/production/landingpage/README.md)** - Public landing page
+- **[Guest Services](apps/production/guest-services/README.md)** - Public guest services
+- **[Monitoring](apps/production/monitoring/README.md)** - Grafana, Prometheus, Alertmanager
+- **[jimsmcp](apps/production/jimsmcp/README.md)** - MCP server for managing infrastructure
+- **[Database](apps/production/database/README.md)** - Shared PostgreSQL database
+- **[Messaging](apps/production/messaging/README.md)** - Shared Mosquitto MQTT broker
+- **[Shared Resources](apps/production/shared-resources/README.md)** - CDN for static assets (icons, logos)
 
 ## Usage
 

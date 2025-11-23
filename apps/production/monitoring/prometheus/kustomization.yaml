@@ -2,8 +2,10 @@ resources:
   - ./authorize-prometheus-to-k8s.yaml
   - ./prometheus-statefulset.yaml
   - ./prometheus-service.yaml
-  - ./certificate.yaml
+  # Certificate handled by ingress annotation instead of separate resource
+  # - ./certificate.yaml
   - ./prometheus-ingress.yaml
+  - ./authentik-middleware.yaml
 
 secretGenerator:
   - name: prometheus-secrets
@@ -16,7 +18,7 @@ configMapGenerator:
   - name: prometheus-config
     files:
       - config/prometheus.yaml
-      - config/web.yaml
+      # web.yaml removed - using Authentik ForwardAuth instead of basic auth
       # scrape configs:
       - config/scrape-configs.coinpoet.yaml
       - config/scrape-configs.prometheus.yaml

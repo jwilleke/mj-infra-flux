@@ -31,8 +31,7 @@ spec:
             - "--storage.tsdb.retention.size=100GB"
             - "--storage.tsdb.path=/prometheus"
             - "--config.file=/etc/prometheus/prometheus.yaml"
-            # for basic auth:
-            - "--web.config.file=/etc/prometheus/web.yaml"
+            # Authentication handled by Authentik ForwardAuth at ingress level
             # enables `curl -X POST https://prometheus.jimwilleke.com/-/reload` to reload configs per https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
             - "--web.enable-lifecycle"
 

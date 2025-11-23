@@ -1,6 +1,0 @@
-# see https://prometheus.io/docs/guides/basic-auth/
-# and https://prometheus.io/docs/prometheus/latest/configuration/https/
-# Username: jim
-# Password: prometheus (change this to a secure password)
-basic_auth_users:
-  jim: $2y$12$xji41/d4pFJATL9XoKPnMe56KgIf7xunx7RycVyn06wJyONe/QeSq

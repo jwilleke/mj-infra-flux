@@ -1,3 +1,4 @@
+"use strict";
 /**
  * Authentik API client for managing applications and providers
  */
@@ -48,14 +49,16 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-import axios from 'axios';
-import { homedir } from 'os';
-import { join } from 'path';
-import { execSync } from 'child_process';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AuthentikClient = void 0;
+var axios_1 = require("axios");
+var os_1 = require("os");
+var path_1 = require("path");
+var child_process_1 = require("child_process");
 var AuthentikClient = /** @class */ (function () {
     function AuthentikClient() {
         this.config = this.loadConfig();
-        this.client = axios.create({
+        this.client = axios_1.default.create({
             baseURL: "".concat(this.config.baseUrl, "/api/v3"),
             headers: {
                 'Authorization': "Bearer ".concat(this.config.token),
@@ -66,11 +69,11 @@ var AuthentikClient = /** @class */ (function () {
     AuthentikClient.prototype.loadConfig = function () {
         try {
             // Try to load from encrypted env file using SOPS
-            var repoDir = join(homedir(), 'Documents', 'mj-infra-flux');
-            var encryptedFile = join(repoDir, '.env.secret.mcp-authentik.encrypted');
-            var ageKeyFile = join(repoDir, 'home-infra-private.agekey');
+            var repoDir = (0, path_1.join)((0, os_1.homedir)(), 'Documents', 'mj-infra-flux');
+            var encryptedFile = (0, path_1.join)(repoDir, '.env.secret.mcp-authentik.encrypted');
+            var ageKeyFile = (0, path_1.join)(repoDir, 'home-infra-private.agekey');
             // Decrypt using SOPS
-            var decrypted = execSync("SOPS_AGE_KEY_FILE=\"".concat(ageKeyFile, "\" sops decrypt --input-type dotenv --output-type dotenv \"").concat(encryptedFile, "\""), { encoding: 'utf8' });
+            var decrypted = (0, child_process_1.execSync)("SOPS_AGE_KEY_FILE=\"".concat(ageKeyFile, "\" sops decrypt --input-type dotenv --output-type dotenv \"").concat(encryptedFile, "\""), { encoding: 'utf8' });
             var config_1 = {
                 baseUrl: '',
                 token: '',
@@ -398,4 +401,4 @@ var AuthentikClient = /** @class */ (function () {
     };
     return AuthentikClient;
 }());
-export { AuthentikClient };
+exports.AuthentikClient = AuthentikClient;
