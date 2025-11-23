@@ -5,7 +5,7 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
 ## Overview
 
 - **Namespace**: `monitoring`
-- **Prometheus URL**: https://prometheus.jimwilleke.com (with basic auth)
+- **Prometheus URL**: https://prometheus.nerdsbythehour.com (with basic auth)
 - **Grafana URL**: https://grafana.nerdsbythehour.com
 - **Components**:
   - Prometheus - Metrics collection and storage
@@ -92,7 +92,7 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
 
 ### View Prometheus Metrics
 
-1. Navigate to: https://prometheus.jimwilleke.com
+1. Navigate to: https://prometheus.nerdsbythehour.com
 2. Enter credentials from web.yaml basic auth
 3. Explore metrics, run PromQL queries
 
@@ -341,7 +341,7 @@ groups:
 
 ### 4. Monitor the Monitor
 
-- Check Prometheus targets: https://prometheus.jimwilleke.com/targets
+- Check Prometheus targets: https://prometheus.nerdsbythehour.com/targets
 - Check Grafana datasource health
 - Monitor Prometheus disk usage
 
@@ -399,14 +399,14 @@ sudo kubectl exec -n monitoring prometheus-0 -- \
   cat /etc/prometheus/prometheus.yaml
 
 # Reload config without restart
-curl -X POST https://prometheus.jimwilleke.com/-/reload
+curl -X POST https://prometheus.nerdsbythehour.com/-/reload
 ```
 
 ## Troubleshooting
 
 ### Prometheus Not Scraping Targets
 
-1. Check target status: https://prometheus.jimwilleke.com/targets
+1. Check target status: https://prometheus.nerdsbythehour.com/targets
 2. Verify pod annotations:
    ```bash
    sudo kubectl get pod <pod-name> -o yaml | grep prometheus

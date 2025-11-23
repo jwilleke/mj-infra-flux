@@ -13,6 +13,6 @@ spec:
   issuerRef:
     name: letsencrypt-production
     kind: ClusterIssuer
-  commonName: prometheus.jimwilleke.com
+  commonName: prometheus.nerdsbythehour.com
   dnsNames:
-  - prometheus.jimwilleke.com
+  - prometheus.nerdsbythehour.com

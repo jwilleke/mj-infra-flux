@@ -52,5 +52,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus
-  # note we apply namespaces in kustomization.yaml
-  # namespace: monitoring
+  namespace: monitoring
