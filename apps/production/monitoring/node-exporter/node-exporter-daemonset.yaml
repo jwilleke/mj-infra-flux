@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: monitoring
+  labels:
+    app: node-exporter
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9100"
+        prometheus.io/path: "/metrics"
+    spec:
+      hostNetwork: true
+      hostPID: true
+      hostIPC: true
+      containers:
+      - name: node-exporter
+        image: prom/node-exporter:v1.8.2
+        args:
+          - --path.procfs=/host/proc
+          - --path.sysfs=/host/sys
+          - --path.rootfs=/host/root
+          - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+          # Enable useful collectors
+          - --collector.processes
+          - --collector.systemd
+          - --no-collector.ipvs
+        ports:
+        - containerPort: 9100
+          protocol: TCP
+          name: metrics
+        resources:
+          limits:
+            cpu: 250m
+            memory: 180Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: sys
+          mountPath: /host/sys
+          readOnly: true
+        - name: root
+          mountPath: /host/root
+          mountPropagation: HostToContainer
+          readOnly: true
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65534
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      tolerations:
+      # Run on all nodes including control plane
+      - effect: NoSchedule
+        operator: Exists
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
+      - name: root
+        hostPath:
+          path: /
