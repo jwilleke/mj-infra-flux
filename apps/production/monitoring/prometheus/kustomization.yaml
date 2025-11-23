@@ -20,10 +20,8 @@ configMapGenerator:
       - config/prometheus.yaml
       # web.yaml removed - using Authentik ForwardAuth instead of basic auth
       # scrape configs:
-      - config/scrape-configs.coinpoet.yaml
       - config/scrape-configs.prometheus.yaml
-      - config/alerting-rules.coinpoet.yaml
-      - config/alerting-rules.tayle.yaml
+      # coinpoet and tayle configs removed
 
 labels:
   - pairs:
