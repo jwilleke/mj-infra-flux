@@ -6,6 +6,11 @@ resources:
   - ./grafana-service.yaml
   - ./grafana-statefulset.yaml
 
+configMapGenerator:
+  - name: grafana-datasources
+    files:
+      - config/provisioning/datasources/prometheus.yaml
+
 labels:
   - pairs:
       # use `app.jimwilleke.com/name` to avoid conflicts with other people's resources using "app" label.

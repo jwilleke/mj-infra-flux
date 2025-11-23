@@ -64,6 +64,9 @@ spec:
             # https://grafana.com/docs/grafana/latest/setup-grafana/configure-docker/#default-paths
             - mountPath: /var/lib/grafana
               name: grafana-pv
+            # Mount datasource provisioning
+            - mountPath: /etc/grafana/provisioning/datasources
+              name: grafana-datasources
       
       securityContext:
         # this user is on the node's os as the file system owner
@@ -78,3 +81,6 @@ spec:
           hostPath:
             # Updated to use local storage for better performance
             path: /mnt/local-k3s-data/grafana
+        - name: grafana-datasources
+          configMap:
+            name: grafana-datasources
