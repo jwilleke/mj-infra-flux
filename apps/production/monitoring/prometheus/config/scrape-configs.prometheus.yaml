@@ -1,15 +1,6 @@
 scrape_configs:
-  # this scrapes metrics from prometheus itself honoring the basic auth setup in web.yaml
+  # Scrapes metrics from Prometheus itself
+  # No authentication needed since basic auth was removed in favor of Authentik at ingress level
   - job_name: "prometheus self scrape"
-
-    # basic auth per https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_config
-    # Sets the `Authorization` header on every request with the
-    # configured username and password.
-    # username and username_file are mutually exclusive.
-    # password and password_file are mutually exclusive.
-    basic_auth:
-      # these files are packed into the container via a secret volume in the statefulset
-      username_file: /etc/prometheus/secrets/prom_scrape_username
-      password_file: /etc/prometheus/secrets/prom_scrape_password
     static_configs:
       - targets: ["localhost:9090"]
