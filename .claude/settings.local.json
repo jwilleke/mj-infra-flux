@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(kubectl cluster-info:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
