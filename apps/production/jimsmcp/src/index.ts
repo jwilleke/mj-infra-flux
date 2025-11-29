@@ -238,6 +238,17 @@ const TOOLS: Tool[] = [
       required: ["providerId"],
     },
   },
+  {
+    name: "stocks_get_price",
+    description: "Get latest stock quote from Alpha Vantage (GLOBAL_QUOTE). Input: { symbol: 'AAPL' }",
+    inputSchema: {
+      type: "object",
+      properties: {
+        symbol: { type: "string", description: "Stock symbol (e.g. AAPL)" },
+      },
+      required: ["symbol"],
+    },
+  },
 ];
 
 // Create server instance
@@ -269,19 +280,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const labelSelector = (args?.labelSelector as string) || undefined;
 
         if (namespace) {
-          const response = await k8sApi.listNamespacedPod(
-            namespace,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            labelSelector
-          );
-          const pods = response.body.items.map((pod) => ({
+          const response = await k8sApi.listNamespacedPod({
+            name: namespace,
+            fieldSelector: undefined,
+            labelSelector: labelSelector,
+          } as any);
+          const pods = (response as any).items.map((pod: any) => ({
             name: pod.metadata?.name,
             namespace: pod.metadata?.namespace,
             status: pod.status?.phase,
-            ready: pod.status?.conditions?.find((c) => c.type === "Ready")?.status,
+            ready: pod.status?.conditions?.find((c: any) => c.type === "Ready")?.status,
             restarts: pod.status?.containerStatuses?.[0]?.restartCount || 0,
             age: pod.metadata?.creationTimestamp,
           }));
@@ -289,17 +297,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [{ type: "text", text: JSON.stringify(pods, null, 2) }],
           };
         } else {
-          const response = await k8sApi.listPodForAllNamespaces(
-            undefined,
-            undefined,
-            undefined,
-            labelSelector
-          );
-          const pods = response.body.items.map((pod) => ({
+          const response = await k8sApi.listPodForAllNamespaces({
+            fieldSelector: undefined,
+            labelSelector: labelSelector,
+          } as any);
+          const pods = (response as any).items.map((pod: any) => ({
             name: pod.metadata?.name,
             namespace: pod.metadata?.namespace,
             status: pod.status?.phase,
-            ready: pod.status?.conditions?.find((c) => c.type === "Ready")?.status,
+            ready: pod.status?.conditions?.find((c: any) => c.type === "Ready")?.status,
             restarts: pod.status?.containerStatuses?.[0]?.restartCount || 0,
             age: pod.metadata?.creationTimestamp,
           }));
@@ -315,21 +321,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const container = (args?.container as string) || undefined;
         const tailLines = (args?.tailLines as number) || 100;
 
-        const logs = await k8sApi.readNamespacedPodLog(
-          podName,
-          namespace,
-          container,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          tailLines
-        );
+        const logs = await k8sApi.readNamespacedPodLog({
+          name: podName,
+          namespace: namespace,
+          container: container,
+          tailLines: tailLines,
+        } as any);
 
         return {
-          content: [{ type: "text", text: logs.body }],
+          content: [{ type: "text", text: (logs as any).body || logs }],
         };
       }
 
@@ -337,8 +337,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const namespace = (args?.namespace as string) || undefined;
 
         if (namespace) {
-          const response = await k8sAppsApi.listNamespacedDeployment(namespace);
-          const deployments = response.body.items.map((dep) => ({
+          const response = await k8sAppsApi.listNamespacedDeployment({
+            name: namespace,
+          } as any);
+          const deployments = (response as any).items.map((dep: any) => ({
             name: dep.metadata?.name,
             namespace: dep.metadata?.namespace,
             replicas: dep.status?.replicas,
@@ -350,8 +352,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [{ type: "text", text: JSON.stringify(deployments, null, 2) }],
           };
         } else {
-          const response = await k8sAppsApi.listDeploymentForAllNamespaces();
-          const deployments = response.body.items.map((dep) => ({
+          const response = await k8sAppsApi.listDeploymentForAllNamespaces({} as any);
+          const deployments = (response as any).items.map((dep: any) => ({
             name: dep.metadata?.name,
             namespace: dep.metadata?.namespace,
             replicas: dep.status?.replicas,
@@ -369,13 +371,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const namespace = (args?.namespace as string) || undefined;
 
         if (namespace) {
-          const response = await k8sApi.listNamespacedService(namespace);
-          const services = response.body.items.map((svc) => ({
+          const response = await k8sApi.listNamespacedService({
+            name: namespace,
+          } as any);
+          const services = (response as any).items.map((svc: any) => ({
             name: svc.metadata?.name,
             namespace: svc.metadata?.namespace,
             type: svc.spec?.type,
             clusterIP: svc.spec?.clusterIP,
-            ports: svc.spec?.ports?.map((p) => ({
+            ports: svc.spec?.ports?.map((p: any) => ({
               name: p.name,
               port: p.port,
               targetPort: p.targetPort,
@@ -385,13 +389,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [{ type: "text", text: JSON.stringify(services, null, 2) }],
           };
         } else {
-          const response = await k8sApi.listServiceForAllNamespaces();
-          const services = response.body.items.map((svc) => ({
+          const response = await k8sApi.listServiceForAllNamespaces({} as any);
+          const services = (response as any).items.map((svc: any) => ({
             name: svc.metadata?.name,
             namespace: svc.metadata?.namespace,
             type: svc.spec?.type,
             clusterIP: svc.spec?.clusterIP,
-            ports: svc.spec?.ports?.map((p) => ({
+            ports: svc.spec?.ports?.map((p: any) => ({
               name: p.name,
               port: p.port,
               targetPort: p.targetPort,
@@ -408,13 +412,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const k8sNetworkingApi = kc.makeApiClient(k8s.NetworkingV1Api);
 
         if (namespace) {
-          const response = await k8sNetworkingApi.listNamespacedIngress(namespace);
-          const ingresses = response.body.items.map((ing) => ({
+          const response = await k8sNetworkingApi.listNamespacedIngress({
+            name: namespace,
+          } as any);
+          const ingresses = (response as any).items.map((ing: any) => ({
             name: ing.metadata?.name,
             namespace: ing.metadata?.namespace,
-            hosts: ing.spec?.rules?.map((r) => r.host),
-            paths: ing.spec?.rules?.flatMap((r) =>
-              r.http?.paths?.map((p) => ({
+            hosts: ing.spec?.rules?.map((r: any) => r.host),
+            paths: ing.spec?.rules?.flatMap((r: any) =>
+              r.http?.paths?.map((p: any) => ({
                 path: p.path,
                 backend: p.backend.service?.name,
               }))
@@ -424,13 +430,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [{ type: "text", text: JSON.stringify(ingresses, null, 2) }],
           };
         } else {
-          const response = await k8sNetworkingApi.listIngressForAllNamespaces();
-          const ingresses = response.body.items.map((ing) => ({
+          const response = await k8sNetworkingApi.listIngressForAllNamespaces({} as any);
+          const ingresses = (response as any).items.map((ing: any) => ({
             name: ing.metadata?.name,
             namespace: ing.metadata?.namespace,
-            hosts: ing.spec?.rules?.map((r) => r.host),
-            paths: ing.spec?.rules?.flatMap((r) =>
-              r.http?.paths?.map((p) => ({
+            hosts: ing.spec?.rules?.map((r: any) => r.host),
+            paths: ing.spec?.rules?.flatMap((r: any) =>
+              r.http?.paths?.map((p: any) => ({
                 path: p.path,
                 backend: p.backend.service?.name,
               }))
@@ -479,23 +485,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const namespace = args?.namespace as string;
 
         // Get pod status
-        const podsResponse = await k8sApi.listNamespacedPod(
-          namespace,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          `app=${app}`
-        );
+        const podsResponse = await k8sApi.listNamespacedPod({
+          name: namespace,
+          labelSelector: `app=${app}`,
+        } as any);
 
         // Get service
         let service;
         try {
-          const svcResponse = await k8sApi.readNamespacedService(app, namespace);
+          const svcResponse = await k8sApi.readNamespacedService({
+            name: app,
+            namespace: namespace,
+          } as any);
           service = {
-            name: svcResponse.body.metadata?.name,
-            type: svcResponse.body.spec?.type,
-            clusterIP: svcResponse.body.spec?.clusterIP,
+            name: (svcResponse as any).metadata?.name,
+            type: (svcResponse as any).spec?.type,
+            clusterIP: (svcResponse as any).spec?.clusterIP,
           };
         } catch (e) {
           service = null;
@@ -505,16 +510,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const k8sNetworkingApi = kc.makeApiClient(k8s.NetworkingV1Api);
         let ingress;
         try {
-          const ingResponse = await k8sNetworkingApi.listNamespacedIngress(namespace);
-          const matchingIngress = ingResponse.body.items.find((ing) =>
-            ing.spec?.rules?.some((r) =>
-              r.http?.paths?.some((p) => p.backend.service?.name === app)
+          const ingResponse = await k8sNetworkingApi.listNamespacedIngress({
+            name: namespace,
+          } as any);
+          const matchingIngress = (ingResponse as any).items.find((ing: any) =>
+            ing.spec?.rules?.some((r: any) =>
+              r.http?.paths?.some((p: any) => p.backend.service?.name === app)
             )
           );
           if (matchingIngress) {
             ingress = {
               name: matchingIngress.metadata?.name,
-              hosts: matchingIngress.spec?.rules?.map((r) => r.host),
+              hosts: matchingIngress.spec?.rules?.map((r: any) => r.host),
             };
           }
         } catch (e) {
@@ -524,10 +531,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const health = {
           app,
           namespace,
-          pods: podsResponse.body.items.map((pod) => ({
+          pods: (podsResponse as any).items.map((pod: any) => ({
             name: pod.metadata?.name,
             status: pod.status?.phase,
-            ready: pod.status?.conditions?.find((c) => c.type === "Ready")?.status,
+            ready: pod.status?.conditions?.find((c: any) => c.type === "Ready")?.status,
             restarts: pod.status?.containerStatuses?.[0]?.restartCount || 0,
           })),
           service,
@@ -545,19 +552,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         let response;
         if (namespace) {
-          response = await k8sNetworkingApi.listNamespacedIngress(namespace);
+          response = await k8sNetworkingApi.listNamespacedIngress({
+            name: namespace,
+          } as any);
         } else {
-          response = await k8sNetworkingApi.listIngressForAllNamespaces();
+          response = await k8sNetworkingApi.listIngressForAllNamespaces({} as any);
         }
 
-        const urls = response.body.items.flatMap((ing) => {
-          const tlsHosts = ing.spec?.tls?.flatMap((t) => t.hosts || []) || [];
+        const urls = (response as any).items.flatMap((ing: any) => {
+          const tlsHosts = ing.spec?.tls?.flatMap((t: any) => t.hosts || []) || [];
           return (
-            ing.spec?.rules?.map((r) => ({
+            ing.spec?.rules?.map((r: any) => ({
               app: ing.metadata?.name,
               namespace: ing.metadata?.namespace,
               url: `${tlsHosts.includes(r.host || "") ? "https" : "http"}://${r.host}`,
-              paths: r.http?.paths?.map((p) => p.path) || ["/"],
+              paths: r.http?.paths?.map((p: any) => p.path) || ["/"],
             })) || []
           );
         });
@@ -570,28 +579,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "authentik_get_info": {
         // Get Authentik deployment info
         const namespace = "authentik";
-        const podsResponse = await k8sApi.listNamespacedPod(
-          namespace,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          "app.kubernetes.io/name=authentik"
-        );
+        const podsResponse = await k8sApi.listNamespacedPod({
+          name: namespace,
+          labelSelector: "app.kubernetes.io/name=authentik",
+        } as any);
 
         const k8sNetworkingApi = kc.makeApiClient(k8s.NetworkingV1Api);
-        const ingressResponse = await k8sNetworkingApi.listNamespacedIngress(namespace);
+        const ingressResponse = await k8sNetworkingApi.listNamespacedIngress({
+          name: namespace,
+        } as any);
 
-        const authentikIngress = ingressResponse.body.items.find(
-          (ing) => ing.metadata?.name === "authentik"
+        const authentikIngress = (ingressResponse as any).items.find(
+          (ing: any) => ing.metadata?.name === "authentik"
         );
 
         const info = {
           namespace,
-          pods: podsResponse.body.items.map((pod) => ({
+          pods: (podsResponse as any).items.map((pod: any) => ({
             name: pod.metadata?.name,
             status: pod.status?.phase,
-            ready: pod.status?.conditions?.find((c) => c.type === "Ready")?.status,
+            ready: pod.status?.conditions?.find((c: any) => c.type === "Ready")?.status,
           })),
           apiUrl: authentikIngress?.spec?.rules?.[0]?.host
             ? `https://${authentikIngress.spec.rules[0].host}/api/v3/`
@@ -714,6 +721,43 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               type: "text",
               text: `❌ Error binding provider to outpost: ${error.message}`
             }],
+            isError: true,
+          };
+        }
+      }
+
+      case "stocks_get_price": {
+        const symbol = ((args?.symbol as string) || "").toUpperCase().trim();
+        if (!symbol) {
+          return {
+            content: [{ type: "text", text: "Error: symbol is required" }],
+            isError: true,
+          };
+        }
+
+        const apiKey = process.env.ALPHA_VANTAGE_KEY;
+        if (!apiKey) {
+          return {
+            content: [{ type: "text", text: "Error: ALPHA_VANTAGE_KEY not set in environment" }],
+            isError: true,
+          };
+        }
+
+        const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(
+          symbol
+        )}&apikey=${encodeURIComponent(apiKey)}`;
+
+        try {
+          const resp = await fetch(url);
+          if (!resp.ok) throw new Error(`Alpha Vantage HTTP ${resp.status}`);
+          const json = await resp.json();
+          const quote = json["Global Quote"] || json;
+          return {
+            content: [{ type: "text", text: JSON.stringify(quote, null, 2) }],
+          };
+        } catch (error: any) {
+          return {
+            content: [{ type: "text", text: `Error fetching quote: ${error.message}` }],
             isError: true,
           };
         }
