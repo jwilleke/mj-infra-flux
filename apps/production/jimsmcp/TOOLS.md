@@ -1,6 +1,6 @@
 # jimsmcp Tool Reference
 
-Complete reference for all 13 tools provided by jimsmcp.
+Complete reference for all 14 tools provided by jimsmcp.
 
 ## Kubernetes Tools
 
@@ -366,6 +366,118 @@ List all providers configured in Authentik.
 
 ---
 
+## Financial Data Tools
+
+### stocks_get_price
+
+Get the latest stock quote using Alpha Vantage's GLOBAL_QUOTE function.
+
+**Parameters:**
+
+- `symbol` (required): Stock ticker symbol (e.g., 'AAPL', 'TSLA', 'MSFT')
+
+**Example:**
+
+```json
+{
+  "symbol": "AAPL"
+}
+```
+
+**Returns:**
+
+```json
+{
+  "01. symbol": "AAPL",
+  "02. open": "243.45",
+  "03. high": "244.89",
+  "04. low": "242.50",
+  "05. price": "244.12",
+  "06. volume": "52834100",
+  "07. latest trading day": "2024-11-29",
+  "08. previous close": "242.84",
+  "09. change": "1.28",
+  "10. change percent": "0.53%"
+}
+```
+
+**Requirements:**
+
+- `ALPHA_VANTAGE_KEY` environment variable must be set
+- See "Setup" section below for configuration
+
+**Rate Limits:**
+
+- Free tier: 5 requests per minute, 500 per day
+- Premium tier: Higher limits available
+
+---
+
+## Setup
+
+### Alpha Vantage API Key Configuration
+
+To enable the `stocks_get_price` tool, you need to set the `ALPHA_VANTAGE_KEY` environment variable.
+
+#### Option 1: Local Development (.env file)
+
+1. Create a `.env.secret.stocks` file in the jimsmcp directory:
+
+```bash
+cd /home/jim/Documents/mj-infra-flux/apps/production/jimsmcp
+echo "ALPHA_VANTAGE_KEY=your_api_key_here" > .env.secret.stocks
+```
+
+2. Encrypt it with SOPS:
+
+```bash
+./scripts/encrypt-env-files.sh apps/production/jimsmcp/
+```
+
+3. Load the environment before running jimsmcp:
+
+```bash
+export ALPHA_VANTAGE_KEY=$(cat .env.secret.stocks)
+npm run dev
+```
+
+#### Option 2: Shell Profile (macOS/Linux)
+
+Add to your `~/.zshrc` or `~/.bash_profile`:
+
+```bash
+export ALPHA_VANTAGE_KEY="your_api_key_here"
+```
+
+Then reload your shell:
+
+```bash
+source ~/.zshrc  # or ~/.bash_profile
+```
+
+#### Option 3: Docker/Kubernetes Deployment
+
+If running jimsmcp as a container, use a Kubernetes Secret:
+
+```bash
+kubectl create secret generic jimsmcp-secrets \
+  -n jimsmcp \
+  --from-literal=ALPHA_VANTAGE_KEY="your_api_key_here"
+```
+
+Then reference in the deployment env:
+
+```yaml
+env:
+  - name: ALPHA_VANTAGE_KEY
+    valueFrom:
+      secretKeyRef:
+        name: jimsmcp-secrets
+        key: ALPHA_VANTAGE_KEY
+```
+
+---
+
 ## Usage with Claude Code
 
 After configuring jimsmcp in Claude Code, you can ask natural language questions:
@@ -376,6 +488,8 @@ After configuring jimsmcp in Claude Code, you can ask natural language questions
 - "What are all the application URLs in my cluster?"
 - "Reconcile the apps kustomization with source"
 - "Give me the Authentik admin URL"
+- "What's the current price of Apple stock?"
+- "Get me Tesla and Microsoft stock quotes"
 
 Claude will automatically use the appropriate jimsmcp tools to answer your questions.
 

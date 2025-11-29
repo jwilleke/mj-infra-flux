@@ -36,10 +36,13 @@ jimsmcp provides programmatic access to your k3s cluster through the Model Conte
 - **app_get_urls** - List all application URLs
 - **authentik_get_info** - Get Authentik API and admin URLs
 
-### Authentik Management (NEW!)
+### Authentik Management
 - **authentik_create_homeassistant_app** - Create complete Home Assistant Authentik setup
 - **authentik_list_applications** - List all Authentik applications
 - **authentik_list_providers** - List all Authentik providers
+
+### Financial Data (NEW!)
+- **stocks_get_price** - Get real-time stock quotes from Alpha Vantage (requires API key)
 
 ## Installation
 
