@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(kubectl cluster-info:*)"
+      "Bash(kubectl cluster-info:*)",
+      "Bash(kubectl get:*)",
+      "Bash(kubectl describe:*)",
+      "Bash(cat:*)",
+      "Bash(npm run build:*)",
+      "Bash(rm:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []

@@ -1,47 +1,40 @@
-# jimsmcp - Infrastructure MCP Server
+# jimsmcp - Custom Infrastructure MCP Server
 
-A Model Context Protocol (MCP) server for managing and querying the mj-infra-flux Kubernetes infrastructure.
+A Model Context Protocol (MCP) server for custom and augmented features on the mj-infra-flux Kubernetes infrastructure.
 
 ## Overview
 
-jimsmcp provides programmatic access to your k3s cluster through the Model Context Protocol, enabling AI assistants like Claude to:
+jimsmcp complements the official Kubernetes MCP server with custom features specific to your infrastructure, enabling AI assistants like Claude to:
 
-- Query Kubernetes resources (pods, deployments, services, ingresses)
-- View pod logs
-- Check Flux GitOps status
-- Force reconciliation of Flux resources
-- Perform health checks on applications
+- Check Flux GitOps status and trigger reconciliation
+- Perform intelligent health checks on all applications (auto-discovers via ingresses)
 - Get application URLs and endpoints
-- Query Authentik deployment information
-- **Manage Authentik applications and providers** (NEW!)
-  - Create proxy providers for applications
-  - Set up complete Authentik applications
-  - List applications and providers
+- Query and manage Authentik deployment and applications
+- Get real-time stock quotes
+- Execute custom infrastructure workflows
+
+**For standard Kubernetes operations** (pods, deployments, services, logs, ingresses), use the official [Kubernetes MCP Server](https://github.com/containers/kubernetes-mcp-server).
 
 ## Features
 
-### Kubernetes Management
-- **k8s_get_pods** - List pods with status and readiness
-- **k8s_get_pod_logs** - Fetch logs from specific pods
-- **k8s_get_deployments** - View deployment status
-- **k8s_get_services** - List services and their endpoints
-- **k8s_get_ingresses** - View ingress configurations
-
 ### Flux GitOps
-- **flux_get_status** - Check status of Flux resources
+- **flux_get_status** - Check status of all Flux resources
 - **flux_reconcile** - Force reconciliation of kustomizations, helm releases, or git repositories
 
 ### Application Management
-- **app_health_check** - Comprehensive health check (pods + service + ingress)
-- **app_get_urls** - List all application URLs
+- **app_health_check** - Comprehensive health check for a specific app (pods + service + ingress)
+- **app_health_check_all** - Check health of all applications in the cluster (auto-discovers via ingresses)
+- **app_get_urls** - List all application URLs and ingress endpoints
 - **authentik_get_info** - Get Authentik API and admin URLs
 
 ### Authentik Management
 - **authentik_create_homeassistant_app** - Create complete Home Assistant Authentik setup
 - **authentik_list_applications** - List all Authentik applications
 - **authentik_list_providers** - List all Authentik providers
+- **authentik_list_outposts** - List all Authentik outposts
+- **authentik_bind_provider_to_outpost** - Bind a provider to an outpost (enables ForwardAuth)
 
-### Financial Data (NEW!)
+### Financial Data
 - **stocks_get_price** - Get real-time stock quotes from Alpha Vantage (requires API key)
 
 ## Installation
@@ -64,13 +57,17 @@ npm run dev
 
 ## Usage with Claude Code
 
-Add to your Claude Code MCP configuration:
+Configure both the official Kubernetes MCP server and jimsmcp in your Claude Code MCP configuration.
 
 ### macOS/Linux: `~/.config/claude-code/mcp.json`
 
 ```json
 {
   "mcpServers": {
+    "kubernetes": {
+      "command": "npx",
+      "args": ["-y", "kubernetes-mcp-server@latest"]
+    },
     "jimsmcp": {
       "command": "node",
       "args": ["/home/jim/Documents/mj-infra-flux/apps/production/jimsmcp/dist/index.js"]
@@ -84,6 +81,10 @@ Add to your Claude Code MCP configuration:
 ```json
 {
   "mcpServers": {
+    "kubernetes": {
+      "command": "npx",
+      "args": ["-y", "kubernetes-mcp-server@latest"]
+    },
     "jimsmcp": {
       "command": "node",
       "args": ["C:\\path\\to\\mj-infra-flux\\apps\\production\\jimsmcp\\dist\\index.js"]
@@ -94,21 +95,26 @@ Add to your Claude Code MCP configuration:
 
 ## Tool Examples
 
-### Check pod status
+### Check health of all applications
 ```typescript
-// Using k8s_get_pods
-{
-  "namespace": "monitoring",
-  "labelSelector": "app=grafana"
-}
+// Using app_health_check_all
+// Returns status of all ingress-exposed apps with pod/service/ingress details
 ```
 
-### View application health
+### Check specific app health
 ```typescript
 // Using app_health_check
 {
   "app": "grafana",
   "namespace": "monitoring"
+}
+```
+
+### Get Flux status
+```typescript
+// Using flux_get_status
+{
+  "resource": "kustomization"
 }
 ```
 
@@ -135,9 +141,13 @@ Add to your Claude Code MCP configuration:
 jimsmcp runs as a standalone Node.js process that:
 
 1. Connects to your Kubernetes cluster using the default kubeconfig
-2. Uses the Kubernetes JavaScript client to query resources
-3. Executes `kubectl` and `flux` CLI commands for advanced operations
+2. Executes `kubectl` and `flux` CLI commands for advanced operations
+3. Interacts with Authentik API for SSO management
 4. Communicates via stdio using the MCP protocol
+
+**Separation of Concerns:**
+- **Kubernetes MCP Server**: Handles standard K8s queries and operations
+- **jimsmcp**: Handles infrastructure-specific features (Flux, Authentik, custom health checks)
 
 ## Requirements
 
@@ -145,18 +155,22 @@ jimsmcp runs as a standalone Node.js process that:
 - kubectl configured with cluster access
 - flux CLI installed
 - Kubeconfig with appropriate permissions
+- ALPHA_VANTAGE_KEY environment variable (for stock quotes)
 
 ## Security
 
 jimsmcp inherits permissions from your kubeconfig. It can:
-- Read all cluster resources
-- View logs
+- Read Kubernetes resources (via kubernetes MCP server)
+- View logs (via kubernetes MCP server)
 - Trigger Flux reconciliations
+- Query Authentik via API
+- Trigger infrastructure workflows
 
 It CANNOT:
-- Modify or delete resources
+- Modify or delete resources (read-only by design)
 - Execute commands in pods
 - Change cluster configuration
+- Modify Authentik without explicit API calls
 
 ## Kubernetes Deployment (Future)
 
@@ -164,8 +178,6 @@ While jimsmcp currently runs locally, it can be deployed as a Kubernetes service
 - API server for HTTP-based MCP communication
 - ServiceAccount with RBAC for cluster access
 - Ingress for external access (with Authentik protection)
-
-See deployment manifests in this directory when available.
 
 ## Troubleshooting
 
@@ -178,9 +190,15 @@ Install flux CLI: https://fluxcd.io/flux/installation/
 ### "Permission denied"
 Check your kubeconfig has the necessary RBAC permissions
 
+### Using both MCP servers
+If you get errors about unknown tools:
+- Standard K8s operations (pods, deployments, services, logs) → use `kubernetes` MCP server
+- Custom infrastructure features (Flux, Authentik, health checks) → use `jimsmcp` MCP server
+
 ## References
 
 - [Model Context Protocol](https://modelcontextprotocol.io/)
+- [Official Kubernetes MCP Server](https://github.com/containers/kubernetes-mcp-server)
 - [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
-- [Kubernetes JavaScript Client](https://github.com/kubernetes-client/javascript)
 - [Flux CLI](https://fluxcd.io/flux/cmd/)
+- [Authentik Docs](https://goauthentik.io/docs/)

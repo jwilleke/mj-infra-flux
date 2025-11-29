@@ -22,89 +22,9 @@ const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
 const k8sAppsApi = kc.makeApiClient(k8s.AppsV1Api);
 
 // Define available tools
+// NOTE: Basic K8s operations (pods, logs, deployments, services, ingresses) are now provided
+// by the official Kubernetes MCP server. This server focuses on custom/augmented features.
 const TOOLS: Tool[] = [
-  {
-    name: "k8s_get_pods",
-    description: "Get pods in a namespace or across all namespaces",
-    inputSchema: {
-      type: "object",
-      properties: {
-        namespace: {
-          type: "string",
-          description: "Namespace to query (optional, default: all namespaces)",
-        },
-        labelSelector: {
-          type: "string",
-          description: "Label selector to filter pods (e.g., 'app=grafana')",
-        },
-      },
-    },
-  },
-  {
-    name: "k8s_get_pod_logs",
-    description: "Get logs from a specific pod",
-    inputSchema: {
-      type: "object",
-      properties: {
-        namespace: {
-          type: "string",
-          description: "Namespace of the pod",
-        },
-        podName: {
-          type: "string",
-          description: "Name of the pod",
-        },
-        container: {
-          type: "string",
-          description: "Container name (optional, uses first container if not specified)",
-        },
-        tailLines: {
-          type: "number",
-          description: "Number of lines to tail (default: 100)",
-        },
-      },
-      required: ["namespace", "podName"],
-    },
-  },
-  {
-    name: "k8s_get_deployments",
-    description: "Get deployments in a namespace or across all namespaces",
-    inputSchema: {
-      type: "object",
-      properties: {
-        namespace: {
-          type: "string",
-          description: "Namespace to query (optional, default: all namespaces)",
-        },
-      },
-    },
-  },
-  {
-    name: "k8s_get_services",
-    description: "Get services in a namespace or across all namespaces",
-    inputSchema: {
-      type: "object",
-      properties: {
-        namespace: {
-          type: "string",
-          description: "Namespace to query (optional, default: all namespaces)",
-        },
-      },
-    },
-  },
-  {
-    name: "k8s_get_ingresses",
-    description: "Get ingresses in a namespace or across all namespaces",
-    inputSchema: {
-      type: "object",
-      properties: {
-        namespace: {
-          type: "string",
-          description: "Namespace to query (optional, default: all namespaces)",
-        },
-      },
-    },
-  },
   {
     name: "flux_get_status",
     description: "Get status of all Flux resources or specific kustomizations",
@@ -165,6 +85,19 @@ const TOOLS: Tool[] = [
         },
       },
       required: ["app", "namespace"],
+    },
+  },
+  {
+    name: "app_health_check_all",
+    description: "Check health of all applications in the cluster",
+    inputSchema: {
+      type: "object",
+      properties: {
+        namespace: {
+          type: "string",
+          description: "Filter by namespace (optional)",
+        },
+      },
     },
   },
   {
@@ -275,179 +208,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     switch (name) {
-      case "k8s_get_pods": {
-        const namespace = (args?.namespace as string) || undefined;
-        const labelSelector = (args?.labelSelector as string) || undefined;
-
-        if (namespace) {
-          const response = await k8sApi.listNamespacedPod({
-            name: namespace,
-            fieldSelector: undefined,
-            labelSelector: labelSelector,
-          } as any);
-          const pods = (response as any).items.map((pod: any) => ({
-            name: pod.metadata?.name,
-            namespace: pod.metadata?.namespace,
-            status: pod.status?.phase,
-            ready: pod.status?.conditions?.find((c: any) => c.type === "Ready")?.status,
-            restarts: pod.status?.containerStatuses?.[0]?.restartCount || 0,
-            age: pod.metadata?.creationTimestamp,
-          }));
-          return {
-            content: [{ type: "text", text: JSON.stringify(pods, null, 2) }],
-          };
-        } else {
-          const response = await k8sApi.listPodForAllNamespaces({
-            fieldSelector: undefined,
-            labelSelector: labelSelector,
-          } as any);
-          const pods = (response as any).items.map((pod: any) => ({
-            name: pod.metadata?.name,
-            namespace: pod.metadata?.namespace,
-            status: pod.status?.phase,
-            ready: pod.status?.conditions?.find((c: any) => c.type === "Ready")?.status,
-            restarts: pod.status?.containerStatuses?.[0]?.restartCount || 0,
-            age: pod.metadata?.creationTimestamp,
-          }));
-          return {
-            content: [{ type: "text", text: JSON.stringify(pods, null, 2) }],
-          };
-        }
-      }
-
-      case "k8s_get_pod_logs": {
-        const namespace = args?.namespace as string;
-        const podName = args?.podName as string;
-        const container = (args?.container as string) || undefined;
-        const tailLines = (args?.tailLines as number) || 100;
-
-        const logs = await k8sApi.readNamespacedPodLog({
-          name: podName,
-          namespace: namespace,
-          container: container,
-          tailLines: tailLines,
-        } as any);
-
-        return {
-          content: [{ type: "text", text: (logs as any).body || logs }],
-        };
-      }
-
-      case "k8s_get_deployments": {
-        const namespace = (args?.namespace as string) || undefined;
-
-        if (namespace) {
-          const response = await k8sAppsApi.listNamespacedDeployment({
-            name: namespace,
-          } as any);
-          const deployments = (response as any).items.map((dep: any) => ({
-            name: dep.metadata?.name,
-            namespace: dep.metadata?.namespace,
-            replicas: dep.status?.replicas,
-            ready: dep.status?.readyReplicas,
-            upToDate: dep.status?.updatedReplicas,
-            available: dep.status?.availableReplicas,
-          }));
-          return {
-            content: [{ type: "text", text: JSON.stringify(deployments, null, 2) }],
-          };
-        } else {
-          const response = await k8sAppsApi.listDeploymentForAllNamespaces({} as any);
-          const deployments = (response as any).items.map((dep: any) => ({
-            name: dep.metadata?.name,
-            namespace: dep.metadata?.namespace,
-            replicas: dep.status?.replicas,
-            ready: dep.status?.readyReplicas,
-            upToDate: dep.status?.updatedReplicas,
-            available: dep.status?.availableReplicas,
-          }));
-          return {
-            content: [{ type: "text", text: JSON.stringify(deployments, null, 2) }],
-          };
-        }
-      }
-
-      case "k8s_get_services": {
-        const namespace = (args?.namespace as string) || undefined;
-
-        if (namespace) {
-          const response = await k8sApi.listNamespacedService({
-            name: namespace,
-          } as any);
-          const services = (response as any).items.map((svc: any) => ({
-            name: svc.metadata?.name,
-            namespace: svc.metadata?.namespace,
-            type: svc.spec?.type,
-            clusterIP: svc.spec?.clusterIP,
-            ports: svc.spec?.ports?.map((p: any) => ({
-              name: p.name,
-              port: p.port,
-              targetPort: p.targetPort,
-            })),
-          }));
-          return {
-            content: [{ type: "text", text: JSON.stringify(services, null, 2) }],
-          };
-        } else {
-          const response = await k8sApi.listServiceForAllNamespaces({} as any);
-          const services = (response as any).items.map((svc: any) => ({
-            name: svc.metadata?.name,
-            namespace: svc.metadata?.namespace,
-            type: svc.spec?.type,
-            clusterIP: svc.spec?.clusterIP,
-            ports: svc.spec?.ports?.map((p: any) => ({
-              name: p.name,
-              port: p.port,
-              targetPort: p.targetPort,
-            })),
-          }));
-          return {
-            content: [{ type: "text", text: JSON.stringify(services, null, 2) }],
-          };
-        }
-      }
-
-      case "k8s_get_ingresses": {
-        const namespace = (args?.namespace as string) || undefined;
-        const k8sNetworkingApi = kc.makeApiClient(k8s.NetworkingV1Api);
-
-        if (namespace) {
-          const response = await k8sNetworkingApi.listNamespacedIngress({
-            name: namespace,
-          } as any);
-          const ingresses = (response as any).items.map((ing: any) => ({
-            name: ing.metadata?.name,
-            namespace: ing.metadata?.namespace,
-            hosts: ing.spec?.rules?.map((r: any) => r.host),
-            paths: ing.spec?.rules?.flatMap((r: any) =>
-              r.http?.paths?.map((p: any) => ({
-                path: p.path,
-                backend: p.backend.service?.name,
-              }))
-            ),
-          }));
-          return {
-            content: [{ type: "text", text: JSON.stringify(ingresses, null, 2) }],
-          };
-        } else {
-          const response = await k8sNetworkingApi.listIngressForAllNamespaces({} as any);
-          const ingresses = (response as any).items.map((ing: any) => ({
-            name: ing.metadata?.name,
-            namespace: ing.metadata?.namespace,
-            hosts: ing.spec?.rules?.map((r: any) => r.host),
-            paths: ing.spec?.rules?.flatMap((r: any) =>
-              r.http?.paths?.map((p: any) => ({
-                path: p.path,
-                backend: p.backend.service?.name,
-              }))
-            ),
-          }));
-          return {
-            content: [{ type: "text", text: JSON.stringify(ingresses, null, 2) }],
-          };
-        }
-      }
-
       case "flux_get_status": {
         const resource = (args?.resource as string) || "all";
         const namespace = (args?.namespace as string) || "flux-system";
@@ -485,18 +245,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const namespace = args?.namespace as string;
 
         // Get pod status
-        const podsResponse = await k8sApi.listNamespacedPod({
-          name: namespace,
-          labelSelector: `app=${app}`,
-        } as any);
+        const podsResponse = await k8sApi.listNamespacedPod(
+          namespace,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          `app=${app}`
+        );
 
         // Get service
         let service;
         try {
-          const svcResponse = await k8sApi.readNamespacedService({
-            name: app,
-            namespace: namespace,
-          } as any);
+          const svcResponse = await k8sApi.readNamespacedService(app, namespace);
           service = {
             name: (svcResponse as any).metadata?.name,
             type: (svcResponse as any).spec?.type,
@@ -510,9 +271,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const k8sNetworkingApi = kc.makeApiClient(k8s.NetworkingV1Api);
         let ingress;
         try {
-          const ingResponse = await k8sNetworkingApi.listNamespacedIngress({
-            name: namespace,
-          } as any);
+          const ingResponse = await k8sNetworkingApi.listNamespacedIngress(namespace);
           const matchingIngress = (ingResponse as any).items.find((ing: any) =>
             ing.spec?.rules?.some((r: any) =>
               r.http?.paths?.some((p: any) => p.backend.service?.name === app)
@@ -543,6 +302,134 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         return {
           content: [{ type: "text", text: JSON.stringify(health, null, 2) }],
+        };
+      }
+
+      case "app_health_check_all": {
+        const filterNamespace = (args?.namespace as string) || undefined;
+        const k8sNetworkingApi = kc.makeApiClient(k8s.NetworkingV1Api);
+
+        // Get all ingresses to discover applications
+        let ingressResponse;
+        if (filterNamespace) {
+          ingressResponse = await k8sNetworkingApi.listNamespacedIngress(
+            filterNamespace
+          );
+        } else {
+          ingressResponse = await k8sNetworkingApi.listIngressForAllNamespaces();
+        }
+
+        // Extract unique app/namespace pairs from ingresses
+        const appMap = new Map<string, string>(); // key: "app:namespace"
+        (ingressResponse as any).items.forEach((ing: any) => {
+          const ns = ing.metadata?.namespace;
+          ing.spec?.rules?.forEach((rule: any) => {
+            rule.http?.paths?.forEach((path: any) => {
+              const appName = path.backend.service?.name;
+              if (appName && ns) {
+                appMap.set(`${appName}:${ns}`, `${appName}|${ns}`);
+              }
+            });
+          });
+        });
+
+        // Check health for each discovered app
+        const healthChecks: any[] = [];
+        for (const appNamespaceStr of appMap.values()) {
+          const [appName, namespace] = appNamespaceStr.split("|");
+          try {
+            // Get pod status
+            const podsResponse = await k8sApi.listNamespacedPod(
+              namespace,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              `app=${appName}`
+            );
+
+            // Get service
+            let service;
+            try {
+              const svcResponse = await k8sApi.readNamespacedService(appName, namespace);
+              service = {
+                name: (svcResponse as any).metadata?.name,
+                type: (svcResponse as any).spec?.type,
+                clusterIP: (svcResponse as any).spec?.clusterIP,
+              };
+            } catch (e) {
+              service = null;
+            }
+
+            // Get ingress
+            let ingress;
+            try {
+              const ingResp = await k8sNetworkingApi.listNamespacedIngress(namespace);
+              const matchingIngress = (ingResp as any).items.find((ing: any) =>
+                ing.spec?.rules?.some((r: any) =>
+                  r.http?.paths?.some((p: any) => p.backend.service?.name === appName)
+                )
+              );
+              if (matchingIngress) {
+                ingress = {
+                  name: matchingIngress.metadata?.name,
+                  hosts: matchingIngress.spec?.rules?.map((r: any) => r.host),
+                };
+              }
+            } catch (e) {
+              ingress = null;
+            }
+
+            const allPodsReady = (podsResponse as any).items.every((pod: any) =>
+              pod.status?.conditions?.find((c: any) => c.type === "Ready")?.status === "True"
+            );
+
+            const health = {
+              app: appName,
+              namespace,
+              status: (podsResponse as any).items.length === 0 ? "No pods" :
+                allPodsReady ? "Healthy" : "Degraded",
+              podCount: (podsResponse as any).items.length,
+              readyCount: (podsResponse as any).items.filter((pod: any) =>
+                pod.status?.conditions?.find((c: any) => c.type === "Ready")?.status === "True"
+              ).length,
+              restarts: (podsResponse as any).items.reduce((sum: number, pod: any) =>
+                sum + (pod.status?.containerStatuses?.[0]?.restartCount || 0), 0),
+              service: service ? "Present" : "Missing",
+              ingress: ingress ? ingress.hosts?.[0] || "ingress" : "Missing",
+            };
+
+            healthChecks.push(health);
+          } catch (e) {
+            healthChecks.push({
+              app: appName,
+              namespace,
+              status: "Error",
+              error: (e as Error).message,
+            });
+          }
+        }
+
+        // Sort by status (degraded first) then by app name
+        healthChecks.sort((a, b) => {
+          const statusOrder = { "Degraded": 0, "No pods": 1, "Healthy": 2, "Error": 3 };
+          const aOrder = statusOrder[a.status as keyof typeof statusOrder] ?? 4;
+          const bOrder = statusOrder[b.status as keyof typeof statusOrder] ?? 4;
+          if (aOrder !== bOrder) return aOrder - bOrder;
+          return a.app.localeCompare(b.app);
+        });
+
+        const summary = {
+          total: healthChecks.length,
+          healthy: healthChecks.filter(h => h.status === "Healthy").length,
+          degraded: healthChecks.filter(h => h.status === "Degraded").length,
+          noPods: healthChecks.filter(h => h.status === "No pods").length,
+          errors: healthChecks.filter(h => h.status === "Error").length,
+          apps: healthChecks,
+        };
+
+        return {
+          content: [{ type: "text", text: JSON.stringify(summary, null, 2) }],
         };
       }
 
