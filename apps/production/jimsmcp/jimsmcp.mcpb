@@ -1,0 +1,66 @@
+{
+  "name": "jimsmcp",
+  "displayName": "JimsMCP Infrastructure Server",
+  "version": "1.0.0",
+  "description": "MCP server for custom infrastructure features on mj-infra-flux Kubernetes cluster. Provides Flux GitOps management, application health checks, Authentik SSO integration, and stock quotes.",
+  "author": "Jim Willeke",
+  "homepage": "https://jimsmcp.nerdsbythehour.com",
+  "server": {
+    "url": "https://jimsmcp.nerdsbythehour.com/mcp",
+    "transport": "sse"
+  },
+  "capabilities": {
+    "tools": true
+  },
+  "tools": [
+    {
+      "name": "flux_get_status",
+      "description": "Get status of all Flux resources or specific kustomizations"
+    },
+    {
+      "name": "flux_reconcile",
+      "description": "Force reconciliation of a Flux resource"
+    },
+    {
+      "name": "app_health_check",
+      "description": "Check health of a specific application (pod status, ingress, service)"
+    },
+    {
+      "name": "app_health_check_all",
+      "description": "Check health of all applications in the cluster"
+    },
+    {
+      "name": "app_get_urls",
+      "description": "Get all URLs/ingresses for applications in the cluster"
+    },
+    {
+      "name": "authentik_get_info",
+      "description": "Get information about Authentik deployment and API endpoint"
+    },
+    {
+      "name": "authentik_create_homeassistant_app",
+      "description": "Create Home Assistant proxy provider and application in Authentik"
+    },
+    {
+      "name": "authentik_list_applications",
+      "description": "List all applications configured in Authentik"
+    },
+    {
+      "name": "authentik_list_providers",
+      "description": "List all providers configured in Authentik"
+    },
+    {
+      "name": "authentik_list_outposts",
+      "description": "List all outposts in Authentik"
+    },
+    {
+      "name": "authentik_bind_provider_to_outpost",
+      "description": "Bind a provider to an outpost (required for ForwardAuth)"
+    },
+    {
+      "name": "stocks_get_price",
+      "description": "Get latest stock quote from Alpha Vantage"
+    }
+  ],
+  "icon": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMyA3VjE3TDEyIDIyTDIxIDE3VjdMMTIgMloiIHN0cm9rZT0iIzAwNzdjYiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGQ9Ik0xMiA4VjE2IiBzdHJva2U9IiMwMDc3Y2IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik04IDEySDE2IiBzdHJva2U9IiMwMDc3Y2IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo="
+}
