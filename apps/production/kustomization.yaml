@@ -25,3 +25,4 @@ resources:
   - ./jimswiki
   - ./amdwiki
   - ./home-assistant-proxy
+  - ./jimsmcp        # MCP server for custom infrastructure features

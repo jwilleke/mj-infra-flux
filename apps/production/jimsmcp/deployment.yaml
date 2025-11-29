@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jimsmcp
+  namespace: jimsmcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jimsmcp
+  template:
+    metadata:
+      labels:
+        app: jimsmcp
+    spec:
+      serviceAccountName: jimsmcp
+      containers:
+      - name: jimsmcp
+        image: jimsmcp:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9210
+          name: http
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "9210"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9210
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 9210
+          initialDelaySeconds: 10
+          periodSeconds: 10

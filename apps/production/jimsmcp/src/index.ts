@@ -662,14 +662,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
+// Export server for HTTP mode
+export { server };
+
 // Start the server
 async function main() {
+  const mode = process.env.TRANSPORT_MODE || "stdio";
+
+  if (mode === "http") {
+    // HTTP mode will be started by http-server.ts
+    console.error("jimsmcp configured for HTTP mode - use http-server.ts to start");
+    return;
+  }
+
+  // Default: stdio mode
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("jimsmcp MCP server running on stdio");
 }
 
-main().catch((error) => {
-  console.error("Fatal error:", error);
-  process.exit(1);
-});
+// Only run main if this is the entry point
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((error) => {
+    console.error("Fatal error:", error);
+    process.exit(1);
+  });
+}
