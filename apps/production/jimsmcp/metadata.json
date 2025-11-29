@@ -1,0 +1,25 @@
+{
+  "name": "jimsmcp",
+  "version": "1.0.0",
+  "description": "Custom infrastructure MCP server for mj-infra-flux Kubernetes cluster",
+  "author": "Jim Willeke",
+  "license": "MIT",
+  "transport": {
+    "type": "sse",
+    "url": "https://jimsmcp.nerdsbythehour.com/mcp"
+  },
+  "capabilities": [
+    "flux_get_status",
+    "flux_reconcile",
+    "app_health_check",
+    "app_health_check_all",
+    "app_get_urls",
+    "authentik_get_info",
+    "authentik_create_homeassistant_app",
+    "authentik_list_applications",
+    "authentik_list_providers",
+    "authentik_list_outposts",
+    "authentik_bind_provider_to_outpost",
+    "stocks_get_price"
+  ]
+}

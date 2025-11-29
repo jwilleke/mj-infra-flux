@@ -7,7 +7,11 @@
       "Bash(cat:*)",
       "Bash(npm run build:*)",
       "Bash(rm:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(docker build:*)",
+      "Bash(kubectl delete:*)",
+      "Bash(kubectl apply:*)",
+      "Bash(kubectl logs:*)"
     ],
     "deny": [],
     "ask": []

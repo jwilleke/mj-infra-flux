@@ -93,6 +93,12 @@ mj-infra-flux/
 - `clusters/production/`: Flux GitOps configuration
 - `scripts/`: Automation scripts for secrets, bootstrapping, git hooks
 
+### Run docker and k8s 
+
+apps as apps:apps 3003:3003 if possible.
+
+Run all apps within ports 9200-9299
+
 ## Common Commands
 
 ### Kustomize Operations
