@@ -12,9 +12,12 @@ I stole this from [Activescott](https://github.com/activescott/home-infra-k8s-fl
 
 ### Key Documentation Files
 
-- **[CLAUDE.md](CLAUDE.md)** - Instructions for Claude Code when working with this repository
+- **[AGENTS.md](AGENTS.md)** - **START HERE** - Project context and instructions for all AI agents (Claude, Gemini, etc.)
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - Complete architecture documentation
 - **[DEPLOYMENT-GUIDELINES.md](DEPLOYMENT-GUIDELINES.md)** - Deployment best practices
+- **[CODE_STANDARDS.md](CODE_STANDARDS.md)** - Coding standards and best practices
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
+- **[SETUP.md](SETUP.md)** - Initial setup and bootstrapping instructions
 - **[SECURITY-INCIDENT.md](SECURITY-INCIDENT.md)** - Security lessons learned
 - **[docker-migration.md](docker-migration.md)** - Migration strategy from Docker to Kubernetes
 
