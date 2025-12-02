@@ -63,6 +63,8 @@ This file serves as the single source of truth for project context and state. Al
 - React (for web frontends like landing page)
 - JSPWiki (for jimswiki - 38,004 pages)
 - Various Docker containers managed by Kubernetes
+- Host ports should be from 9200-9220
+- All files should be owned by APPS:APPS (3003:3003)
 
 ## Repository Structure
 
@@ -309,21 +311,55 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 
 ## Completed Work
 
-### Session: 2025-12-01
+### Session: 2025-12-01 (Morning)
 - Agent: Claude
 - Work Done:
   - Initialized AGENTS.md with complete project context
   - Consolidated documentation from CLAUDE.md and other files
-  - Prepared to remove CLAUDE.md (replaced by AGENTS.md)
-- Files Modified: AGENTS.md (created)
+  - Removed CLAUDE.md (replaced by AGENTS.md)
+  - Updated README.md to reference AGENTS.md
+- Files Modified: AGENTS.md (created), CLAUDE.md (removed), README.md
+
+### Session: 2025-12-01 (Afternoon)
+- Agent: Claude
+- Work Done:
+  - Fixed amdwiki service (https://amd.nerdsbythehour.com) which was showing "no available server"
+  - Rebuilt amdwiki Docker image from source (missing config files)
+  - Imported rebuilt image to k3s cluster
+  - Copied config files from Docker image to host directory at `/home/jim/docs/data/systems/mj-infra-flux/amdwiki/config/`
+  - Fixed enableServiceLinks issue causing port misconfiguration (app was trying to listen on malformed address)
+  - Set `amdwiki.install.completed: true` in production config to skip installation wizard
+  - Updated deployment with increased readiness probe failure threshold
+- Files Modified:
+  - `apps/production/amdwiki/deployment.yaml` (added enableServiceLinks: false, increased readiness failureThreshold)
+  - `/home/jim/docs/data/systems/mj-infra-flux/amdwiki/config/app-production-config.json` (added install.completed flag)
 
 ## Current Issues & Blockers
 
-### No Critical Blockers
+### Active Issue: amdwiki Pods Not Becoming Ready
 
-All 16+ production services are running successfully. Current infrastructure is stable.
+**Status:** In Progress - Pod is running but failing readiness checks
+
+**Problem:**
+- amdwiki pods are running and application is responding
+- Readiness probe keeps failing, causing 503 errors from Traefik
+- Application is looking for "Welcome" page that doesn't exist
+- Pages directory at `/home/jim/docs/data/systems/wikis/amdWiki/` appears to be mostly empty (only has OLD/, versions/, and backup file)
+
+**What's Working:**
+- Docker image rebuilt successfully with config files
+- Application starts and listens on correct port (3000)
+- No more install redirect (install.completed flag working)
+- No more port misconfiguration (enableServiceLinks: false working)
+
+**Next Steps Needed:**
+- Investigate why wiki pages directory is empty
+- Check if pages are in OLD subdirectory and need to be restored
+- Or create initial Welcome page to satisfy readiness probe
+- Consider adjusting readiness probe to check a different endpoint
 
 ### Potential Improvements
+- Create port allocation table for all applications (ports 9200-9220)
 - Consider enabling Authentik ForwardAuth on protected services
 - Monitor for security updates on all containers
 - Review and optimize resource allocations as needed
