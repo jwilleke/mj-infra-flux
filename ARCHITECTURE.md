@@ -4,6 +4,41 @@
 
 Complete Kubernetes (k3s) infrastructure running on `192.168.68.71` (deby) with Flux GitOps management.
 
+## Infrastructure
+
+- **Kubernetes Distribution:** k3s
+- **GitOps Tool:** Flux CD
+- **Ingress Controller:** Traefik (kube-system namespace)
+- **Certificate Management:** cert-manager (Let's Encrypt)
+- **Domain:** nerdsbythehour.com
+- **Cluster IP:** 192.168.68.71 (hostname: deby)
+
+### Coding Standard:** DRY (Don't Repeat Yourself) principle
+- If logic repeats more than twice, refactor into reusable components
+ - Abstract repeated logic into functions, classes, or modules
+ - Improves maintainability, reduces bugs, simplifies updates
+
+### Key Technologies
+
+- **Container Orchestration:** Kubernetes (k3s)
+- **GitOps:** Flux CD
+- **Configuration Management:** Kustomize (preferred) / Helm (only when necessary)
+- **Secret Management:** SOPS + Age encryption
+- **Ingress:** Traefik
+- **Authentication:** Authentik SSO
+- **Databases:** PostgreSQL (shared)
+- **Messaging:** Mosquitto MQTT (shared)
+- **Monitoring:** Grafana + Prometheus
+
+### Application Stack
+
+- Node.js with TypeScript (for custom applications)
+- React (for web frontends like landing page)
+- JSPWiki (for jimswiki - 38,004 pages)
+- Various Docker containers managed by Kubernetes
+- Host ports should be from 9200-9220
+- All files should be owned by APPS:APPS (3003:3003)
+
 ## Access Architecture
 
 ### Public Access (No Authentication)

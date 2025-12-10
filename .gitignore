@@ -25,3 +25,6 @@ scripts/ghcr.dockeronfigjson.encrypted
 # .vscode
 .vscode/*
 dev-notes.md
+
+# Private/local configuration files
+private/
