@@ -2,6 +2,19 @@
 
 This file serves as the single source of truth for project context and state. All AI agents (Claude, Gemini, etc.) should read this file first when working on this project.
 
+## Jim's Global Preference
+
+In all interactions and commit messages 
+- Be concise and sacrifice grammar for consistion
+- DRY (Don't Repeat Yourself) principle in Documentation and Code. Refer to other Documents.
+- Iterate Progressively. Start with Core features only: Gather feedback.
+- Present a list of unresolved questions to answer, if any.
+- Questions, Comments and Suggestions are always encouraged!
+- Your primary method for interacting with GitHub should be the CLI.
+- On larger objectives present phased implementation plan
+- Always create project_log.md file as aa log of work done on the project in format
+  - yyyy-MM-dd-## - Created new file - "Commit"
+
 ## Project Overview
 
 **Project Name:** mj-infra-flux
@@ -28,43 +41,7 @@ This file serves as the single source of truth for project context and state. Al
 
 ## Architecture & Tech Stack
 
-### Infrastructure
-
-- **Kubernetes Distribution:** k3s
-- **GitOps Tool:** Flux CD
-- **Ingress Controller:** Traefik (kube-system namespace)
-- **Certificate Management:** cert-manager (Let's Encrypt)
-- **Domain:** nerdsbythehour.com
-- **Cluster IP:** 192.168.68.71 (hostname: deby)
-
-### Language and Standards
-
-- **Language:** English (US)
-- **Coding Standard:** DRY (Don't Repeat Yourself) principle
-  - If logic repeats more than twice, refactor into reusable components
-  - Abstract repeated logic into functions, classes, or modules
-  - Improves maintainability, reduces bugs, simplifies updates
-
-### Key Technologies
-
-- **Container Orchestration:** Kubernetes (k3s)
-- **GitOps:** Flux CD
-- **Configuration Management:** Kustomize (preferred) / Helm (only when necessary)
-- **Secret Management:** SOPS + Age encryption
-- **Ingress:** Traefik
-- **Authentication:** Authentik SSO
-- **Databases:** PostgreSQL (shared)
-- **Messaging:** Mosquitto MQTT (shared)
-- **Monitoring:** Grafana + Prometheus
-
-### Application Stack
-
-- Node.js with TypeScript (for custom applications)
-- React (for web frontends like landing page)
-- JSPWiki (for jimswiki - 38,004 pages)
-- Various Docker containers managed by Kubernetes
-- Host ports should be from 9200-9220
-- All files should be owned by APPS:APPS (3003:3003)
+see [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 ## Repository Structure
 
@@ -195,8 +172,8 @@ kubectl logs -n namespace -l app=myapp
 ### Applications
 - **Landing Page** - Public landing page at nerdsbythehour.com
 - **JimsWiki** - 38,004 pages wiki (JSPWiki)
-- **AMDWiki** - AMD Technologies wiki
-- **TeslaMate** - Vehicle tracking
+- **AMDWiki** - AMD Technologies (https://github.com/jwilleke/amdWiki)
+- **TeslaMate** - Vehicle tracking 
 - **Home Assistant** - Home automation
 - **Hoarder** - Bookmark and content management
 - **Guest Services** - Public services (OpenSpeedTest, whoami)
@@ -334,33 +311,50 @@ kubectl port-forward -n namespace svc/myservice 8080:80
   - `apps/production/amdwiki/deployment.yaml` (added enableServiceLinks: false, increased readiness failureThreshold)
   - `/home/jim/docs/data/systems/mj-infra-flux/amdwiki/config/app-production-config.json` (added install.completed flag)
 
+### Session: 2025-12-10 (Evening)
+- Agent: Claude
+- Work Done:
+  - Fixed Home Assistant proxy connectivity issue (ha.nerdsbythehour.com)
+  - Diagnosed: DNS was pointing to wrong IP (192.168.68.20 instead of Traefik at 192.168.68.71)
+  - Fixed Home Assistant config: updated external_url and internal_url for new domain
+  - Fixed service backend: changed from HTTPS to HTTP (backend runs on HTTP)
+  - Root cause of "Unable to connect": Traefik Ingress uses HTTP/2 but WebSocket needs HTTP/1.1
+  - Solution: Migrated from standard Ingress to Traefik IngressRoute for proper WebSocket support
+- Files Modified:
+  - `private/ha-configuration.yaml` (added external_url, internal_url, auth_providers, fixed HTTP config)
+  - `apps/production/home-assistant-proxy/external-service.yaml` (changed serversscheme from https to http)
+  - `apps/production/home-assistant-proxy/ingress.yaml` (simplified, removed duplicate API ingress)
+  - `apps/production/home-assistant-proxy/ingressroute.yaml` (created, replaces Ingress with proper WebSocket support)
+
 ## Current Issues & Blockers
 
-### Active Issue: amdwiki Pods Not Becoming Ready
+### Active Issue: Home Assistant Proxy WebSocket Connection
 
-**Status:** In Progress - Pod is running but failing readiness checks
+**Status:** In Progress - WebSocket failing due to HTTP/2 limitation
 
 **Problem:**
-- amdwiki pods are running and application is responding
-- Readiness probe keeps failing, causing 503 errors from Traefik
-- Application is looking for "Welcome" page that doesn't exist
-- Pages directory at `/home/jim/docs/data/systems/wikis/amdWiki/` appears to be mostly empty (only has OLD/, versions/, and backup file)
+- Home Assistant accessible at ha.nerdsbythehour.com but frontend shows "Unable to connect"
+- Root cause: Traefik's standard Ingress uses HTTP/2, but WebSocket requires HTTP/1.1
+- Traefik's HTTP/2 doesn't support the Upgrade header needed for WebSocket connections
 
 **What's Working:**
-- Docker image rebuilt successfully with config files
-- Application starts and listens on correct port (3000)
-- No more install redirect (install.completed flag working)
-- No more port misconfiguration (enableServiceLinks: false working)
+- DNS resolution fixed (192.168.68.71 - correct Traefik IP)
+- Home Assistant backend accessible at 192.168.68.20:8123
+- HTTP proxy working through Traefik
+- Authentik authentication working
+- Home Assistant config updated with external/internal URLs
 
-**Next Steps Needed:**
-- Investigate why wiki pages directory is empty
-- Check if pages are in OLD subdirectory and need to be restored
-- Or create initial Welcome page to satisfy readiness probe
-- Consider adjusting readiness probe to check a different endpoint
+**Solution Applied:**
+- Switched from standard Ingress to Traefik IngressRoute
+- IngressRoute properly handles HTTP/1.1 protocol for WebSocket connections
+- Created: `/home/jim/Documents/mj-infra-flux/apps/production/home-assistant-proxy/ingressroute.yaml`
+
+**Next Steps:**
+- Verify WebSocket connection works after IngressRoute deployment
+- Test frontend can establish connection to backend API
 
 ### Potential Improvements
 - Create port allocation table for all applications (ports 9200-9220)
-- Consider enabling Authentik ForwardAuth on protected services
 - Monitor for security updates on all containers
 - Review and optimize resource allocations as needed
 
@@ -486,4 +480,4 @@ kubectl get pods -A
 
 **Important:** Keep this file synchronized and updated. It's the bridge between different agents and sessions working on the same project.
 
-**Last Updated:** 2025-12-01 by Claude (Initial creation)
+**Last Updated:** 2025-12-10 by Claude (Home Assistant proxy WebSocket fix)
