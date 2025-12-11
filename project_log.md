@@ -42,7 +42,7 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
   - Restarted landingpage pods
   - Verified zero-threat.html serves correct content without SPA fallback
   - Updated AGENTS.md and project_log.md with session notes
-- Commits: pending
+- Commits: 0907c8a
 - Files Modified:
   - `/opt/traefik/landingpage/public/zero-threat.html` (created)
   - `/opt/traefik/landingpage/serve.json` (created)
