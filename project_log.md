@@ -1,5 +1,26 @@
 # Project Log
 
+This page is for AI agent session tracking. 
+See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGELOG.md](./CHANGELOG.md) for version history.
+
+## Format
+
+```
+## yyyy-MM-dd-##
+
+- Agent: [Claude/Gemini/Other]
+- Subject: [Brief description]
+- Key Decision: [decision]
+- Current Issue: [issue]
+- Work Done: 
+  - [task 1]
+  - [task 2]
+- Commits: [hash]
+- Files Modified: 
+  - [file1.js]
+  - [file2.md]
+```
+
 ## Work Completed
 
 - 2025-12-01-01 - Fixed amdwiki service connectivity - "Rebuild amdwiki image and config"
@@ -18,6 +39,6 @@
 - Home Assistant WebSocket connection pending verification with IngressRoute deployment
 
 ### Next Work Items
-1. Verify Home Assistant frontend loads and connects successfully
+-  Verify Home Assistant frontend loads and connects successfully
 2. Monitor Home Assistant stability
 3. Consider enabling Authentik ForwardAuth on other protected services
