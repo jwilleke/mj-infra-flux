@@ -326,6 +326,20 @@ kubectl port-forward -n namespace svc/myservice 8080:80
   - `apps/production/home-assistant-proxy/ingress.yaml` (simplified, removed duplicate API ingress)
   - `apps/production/home-assistant-proxy/ingressroute.yaml` (created, replaces Ingress with proper WebSocket support)
 
+### Session: 2025-12-11 (Evening)
+- Agent: Claude
+- Work Done:
+  - Added zero-threat.html static page to landing page unprotected
+  - Created `/opt/traefik/landingpage/public/zero-threat.html` with required content
+  - Modified serve configuration to serve specific routes as SPA fallback while serving zero-threat.html as static file
+  - Updated Dockerfile to use explicit serve.json config for SPA routing control
+  - Rebuilt Docker image, imported to k3s, deployed and verified serving correct content
+  - Issue resolution: serve's default behavior was rewriting all 404s to index.html; solved with explicit rewrite config limiting to "/" and "/guest" routes only
+- Files Modified:
+  - `/opt/traefik/landingpage/public/zero-threat.html` (created static page)
+  - `/opt/traefik/landingpage/serve.json` (created serve config with specific rewrites)
+  - `/opt/traefik/landingpage/Dockerfile` (updated to use serve.json for routing control)
+
 ## Current Issues & Blockers
 
 ### Active Issue: Home Assistant Proxy WebSocket Connection
@@ -480,4 +494,4 @@ kubectl get pods -A
 
 **Important:** Keep this file synchronized and updated. It's the bridge between different agents and sessions working on the same project.
 
-**Last Updated:** 2025-12-10 by Claude (Home Assistant proxy WebSocket fix)
+**Last Updated:** 2025-12-11 by Claude (Added zero-threat.html static page)
