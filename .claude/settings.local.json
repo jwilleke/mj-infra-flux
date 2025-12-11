@@ -11,7 +11,9 @@
       "Bash(docker build:*)",
       "Bash(kubectl delete:*)",
       "Bash(kubectl apply:*)",
-      "Bash(kubectl logs:*)"
+      "Bash(kubectl logs:*)",
+      "Bash(kubectl exec:*)",
+      "Bash(kubectl rollout:*)"
     ],
     "deny": [],
     "ask": []
