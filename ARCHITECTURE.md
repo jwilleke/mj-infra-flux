@@ -85,6 +85,24 @@ Protected services accessible after Authentik login at `https://auth.nerdsbytheh
 
 ### Applications
 
+#### Quick Reference: Application URLs, Ports & Access
+
+| Title | URL | Port | Access Group | Provider ID |
+|-------|-----|------|--------------|-------------|
+| **Landing Page** | nerdsbythehour.com | 3000 | Public + Members | — |
+| **OpenSpeedTest** | /speed | 80 | Public | — |
+| **whoami** | deby.nerdsbythehour.com | 80 | Public | — |
+| **CDN** | cdn.nerdsbythehour.com | 80 | anyone | No auth needed |
+| **JimsWiki** | /jimswiki | 8080 | mj | 8 |
+| **TeslaMate** | teslamate.nerdsbythehour.com | 4000 | mj | 9 |
+| **Grafana** | grafana.nerdsbythehour.com | 80 | mj | 10 |
+| **Home Assistant** | ha.nerdsbythehour.com | 8123 | mj | Existing |
+| **AMDWiki** | amd.nerdsbythehour.com | — | mj | Existing |
+| **Authentik** | auth.nerdsbythehour.com | — | All | Self-service |
+| **FileBrowser** | TBD | 80 | Protected | TBD |
+
+#### Detailed Applications Table
+
 | Service | Namespace | Type | URL | Auth |
 |---------|-----------|------|-----|------|
 | **Landing Page** | landingpage | React SPA | nerdsbythehour.com | Public + Members |
