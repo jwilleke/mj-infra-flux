@@ -13,7 +13,11 @@
       "Bash(kubectl apply:*)",
       "Bash(kubectl logs:*)",
       "Bash(kubectl exec:*)",
-      "Bash(kubectl rollout:*)"
+      "Bash(kubectl rollout:*)",
+      "Bash(echo:*)",
+      "Bash(gh:*)",
+      "Bash(source ~/.bashrc)",
+      "Bash(/opt/homebrew/bin/gh repo view --json url)"
     ],
     "deny": [],
     "ask": []
