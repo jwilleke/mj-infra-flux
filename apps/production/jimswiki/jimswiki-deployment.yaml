@@ -123,7 +123,7 @@ spec:
       # Configuration files (NFS mount - editable)
       - name: wiki-config
         hostPath:
-          path: /home/jim/docs/data/systems/mj-infra-flux/jimswiki/config
+          path: /mnt/local-k3s-data/jimswiki-config/etc
           type: Directory
 
       # Logs directory (local fast disk - ephemeral, use kubectl logs for debugging)
