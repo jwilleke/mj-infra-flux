@@ -19,22 +19,7 @@ spec:
       - name: setup-webapp
         image: aug12018/jimswiki:latest
         imagePullPolicy: IfNotPresent
-        command: ["/bin/bash", "-c"]
-        args:
-        - |
-          # Copy webapp files from image to shared volume and rename to jimswiki context
-          echo "Copying webapp files from image to shared volume..."
-          cp -r /usr/local/tomcat/webapps/ROOT /webapps-shared/jimswiki
-
-          # Copy custom properties file to WEB-INF/classes where JSPWiki expects it
-          if [ -f "/var/jspwiki/etc/jspwiki-custom.properties" ]; then
-              echo "Copying jspwiki-custom.properties to WEB-INF/classes..."
-              cp /var/jspwiki/etc/jspwiki-custom.properties /webapps-shared/jimswiki/WEB-INF/classes/jspwiki-custom.properties
-              echo "Copying log4j2.xml to WEB-INF/classes..."
-              cp /var/jspwiki/etc/log4j2.xml /webapps-shared/jimswiki/WEB-INF/classes/log4j2.xml
-          fi
-
-          echo "Setup complete"
+        command: ["/bin/sleep", "3600"]
         volumeMounts:
         - name: wiki-config
           mountPath: /var/jspwiki/etc
