@@ -1,0 +1,21 @@
+resources:
+  # this is a copy of https://raw.githubusercontent.com/kubernetes/kube-state-metrics/refs/tags/v2.15.0/examples/standard/kustomization.yaml without the name+namespace header. my kustomize didn't like it
+  - https://raw.githubusercontent.com/kubernetes/kube-state-metrics/refs/tags/v2.15.0/examples/standard/cluster-role.yaml
+  - https://raw.githubusercontent.com/kubernetes/kube-state-metrics/refs/tags/v2.15.0/examples/standard/cluster-role-binding.yaml
+  - https://raw.githubusercontent.com/kubernetes/kube-state-metrics/refs/tags/v2.15.0/examples/standard/service-account.yaml
+  - https://raw.githubusercontent.com/kubernetes/kube-state-metrics/refs/tags/v2.15.0/examples/standard/deployment.yaml
+  - https://raw.githubusercontent.com/kubernetes/kube-state-metrics/refs/tags/v2.15.0/examples/standard/service.yaml
+
+patches:
+  - patch: |
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: kube-state-metrics
+        namespace: kube-system
+
+        # add the prometheus scrape annotations:
+        annotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "8080"
+          prometheus.io/path: "/metrics"
