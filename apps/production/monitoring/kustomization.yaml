@@ -1,6 +1,7 @@
 resources:
   - ./namespace.yaml
   # - ./kube-state-metrics  # DISABLED: Missing base resources at ../../../base/monitoring/kube-state-metrics
+  - ../../base/monitoring/kube-state-metrics/  # 2026-01-01 Added this line
   - ./prometheus
   - ./prometheus-alertmanager
   - ./prometheus-blackbox-exporter
