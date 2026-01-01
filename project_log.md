@@ -23,6 +23,7 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 
 ## Work Completed
 
+- 2026-01-01-03 - Remove home assistant and hoarder
 - 2026-01-01-25 - Added patch to disable node-exporter systemd collector - "Prevented D-Bus connection errors"
 - 2025-12-01-01 - Fixed amdwiki service connectivity - "Rebuild amdwiki image and config"
 - 2025-12-10-01 - Fixed Home Assistant proxy DNS and WebSocket - "Diagnose and fix ha.nerdsbythehour.com connectivity"
