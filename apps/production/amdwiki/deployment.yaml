@@ -4,7 +4,7 @@ metadata:
   name: amdwiki
   namespace: amdwiki
 spec:
-  replicas: 1
+  replicas: 0 ## Temporarily 0 for fixes
   selector:
     matchLabels:
       app: amdwiki
