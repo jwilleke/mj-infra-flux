@@ -2,6 +2,7 @@ resources:
   - ./authorize-prometheus-to-k8s.yaml
   - ./prometheus-statefulset.yaml
   - ./prometheus-service.yaml
+  - ./prometheus-pdb.yaml
   # Certificate handled by ingress annotation instead of separate resource
   # - ./certificate.yaml
   - ./prometheus-ingress.yaml
@@ -21,6 +22,8 @@ configMapGenerator:
       # web.yaml removed - using Authentik ForwardAuth instead of basic auth
       # scrape configs:
       - config/scrape-configs.prometheus.yaml
+      # monitoring and alerting rules:
+      - config/alerting-rules.prometheus.yaml
       # coinpoet and tayle configs removed
 
 labels:

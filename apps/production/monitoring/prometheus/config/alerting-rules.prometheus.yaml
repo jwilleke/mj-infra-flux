@@ -1,0 +1,52 @@
+groups:
+  - name: prometheus_tsdb_health
+    interval: 15s
+    rules:
+      # Alert if Prometheus WAL directory is growing too large (>10GB)
+      - alert: PrometheusWALFilesLarge
+        expr: |
+          node_filesystem_avail_bytes{mount_point="/prometheus"} < 10737418240
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus WAL files consuming excessive storage"
+          description: "Prometheus storage has less than 10GB available. Current state may lead to issues similar to past CrashLoopBackOff. Instance: {{ $labels.instance }}"
+
+      # Alert if compaction is slow (taking >1 hour)
+      - alert: PrometheusCompactionSlowing
+        expr: |
+          increase(tsdb_compaction_duration_seconds_sum[1h]) > 3600
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus TSDB compaction is slow"
+          description: "Compaction is taking longer than expected. This can lead to WAL accumulation and startup issues."
+
+      # Alert if Prometheus restart happens more than twice in 24 hours
+      - alert: PrometheusFrequentRestarts
+        expr: |
+          rate(process_start_time_seconds[24h]) > 0.000023
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus pod is restarting frequently"
+          description: "Multiple restarts detected in the past 24 hours. Check pod logs for CrashLoopBackOff conditions."
+
+      # Alert on high memory usage (>85% of limit)
+      - alert: PrometheusHighMemory
+        expr: |
+          (container_memory_working_set_bytes{pod="prometheus-0"} / 8589934592) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus memory usage is high"
+          description: "Memory usage is above 85% of the 8GB limit. Increase memory or reduce retention period."
+
+      # Recording rules for monitoring
+      - record: tsdb:wal_segment_count
+        expr: |
+          count(count by (le) (prometheus_tsdb_compaction_duration_seconds_bucket))

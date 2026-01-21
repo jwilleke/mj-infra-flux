@@ -1,0 +1,11 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: prometheus-pdb
+  labels:
+    app: prometheus
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: prometheus

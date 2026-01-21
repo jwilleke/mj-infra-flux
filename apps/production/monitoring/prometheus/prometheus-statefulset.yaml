@@ -27,8 +27,8 @@ spec:
           image: prom/prometheus:v3.0.1
           args:
             # storage config: https://prometheus.io/docs/prometheus/latest/storage/
-            - "--storage.tsdb.retention.time=30d" # with Erigon and K8s 6h was ~111MB
-            - "--storage.tsdb.retention.size=100GB"
+            - "--storage.tsdb.retention.time=15d" # reduced from 30d to minimize WAL accumulation and faster recovery
+            - "--storage.tsdb.retention.size=50GB" # reduced from 100GB to further reduce WAL
             - "--storage.tsdb.path=/prometheus"
             - "--config.file=/etc/prometheus/prometheus.yaml"
             # Authentication handled by Authentik ForwardAuth at ingress level
@@ -39,11 +39,26 @@ spec:
             - name: web-ui
               containerPort: 9090
 
+          startupProbe:
+            httpGet:
+              path: /-/healthy
+              port: web-ui
+            failureThreshold: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+
           resources:
-            limits:
-              cpu: "1.0"
-              # unclear what this should be: https://github.com/prometheus/prometheus/issues/5469
+            requests:
+              cpu: "1"
               memory: "4Gi"
+            limits:
+              cpu: "2" # increased from 1.0 for better compaction performance
+              memory: "8Gi" # increased from 4Gi to handle larger datasets
+
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 15"]
 
           volumeMounts:
             - name: prometheus-config-volume
@@ -69,11 +84,18 @@ spec:
             defaultMode: 420
             name: prometheus-config
 
-        - name: prometheus-storage-volume
-          hostPath:
-            path: /mnt/thedatapool/no-backup/app-data/prometheus/storage
-
         # we generate these secrets in kustomization.yaml and save each key as a file in this mount
         - name: prometheus-secret-volume
           secret:
             secretName: prometheus-secrets
+
+  volumeClaimTemplates:
+    - metadata:
+        name: prometheus-storage-volume
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 60Gi  # slightly larger than retention size for headroom
