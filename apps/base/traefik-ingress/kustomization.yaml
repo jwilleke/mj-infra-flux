@@ -27,6 +27,12 @@ helmCharts:
         enabled: true
         #namespaced: false # false = allow traefik to be used across namespaces
       ports:
+        mqtt:  # MQTT protocol for external clients
+          port: 1883
+          expose:
+            default: true
+          exposedPort: 1883
+          protocol: TCP
         websecure: # i.e. port 443
           tls:
             enabled: true
@@ -107,6 +113,7 @@ helmCharts:
           - --entrypoints.traefik.address=:9000/tcp
           - --entrypoints.web.address=:80/tcp # Use standard HTTP port
           - --entrypoints.websecure.address=:443/tcp # Use standard HTTPS port
+          - --entrypoints.mqtt.address=:1883/tcp # MQTT protocol for external clients
           - --api.dashboard=false # You had this disabled previously, keep it consistent
           - --ping=true
           - --metrics.prometheus=true
