@@ -23,6 +23,7 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 
 ## Work Completed
 
+- 2026-01-21-01 - Fix Prometheus CrashLoopBackOff and expose MQTT externally
 - 2026-01-01-03 - Remove home assistant and hoarder
 - 2026-01-01-25 - Added patch to disable node-exporter systemd collector - "Prevented D-Bus connection errors"
 - 2025-12-01-01 - Fixed amdwiki service connectivity - "Rebuild amdwiki image and config"
@@ -74,4 +75,37 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - Files Modified:
   - `security/SECURITY.md` (created)
   - AGENTS.md (updated with session notes)
+  - project_log.md (this file)
+
+## 2026-01-21-01
+
+- Agent: Claude Opus 4.5
+- Subject: Fix Prometheus CrashLoopBackOff and expose MQTT externally
+- Key Decision: Use LoadBalancer for MQTT instead of Traefik (simpler, existing Traefik in kube-system not managed by Flux)
+- Current Issue: None - completed successfully
+- Work Done:
+  - Diagnosed Prometheus CrashLoopBackOff (1612 restarts over 22 days)
+  - Root cause: 3,232 WAL segments (44GB) causing excessive WAL replay time on startup
+  - Deleted corrupted WAL files from HostPath volume
+  - Updated Prometheus StatefulSet with resilience improvements:
+    - Reduced retention from 30d to 15d
+    - Reduced size limit from 100GB to 50GB
+    - Increased CPU from 1 to 2 cores
+    - Increased memory from 4Gi to 8Gi
+    - Migrated from HostPath to PVC (60Gi local-path)
+    - Added startup probe (30 retries x 10s = 5 min grace period)
+    - Added preStop lifecycle hook (15s drain)
+  - Created PodDisruptionBudget for Prometheus
+  - Created alerting rules for WAL size, compaction, restarts, memory
+  - Deleted and recreated StatefulSet (volumeClaimTemplate is immutable)
+  - Changed Mosquitto service from ClusterIP to LoadBalancer
+  - MQTT now accessible externally at 192.168.68.71:1883
+- Commits: b733b0a, f7273e9, 2d43c1b
+- Files Modified:
+  - apps/production/monitoring/prometheus/prometheus-statefulset.yaml
+  - apps/production/monitoring/prometheus/prometheus-pdb.yaml (created)
+  - apps/production/monitoring/prometheus/config/alerting-rules.prometheus.yaml (created)
+  - apps/production/monitoring/prometheus/kustomization.yaml
+  - apps/base/traefik-ingress/kustomization.yaml (added MQTT entrypoint)
+  - apps/production/messaging/mosquitto-service.yaml
   - project_log.md (this file)
