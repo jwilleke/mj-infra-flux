@@ -4,7 +4,7 @@ metadata:
   name: mosquitto
   namespace: messaging
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   ports:
   - port: 1883
     targetPort: 1883
