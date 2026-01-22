@@ -74,13 +74,82 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
   - Notification routing (email, Slack, webhook)
 
 ### Blackbox Exporter
-- **Version**: Latest
+- **Version**: 0.25.0
 - **Service**: `blackbox-exporter.monitoring.svc.cluster.local:9115`
-- **Purpose**: Probes external HTTP/HTTPS/TCP/ICMP endpoints
-- **Use cases**:
-  - Website uptime monitoring
-  - SSL certificate expiration
-  - Response time tracking
+- **DNS**: Uses local DNS (192.168.68.1) for external domain resolution
+- **Purpose**: Probes external HTTP/HTTPS endpoints
+- **Monitored Services**:
+  - https://nerdsbythehour.com (landing page)
+  - https://auth.nerdsbythehour.com (Authentik SSO)
+  - https://jimswiki.nerdsbythehour.com
+  - https://teslamate.nerdsbythehour.com
+  - https://grafana.nerdsbythehour.com
+  - https://ha.nerdsbythehour.com (Home Assistant)
+  - https://cdn.nerdsbythehour.com
+- **Excluded**: traefik (internal), jimsmcp (internal), amd (known broken)
+
+## Checking Service Health Probes
+
+### View Probe Status
+
+```bash
+# Check all HTTP probe results (1=up, 0=down)
+kubectl exec -n monitoring prometheus-0 -- wget -qO- \
+  "http://localhost:9090/api/v1/query?query=probe_success" 2>/dev/null | \
+  jq -r '.data.result[] | "\(.metric.instance): \(.value[1])"'
+
+# Check HTTP response codes
+kubectl exec -n monitoring prometheus-0 -- wget -qO- \
+  "http://localhost:9090/api/v1/query?query=probe_http_status_code" 2>/dev/null | \
+  jq -r '.data.result[] | "\(.metric.instance): \(.value[1])"'
+
+# Check SSL certificate expiry (days remaining)
+kubectl exec -n monitoring prometheus-0 -- wget -qO- \
+  "http://localhost:9090/api/v1/query?query=(probe_ssl_earliest_cert_expiry-time())/86400" 2>/dev/null | \
+  jq -r '.data.result[] | "\(.metric.instance): \(.value[1] | tonumber | floor) days"'
+```
+
+### View Active Alerts
+
+```bash
+# Check firing alerts
+kubectl exec -n monitoring prometheus-0 -- wget -qO- \
+  "http://localhost:9090/api/v1/alerts" 2>/dev/null | \
+  jq -r '.data.alerts[] | select(.state=="firing") | "\(.labels.alertname): \(.labels.instance // .labels.pod // "cluster")"'
+
+# Check all alerts (pending and firing)
+kubectl exec -n monitoring prometheus-0 -- wget -qO- \
+  "http://localhost:9090/api/v1/alerts" 2>/dev/null | \
+  jq -r '.data.alerts[] | "\(.labels.alertname): \(.state)"'
+
+# Check alertmanager received alerts
+kubectl exec -n monitoring deploy/alertmanager -- wget -qO- \
+  "http://localhost:9093/api/v2/alerts" 2>/dev/null | \
+  jq -r '.[] | "\(.labels.alertname): \(.status.state)"'
+```
+
+### View Loaded Alert Rules
+
+```bash
+# List all alert rule groups
+kubectl exec -n monitoring prometheus-0 -- wget -qO- \
+  "http://localhost:9090/api/v1/rules" 2>/dev/null | \
+  jq -r '.data.groups[].name'
+
+# View specific rule group
+kubectl exec -n monitoring prometheus-0 -- wget -qO- \
+  "http://localhost:9090/api/v1/rules" 2>/dev/null | \
+  jq '.data.groups[] | select(.name=="service_health")'
+```
+
+### Test Blackbox Probe Manually
+
+```bash
+# Test a specific URL through blackbox exporter
+kubectl exec -n monitoring deploy/blackbox-exporter -- wget -qO- \
+  "http://localhost:9115/probe?target=https://grafana.nerdsbythehour.com&module=http_2xx_3xx" | \
+  grep -E "probe_success|probe_http_status_code"
+```
 
 ## Quick Start
 
@@ -280,35 +349,54 @@ histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
 
 Located in: `apps/production/monitoring/prometheus/config/`
 
-- `alerting-rules.coinpoet.yaml`
-- `alerting-rules.tayle.yaml`
+**Active alert rule files:**
+- `alerting-rules.prometheus.yaml` - Prometheus TSDB health (WAL, compaction, restarts, memory)
+- `alerting-rules.service-health.yaml` - Service failure alerts (added 2026-01-22)
 
-**Example alert rule:**
-```yaml
-groups:
-  - name: example
-    rules:
-      - alert: HighMemoryUsage
-        expr: container_memory_usage_bytes / container_spec_memory_limit_bytes > 0.9
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High memory usage detected"
-          description: "{{ $labels.pod }} is using {{ $value }}% of memory"
-```
+**Service Health Alerts (alerting-rules.service-health.yaml):**
+
+| Alert | Severity | Trigger |
+|-------|----------|---------|
+| ServiceDown | critical | HTTP probe fails for 2min |
+| ServiceSlowResponse | warning | Response time >5s for 5min |
+| SSLCertExpiringSoon | warning | SSL cert expires in <14 days |
+| SSLCertExpiryCritical | critical | SSL cert expires in <3 days |
+| PodCrashLoopBackOff | critical | >3 restarts in 1 hour |
+| PodNotReady | warning | Pod not ready for 5min |
+| DeploymentNoReplicas | critical | 0 available replicas for 5min |
+| StatefulSetNoReplicas | critical | 0 ready replicas for 5min |
+| NodeHighMemoryUsage | warning | Memory >90% for 5min |
+| NodeHighCPUUsage | warning | CPU >85% for 10min |
+| NodeDiskSpaceLow | warning | Disk <15% free for 5min |
+| NodeDiskSpaceCritical | critical | Disk <5% free for 2min |
+| PostgreSQLDown | critical | PostgreSQL pod down for 2min |
+
+**Prometheus TSDB Alerts (alerting-rules.prometheus.yaml):**
+
+| Alert | Severity | Trigger |
+|-------|----------|---------|
+| PrometheusWALFilesLarge | warning | Storage <10GB available |
+| PrometheusCompactionSlowing | warning | Compaction >1hr |
+| PrometheusFrequentRestarts | critical | Multiple restarts in 24hr |
+| PrometheusHighMemory | warning | Memory >85% of 8GB limit |
 
 ### Alertmanager Configuration
 
 Configure notification routing in:
 - `apps/production/monitoring/prometheus-alertmanager/config/alertmanager.yaml`
 
+**Current configuration:**
+- **Receiver**: Telegram (chat_id: 510755639)
+- **Group wait**: 30s
+- **Group interval**: 5m
+- **Repeat interval**: 4h
+
 **Supported receivers:**
 - Email (SMTP)
 - Slack webhooks
 - PagerDuty
 - Webhook (generic)
-- Discord, Telegram, etc.
+- Telegram (currently configured)
 
 ## Monitoring Best Practices
 
@@ -513,6 +601,39 @@ Authentik exposes metrics at `:9300/metrics`:
 - PromQL guide: https://prometheus.io/docs/prometheus/latest/querying/basics/
 - Grafana dashboards: https://grafana.com/grafana/dashboards/
 - Kubernetes monitoring: https://github.com/prometheus-operator/kube-prometheus
+
+## TODO / Future Improvements
+
+### High Priority
+- [ ] Add Grafana dashboard for service health probes
+- [ ] Configure alert silencing for maintenance windows
+- [ ] Add PostgreSQL exporter for detailed database metrics
+
+### Medium Priority
+- [ ] Add Node Exporter dashboard to Grafana
+- [ ] Configure alert escalation (critical → page, warning → email)
+- [ ] Add MQTT broker health monitoring
+- [ ] Monitor Authentik login success/failure rates
+
+### Low Priority
+- [ ] Add custom recording rules for common queries
+- [ ] Set up remote write for long-term metric storage
+- [ ] Add application-specific metrics (TeslaMate, JimsWiki JMX)
+- [ ] Configure Grafana alerting as backup to Alertmanager
+
+### Known Issues
+- `amd.nerdsbythehour.com` excluded from probes (service broken)
+- `traefik.nerdsbythehour.com` excluded (internal dashboard, not publicly exposed)
+- `jimsmcp.nerdsbythehour.com` excluded (internal service)
+
+## Recent Changes
+
+### 2026-01-22: Service Failure Monitoring
+- Added HTTP probe modules (http_2xx, http_2xx_3xx) to blackbox-exporter
+- Configured blackbox-exporter with local DNS (192.168.68.1)
+- Created `scrape-configs.blackbox.yaml` for external service probes
+- Created `alerting-rules.service-health.yaml` with comprehensive alerts
+- Alerts now route to Telegram via Alertmanager
 
 ## Related Files
 
