@@ -4,7 +4,7 @@ metadata:
   name: jimswiki
   namespace: jimswiki
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
     # TODO: Enable Authentik ForwardAuth in Phase 3 final step
     # traefik.ingress.kubernetes.io/router.middlewares: authentik-forwardauth-jimswiki@kubernetescrd
 spec:
