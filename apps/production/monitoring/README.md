@@ -90,6 +90,18 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
 
 ## Checking Service Health Probes
 
+### Web UI
+
+- **https://prometheus.nerdsbythehour.com/alerts** - View all alert rules and current state (firing/pending/inactive)
+- **https://prometheus.nerdsbythehour.com/targets** - View all scrape targets including blackbox probes
+- **https://prometheus.nerdsbythehour.com/graph** - Query metrics directly with PromQL
+
+**Alertmanager UI** (cluster internal):
+```bash
+kubectl port-forward -n monitoring svc/alertmanager 9093:9093
+# Then browse to http://localhost:9093
+```
+
 ### View Probe Status
 
 ```bash
