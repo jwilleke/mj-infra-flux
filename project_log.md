@@ -23,6 +23,8 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 
 ## Work Completed
 
+- 2026-01-22-03 - Implement service failure monitoring alerts
+- 2026-01-22-02 - Verify Home Assistant trusted proxies for k3s
 - 2026-01-22-01 - Fix JimsWiki subdomain migration and certificate issuer
 - 2026-01-21-01 - Fix Prometheus CrashLoopBackOff and expose MQTT externally
 - 2026-01-01-03 - Remove home assistant and hoarder
@@ -31,6 +33,50 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-10-01 - Fixed Home Assistant proxy DNS and WebSocket - "Diagnose and fix ha.nerdsbythehour.com connectivity"
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
+
+## 2026-01-22-03
+
+- Agent: Claude Opus 4.5
+- Subject: Implement service failure monitoring alerts
+- Key Decision: Use blackbox-exporter with local DNS (192.168.68.1) for external URL probing
+- Current Issue: None - completed successfully
+- Work Done:
+  - Added http_2xx and http_2xx_3xx probe modules to blackbox-exporter config
+  - Configured blackbox-exporter with dnsPolicy: None using 192.168.68.1 for external DNS
+  - Created scrape-configs.blackbox.yaml for HTTP service health probes
+  - Created alerting-rules.service-health.yaml with alerts for:
+    - ServiceDown, ServiceSlowResponse, SSL cert expiry
+    - PodCrashLoopBackOff, PodNotReady, DeploymentNoReplicas, StatefulSetNoReplicas
+    - NodeHighMemoryUsage, NodeHighCPUUsage, NodeDiskSpaceLow/Critical
+    - PostgreSQLDown
+  - Monitored services: nerdsbythehour.com, auth, jimswiki, teslamate, grafana, ha, cdn
+  - Excluded: traefik (internal), jimsmcp (internal), amd (known broken)
+  - Verified alerts firing and reaching Alertmanager (Telegram notifications configured)
+- Commits: a30ac24
+- Files Modified:
+  - apps/production/monitoring/prometheus-blackbox-exporter/blackbox-deployment.yaml
+  - apps/production/monitoring/prometheus-blackbox-exporter/config/blackbox-config.yaml
+  - apps/production/monitoring/prometheus/kustomization.yaml
+  - apps/production/monitoring/prometheus/config/alerting-rules.service-health.yaml (created)
+  - apps/production/monitoring/prometheus/config/scrape-configs.blackbox.yaml (created)
+  - AGENTS.md, project_log.md
+
+## 2026-01-22-02
+
+- Agent: Claude Opus 4.5
+- Subject: Verify Home Assistant trusted proxies for k3s
+- Key Decision: None - configuration already in place
+- Current Issue: None - completed successfully
+- Work Done:
+  - Verified trusted_proxies config exists in HA at /config/configuration.yaml
+  - Config trusts k3s pod network (10.42.0.0/16), service network (10.43.0.0/16), and host (192.168.68.71)
+  - Confirmed use_x_forwarded_for: true is set
+  - Tested proxy with curl - Authentik ForwardAuth redirects correctly (HTTP 302)
+  - Marked task complete in AGENTS.md
+- Commits: None (verification only)
+- Files Modified:
+  - AGENTS.md (marked task complete)
+  - project_log.md (this file)
 
 ## 2026-01-22-01
 

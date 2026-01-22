@@ -390,7 +390,7 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 ### High Priority
 
 - [ ] Enable Authentik ForwardAuth on protected services (jimswiki, teslamate, grafana, home assistant)
-- [ ] Configure Home Assistant trusted proxies for k3s
+- [x] Configure Home Assistant trusted proxies for k3s (completed 2026-01-22)
 - [ ] Monitor and maintain service health
 
 ### Medium Priority
@@ -398,7 +398,7 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 - [ ] Review and update documentation as services change
 - [ ] Consider migrating remaining Helm deployments to Kustomize
 - [ ] Set up automated backups for critical data
-- [ ] Implement monitoring alerts for service failures
+- [x] Implement monitoring alerts for service failures (completed 2026-01-22)
 
 ### Low Priority
 
@@ -507,4 +507,4 @@ kubectl get pods -A
 
 **Important:** Keep this file synchronized and updated. It's the bridge between different agents and sessions working on the same project.
 
-**Last Updated:** 2025-12-11 by Claude (Added zero-threat.html static page)
+**Last Updated:** 2026-01-22 by Claude (Implemented service failure monitoring alerts)
