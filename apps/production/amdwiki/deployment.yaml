@@ -4,7 +4,7 @@ metadata:
   name: amdwiki
   namespace: amdwiki
 spec:
-  replicas: 0  # Waiting for upstream fix: https://github.com/jwilleke/amdWiki/issues/212
+  replicas: 1
   selector:
     matchLabels:
       app: amdwiki
