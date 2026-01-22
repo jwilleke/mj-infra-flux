@@ -23,6 +23,7 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 
 ## Work Completed
 
+- 2026-01-22-04 - Fix Dependabot security vulnerabilities in jimsmcp
 - 2026-01-22-03 - Implement service failure monitoring alerts
 - 2026-01-22-02 - Verify Home Assistant trusted proxies for k3s
 - 2026-01-22-01 - Fix JimsWiki subdomain migration and certificate issuer
@@ -33,6 +34,23 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-10-01 - Fixed Home Assistant proxy DNS and WebSocket - "Diagnose and fix ha.nerdsbythehour.com connectivity"
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
+
+## 2026-01-22-04
+
+- Agent: Claude Opus 4.5
+- Subject: Fix Dependabot security vulnerabilities in jimsmcp
+- Key Decision: Update dependencies via npm update
+- Current Issue: None - completed successfully
+- Work Done:
+  - Identified 3 high severity vulnerabilities via gh CLI
+  - @modelcontextprotocol/sdk ReDoS vulnerability
+  - @modelcontextprotocol/sdk DNS rebinding protection not enabled
+  - qs DoS via memory exhaustion (arrayLimit bypass)
+  - Ran npm update and npm audit fix
+  - Verified 0 vulnerabilities remain
+- Commits: a3adf5e
+- Files Modified:
+  - apps/production/jimsmcp/package-lock.json
 
 ## 2026-01-22-03
 
