@@ -44,22 +44,21 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
   - Added http_2xx and http_2xx_3xx probe modules to blackbox-exporter config
   - Configured blackbox-exporter with dnsPolicy: None using 192.168.68.1 for external DNS
   - Created scrape-configs.blackbox.yaml for HTTP service health probes
-  - Created alerting-rules.service-health.yaml with alerts for:
-    - ServiceDown, ServiceSlowResponse, SSL cert expiry
-    - PodCrashLoopBackOff, PodNotReady, DeploymentNoReplicas, StatefulSetNoReplicas
-    - NodeHighMemoryUsage, NodeHighCPUUsage, NodeDiskSpaceLow/Critical
-    - PostgreSQLDown
+  - Created alerting-rules.service-health.yaml with comprehensive alerts
   - Monitored services: nerdsbythehour.com, auth, jimswiki, teslamate, grafana, ha, cdn
   - Excluded: traefik (internal), jimsmcp (internal), amd (known broken)
   - Verified alerts firing and reaching Alertmanager (Telegram notifications configured)
-- Commits: a30ac24
+  - Updated monitoring README with probe commands, web UI URLs, and TODOs
+- Commits: a30ac24, 24d0034, d68cf59, 3f48357
 - Files Modified:
   - apps/production/monitoring/prometheus-blackbox-exporter/blackbox-deployment.yaml
   - apps/production/monitoring/prometheus-blackbox-exporter/config/blackbox-config.yaml
   - apps/production/monitoring/prometheus/kustomization.yaml
   - apps/production/monitoring/prometheus/config/alerting-rules.service-health.yaml (created)
   - apps/production/monitoring/prometheus/config/scrape-configs.blackbox.yaml (created)
-  - AGENTS.md, project_log.md
+  - apps/production/monitoring/README.md
+  - AGENTS.md
+  - project_log.md
 
 ## 2026-01-22-02
 
