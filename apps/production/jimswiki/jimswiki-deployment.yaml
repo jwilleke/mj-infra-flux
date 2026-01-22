@@ -53,7 +53,7 @@ spec:
         - name: JAVA_HOME
           value: "/opt/java/openjdk"
         - name: CATALINA_OPTS
-          value: "-Djspwiki.baseURL=https://nerdsbythehour.com/jimswiki -Dlog4j.configurationFile=file:///var/jspwiki/etc/log4j2.xml"
+          value: "-Djspwiki.baseURL=https://nerdsbythehour.com/jimswiki/ -Dlog4j.configurationFile=file:///var/jspwiki/etc/log4j2.xml"
         # Override Dockerfile ENV vars with values from jspwiki-custom.properties
         - name: jspwiki_fileSystemProvider_pageDir
           value: "/home/jim/docs/data/systems/wikis/jimswiki"
