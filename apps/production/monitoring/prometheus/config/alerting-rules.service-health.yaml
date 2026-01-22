@@ -75,10 +75,12 @@ groups:
           summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} not ready"
           description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has been not ready for 5 minutes."
 
-      # Alert if deployment has zero available replicas
+      # Alert if deployment has zero available replicas (excludes intentionally scaled-down deployments)
       - alert: DeploymentNoReplicas
         expr: |
           kube_deployment_status_replicas_available == 0
+          and kube_deployment_spec_replicas > 0
+          unless on(namespace) (kube_namespace_labels{namespace="amdwiki"})
         for: 5m
         labels:
           severity: critical

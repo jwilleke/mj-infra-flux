@@ -22,7 +22,12 @@
       "Bash(flux reconcile:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(kubectl kustomize:*)",
+      "Bash(npm outdated:*)",
+      "Bash(npm update:*)",
+      "Bash(npm audit fix:*)",
+      "Bash(npm audit:*)"
     ],
     "deny": [],
     "ask": []
