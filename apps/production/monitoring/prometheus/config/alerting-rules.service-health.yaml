@@ -1,0 +1,163 @@
+groups:
+  - name: service_health
+    interval: 30s
+    rules:
+      ###################
+      # HTTP Probe Alerts
+      ###################
+
+      # Alert if HTTP endpoint is down (probe fails)
+      - alert: ServiceDown
+        expr: probe_success{job="blackbox-http-services"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.service }} is down"
+          description: "HTTP probe failed for {{ $labels.instance }} for more than 2 minutes."
+
+      # Alert if HTTP response time is slow (>5s)
+      - alert: ServiceSlowResponse
+        expr: probe_http_duration_seconds{job="blackbox-http-services"} > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Service {{ $labels.service }} responding slowly"
+          description: "HTTP response time for {{ $labels.instance }} is {{ $value | printf \"%.2f\" }}s (>5s threshold)."
+
+      # Alert if SSL certificate expires within 14 days
+      - alert: SSLCertExpiringSoon
+        expr: (probe_ssl_earliest_cert_expiry{job="blackbox-http-services"} - time()) / 86400 < 14
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "SSL cert for {{ $labels.service }} expires soon"
+          description: "SSL certificate for {{ $labels.instance }} expires in {{ $value | printf \"%.0f\" }} days."
+
+      # Alert if SSL certificate expires within 3 days
+      - alert: SSLCertExpiryCritical
+        expr: (probe_ssl_earliest_cert_expiry{job="blackbox-http-services"} - time()) / 86400 < 3
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SSL cert for {{ $labels.service }} expires in <3 days"
+          description: "SSL certificate for {{ $labels.instance }} expires in {{ $value | printf \"%.1f\" }} days. Immediate action required!"
+
+  - name: kubernetes_pod_health
+    interval: 30s
+    rules:
+      ###################
+      # Pod Health Alerts
+      ###################
+
+      # Alert if pod is in CrashLoopBackOff
+      - alert: PodCrashLoopBackOff
+        expr: |
+          increase(kube_pod_container_status_restarts_total[1h]) > 3
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} restarted {{ $value | printf \"%.0f\" }} times in the last hour."
+
+      # Alert if pod is not ready
+      - alert: PodNotReady
+        expr: |
+          kube_pod_status_ready{condition="true"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} not ready"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has been not ready for 5 minutes."
+
+      # Alert if deployment has zero available replicas
+      - alert: DeploymentNoReplicas
+        expr: |
+          kube_deployment_status_replicas_available == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has no replicas"
+          description: "Deployment {{ $labels.deployment }} in namespace {{ $labels.namespace }} has 0 available replicas."
+
+      # Alert if StatefulSet has zero ready replicas
+      - alert: StatefulSetNoReplicas
+        expr: |
+          kube_statefulset_status_replicas_ready == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "StatefulSet {{ $labels.namespace }}/{{ $labels.statefulset }} has no replicas"
+          description: "StatefulSet {{ $labels.statefulset }} in namespace {{ $labels.namespace }} has 0 ready replicas."
+
+  - name: kubernetes_resource_health
+    interval: 60s
+    rules:
+      ###################
+      # Resource Alerts
+      ###################
+
+      # Alert if node has high memory pressure
+      - alert: NodeHighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Node {{ $labels.instance }} memory usage >90%"
+          description: "Node {{ $labels.instance }} memory usage is {{ $value | printf \"%.1f\" }}%."
+
+      # Alert if node has high CPU usage
+      - alert: NodeHighCPUUsage
+        expr: |
+          100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Node {{ $labels.instance }} CPU usage >85%"
+          description: "Node {{ $labels.instance }} CPU usage is {{ $value | printf \"%.1f\" }}%."
+
+      # Alert if disk space is low (<15% free)
+      - alert: NodeDiskSpaceLow
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Node {{ $labels.instance }} disk space low"
+          description: "Node {{ $labels.instance }} has only {{ $value | printf \"%.1f\" }}% disk space remaining on /."
+
+      # Alert if disk space is critical (<5% free)
+      - alert: NodeDiskSpaceCritical
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Node {{ $labels.instance }} disk space critical"
+          description: "Node {{ $labels.instance }} has only {{ $value | printf \"%.1f\" }}% disk space remaining on /. Immediate action required!"
+
+  - name: database_health
+    interval: 30s
+    rules:
+      # Alert if PostgreSQL is down
+      - alert: PostgreSQLDown
+        expr: |
+          up{job="kubernetes-pods", pod=~"postgresql.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "PostgreSQL pod is not responding. This affects multiple services (TeslaMate, Grafana, etc.)."

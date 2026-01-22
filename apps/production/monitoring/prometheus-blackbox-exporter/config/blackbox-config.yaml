@@ -1,5 +1,26 @@
 # see https://github.com/prometheus/blackbox_exporter/blob/master/CONFIGURATION.md
 modules:
+  # Generic HTTP probe for service health checks
+  http_2xx:
+    prober: http
+    timeout: 10s
+    http:
+      method: GET
+      follow_redirects: true
+      preferred_ip_protocol: ip4
+      ip_protocol_fallback: true
+
+  # HTTP probe that accepts 2xx and 3xx (redirects to auth)
+  http_2xx_3xx:
+    prober: http
+    timeout: 10s
+    http:
+      method: GET
+      valid_status_codes: [200, 201, 202, 204, 301, 302, 303, 307, 308]
+      follow_redirects: false
+      preferred_ip_protocol: ip4
+      ip_protocol_fallback: true
+
   coinpoet_cache_updater:
     prober: http
 

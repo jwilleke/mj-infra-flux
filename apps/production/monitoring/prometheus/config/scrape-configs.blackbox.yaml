@@ -1,0 +1,37 @@
+scrape_configs:
+  # Blackbox HTTP probes for service health monitoring
+  # Uses http_2xx_3xx module since many services redirect to Authentik for auth
+  - job_name: "blackbox-http-services"
+    metrics_path: /probe
+    params:
+      module: [http_2xx_3xx]
+    static_configs:
+      - targets:
+          # Core infrastructure
+          - https://nerdsbythehour.com
+          - https://auth.nerdsbythehour.com
+          # Applications
+          - https://jimswiki.nerdsbythehour.com
+          - https://teslamate.nerdsbythehour.com
+          - https://grafana.nerdsbythehour.com
+          - https://ha.nerdsbythehour.com
+          # Supporting services
+          - https://cdn.nerdsbythehour.com
+          # Excluded: traefik (internal), jimsmcp (internal), amd (known broken)
+    relabel_configs:
+      # Pass the target URL to blackbox exporter
+      - source_labels: [__address__]
+        target_label: __param_target
+      # Set instance label to the target URL
+      - source_labels: [__param_target]
+        target_label: instance
+      # Extract service name from URL for cleaner labeling
+      - source_labels: [__param_target]
+        regex: "https://([^.]+)\\.nerdsbythehour\\.com.*"
+        replacement: "${1}"
+        target_label: service
+      # Point to blackbox exporter
+      - target_label: __address__
+        replacement: blackbox-exporter.monitoring.svc:9115
+    scrape_interval: 60s
+    scrape_timeout: 15s
