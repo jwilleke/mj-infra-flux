@@ -22,16 +22,16 @@ spec:
         command: ["/bin/bash", "-c"]
         args:
         - |
-          # Copy webapp files from image to shared volume and rename to jimswiki context
+          # Copy webapp files from image to shared volume as ROOT context (subdomain-based access)
           echo "Copying webapp files from image to shared volume..."
-          cp -r /usr/local/tomcat/webapps/ROOT /webapps-shared/jimswiki
+          cp -r /usr/local/tomcat/webapps/ROOT /webapps-shared/ROOT
 
           # Copy custom properties file to WEB-INF/classes where JSPWiki expects it
           if [ -f "/var/jspwiki/etc/jspwiki-custom.properties" ]; then
               echo "Copying jspwiki-custom.properties to WEB-INF/classes..."
-              cp /var/jspwiki/etc/jspwiki-custom.properties /webapps-shared/jimswiki/WEB-INF/classes/jspwiki-custom.properties
+              cp /var/jspwiki/etc/jspwiki-custom.properties /webapps-shared/ROOT/WEB-INF/classes/jspwiki-custom.properties
               echo "Copying log4j2.xml to WEB-INF/classes..."
-              cp /var/jspwiki/etc/log4j2.xml /webapps-shared/jimswiki/WEB-INF/classes/log4j2.xml
+              cp /var/jspwiki/etc/log4j2.xml /webapps-shared/ROOT/WEB-INF/classes/log4j2.xml
           fi
 
           echo "Setup complete"
@@ -53,7 +53,7 @@ spec:
         - name: JAVA_HOME
           value: "/opt/java/openjdk"
         - name: CATALINA_OPTS
-          value: "-Djspwiki.baseURL=https://nerdsbythehour.com/jimswiki/ -Dlog4j.configurationFile=file:///var/jspwiki/etc/log4j2.xml"
+          value: "-Djspwiki.baseURL=https://jimswiki.nerdsbythehour.com/ -Dlog4j.configurationFile=file:///var/jspwiki/etc/log4j2.xml"
         # Override Dockerfile ENV vars with values from jspwiki-custom.properties
         - name: jspwiki_fileSystemProvider_pageDir
           value: "/home/jim/docs/data/systems/wikis/jimswiki"
@@ -97,7 +97,7 @@ spec:
 
         livenessProbe:
           httpGet:
-            path: /jimswiki/
+            path: /
             port: 8080
           initialDelaySeconds: 120
           periodSeconds: 30
@@ -106,7 +106,7 @@ spec:
 
         readinessProbe:
           httpGet:
-            path: /jimswiki/
+            path: /
             port: 8080
           initialDelaySeconds: 90
           periodSeconds: 10
