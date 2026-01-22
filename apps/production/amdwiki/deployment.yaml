@@ -4,7 +4,7 @@ metadata:
   name: amdwiki
   namespace: amdwiki
 spec:
-  replicas: 0 ## Temporarily 0 for fixes
+  replicas: 0  # Waiting for upstream fix: https://github.com/jwilleke/amdWiki/issues/212
   selector:
     matchLabels:
       app: amdwiki
@@ -24,27 +24,18 @@ spec:
         env:
         - name: NODE_ENV
           value: "production"
+        # All instance data consolidated under INSTANCE_DATA_FOLDER
+        - name: INSTANCE_DATA_FOLDER
+          value: "/app/data"
 
         volumeMounts:
-        # Wiki pages from existing amdWiki data
-        - name: wiki-pages
-          mountPath: /app/pages
-
-        # Required pages (bundled with app, but can be overridden)
-        - name: required-pages
-          mountPath: /app/required-pages
-
-        # Configuration directory
-        - name: wiki-config
-          mountPath: /app/config
-
-        # Data directory (attachments, versions, users)
-        - name: wiki-data
+        # Single data volume - contains pages, users, attachments, logs, etc.
+        - name: amdwiki-data
           mountPath: /app/data
 
-        # Logs directory
-        - name: wiki-logs
-          mountPath: /app/logs
+        # Configuration directory (app-production-config.json)
+        - name: amdwiki-config
+          mountPath: /app/config
 
         resources:
           requests:
@@ -70,35 +61,17 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
-          failureThreshold: 20  # Increased from 10 to allow more time for startup
+          failureThreshold: 20
 
       volumes:
-      # Wiki pages from existing amdWiki directory
-      - name: wiki-pages
+      # Consolidated data directory
+      - name: amdwiki-data
         hostPath:
-          path: /home/jim/docs/data/systems/wikis/amdWiki
-          type: Directory
-
-      # Required pages (system pages)
-      - name: required-pages
-        hostPath:
-          path: /home/jim/docs/data/systems/mj-infra-flux/amdwiki/required-pages
+          path: /home/jim/docs/data/systems/mj-infra-flux/amdwiki/data
           type: DirectoryOrCreate
 
       # Configuration directory
-      - name: wiki-config
+      - name: amdwiki-config
         hostPath:
           path: /home/jim/docs/data/systems/mj-infra-flux/amdwiki/config
-          type: Directory
-
-      # Data directory (attachments, versions, users)
-      - name: wiki-data
-        hostPath:
-          path: /home/jim/docs/data/systems/mj-infra-flux/amdwiki/data
-          type: Directory
-
-      # Logs directory
-      - name: wiki-logs
-        hostPath:
-          path: /home/jim/docs/data/systems/mj-infra-flux/amdwiki/logs
           type: DirectoryOrCreate
