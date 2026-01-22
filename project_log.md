@@ -23,6 +23,7 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 
 ## Work Completed
 
+- 2026-01-22-05 - Attempt amdwiki fix, created upstream issue
 - 2026-01-22-04 - Fix Dependabot security vulnerabilities in jimsmcp
 - 2026-01-22-03 - Implement service failure monitoring alerts
 - 2026-01-22-02 - Verify Home Assistant trusted proxies for k3s
@@ -34,6 +35,27 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-10-01 - Fixed Home Assistant proxy DNS and WebSocket - "Diagnose and fix ha.nerdsbythehour.com connectivity"
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
+
+## 2026-01-22-05
+
+- Agent: Claude Opus 4.5
+- Subject: Attempt amdwiki fix, created upstream issue
+- Key Decision: Report Dockerfile bug upstream rather than maintain local fork
+- Current Issue: amdwiki blocked on upstream fix (issue #212)
+- Work Done:
+  - Cloned latest amdWiki from GitHub (commit 0a0391c)
+  - Built Docker image and imported to k3s
+  - Found Dockerfile missing TypeScript build step (npm run build)
+  - Reviewed docker-compose.yml and docker-compose-traefik.yml
+  - Found inconsistency: traefik compose uses old volume structure
+  - Created GitHub issue: https://github.com/jwilleke/amdWiki/issues/212
+  - Simplified deployment.yaml to use INSTANCE_DATA_FOLDER
+  - Scaled amdwiki to 0 replicas pending upstream fix
+  - Deleted abandoned kubefilebrowser deployment
+- Commits: 323c234
+- Files Modified:
+  - apps/production/amdwiki/deployment.yaml
+  - project_log.md
 
 ## 2026-01-22-04
 
