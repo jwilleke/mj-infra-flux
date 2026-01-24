@@ -12,7 +12,7 @@ In all interactions and commit messages
 - Questions, Comments and Suggestions are always encouraged!
 - Your primary method for interacting with GitHub should be the CLI.
 - On larger objectives present phased implementation plan
-- Always create project_log.md file as aa log of work done on the project in format
+- Always create [project_log.md](./docs/project_log.md) file as aa log of work done on the project in format
   - yyyy-MM-dd-## - Created new file - "Commit"
 
 ## Project Overview
