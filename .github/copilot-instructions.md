@@ -9,7 +9,6 @@ When running terminal commands, ensure the shell sources ~/.bash_profile or equi
 - [AGENTS.md](../AGENTS.md) - AI agent context and project coordination
 - [CONTRIBUTING.md](../CONTRIBUTING.md) - Development workflow and standards
 - [docs/SEMVER.md](../docs/SEMVER.md) - Semantic versioning guidelines
-- [docs/architecture/Policies-Roles-Permissions.md](../docs/architecture/Policies-Roles-Permissions.md) - Authorization and ACL patterns
 
 ## Architecture Overview
 
