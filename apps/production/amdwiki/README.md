@@ -23,34 +23,54 @@ A simple, file-based wiki application built with Node.js, Express, and Markdown 
 
 ## Data Paths
 
-All data is stored on NFS at `/home/jim/docs/data/systems/mj-infra-flux/amdwiki/`:
+All data is consolidated under `INSTANCE_DATA_FOLDER` at `/home/jim/docs/data/systems/mj-infra-flux/amdwiki/data/`:
 
 - `pages/` - Wiki pages (Markdown files)
-- `required-pages/` - Required system pages
-- `data/` - Attachments, versions, users
+- `attachments/` - File attachments
+- `users/` - User accounts
+- `sessions/` - Session data
+- `versions/` - Page version history
 - `logs/` - Application logs
+- `config/` - Instance-level configuration files
 
 ## Configuration
 
-The application uses built-in configuration from the Docker image. Configuration priority:
-1. `config/app-default-config.json` (base defaults)
-2. `config/app-production-config.json` (production overrides)
+Configuration loads hierarchically:
+1. `/app/config/app-default-config.json` (base defaults, baked into Docker image)
+2. `INSTANCE_DATA_FOLDER/config/app-production-config.json` (environment-specific)
+3. `INSTANCE_DATA_FOLDER/config/app-custom-config.json` (instance overrides, optional)
 
-Key settings for production:
-- Server binds to `0.0.0.0:3000`
-- Secure cookies enabled
-- Caching enabled (1 hour TTL)
-- Enhanced security settings
+**Important:** Do NOT mount `/app/config` - it's built into the Docker image. Only mount `INSTANCE_DATA_FOLDER` (`/app/data`).
+
+Instance config files go in `data/config/`:
+- `app-production-config.json` - production environment settings
+- `app-custom-config.json` - optional local overrides
+
+Example `data/config/app-production-config.json`:
+```json
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 3001
+  },
+  "session": {
+    "secure": true,
+    "sameSite": "lax"
+  }
+}
+```
 
 ## Deployment
 
+Managed by Flux GitOps. Changes are applied automatically when committed to the repository.
+
 ```bash
-# Apply manifests
-kubectl apply -k apps/production/amdwiki/
+# Force reconciliation after commit
+flux reconcile kustomization flux-system --with-source
 
 # Check status
 kubectl get pods -n amdwiki
-kubectl logs -n amdwiki -l app=amdwiki
+flux get kustomizations | grep amdwiki
 
 # Access logs
 kubectl logs -n amdwiki -l app=amdwiki -f
@@ -58,14 +78,18 @@ kubectl logs -n amdwiki -l app=amdwiki -f
 
 ## Docker Image
 
-Built from source:
+Built from source using multi-stage build (~450MB, down from 2.2GB):
 ```bash
 cd /tmp/amdwiki
+git pull origin master
 docker build -f docker/Dockerfile -t amdwiki:latest .
 docker save amdwiki:latest | sudo k3s ctr images import -
 ```
 
 Image: `amdwiki:latest` (local, not in registry)
+- Uses direct `node app.js` (no PM2)
+- TypeScript compiled at build time
+- Production dependencies only
 
 ## Security
 
@@ -83,15 +107,16 @@ kubectl describe pod -n amdwiki -l app=amdwiki
 ```
 
 ### Permission issues
-Data directories owned by UID/GID 3003 (apps:apps)
+Data directories owned by UID/GID 3003 (apps:apps). Pod uses `fsGroup: 3003` for proper file access.
 
 ### Rebuild image
 ```bash
 cd /tmp/amdwiki
-git pull
+git pull origin master
 docker build -f docker/Dockerfile -t amdwiki:latest .
 docker save amdwiki:latest | sudo k3s ctr images import -
-kubectl rollout restart deployment/amdwiki -n amdwiki
+# Delete pod to pick up new image (Flux manages the deployment)
+kubectl delete pod -n amdwiki -l app=amdwiki
 ```
 
 ## Architecture

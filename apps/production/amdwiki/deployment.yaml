@@ -14,28 +14,28 @@ spec:
         app: amdwiki
     spec:
       enableServiceLinks: false  # Disable automatic service environment variable injection
+      securityContext:
+        fsGroup: 3003  # apps group for file permissions
       containers:
       - name: amdwiki
         image: amdwiki:latest
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 3000
+        - containerPort: 3001
           name: http
         env:
         - name: NODE_ENV
           value: "production"
         # All instance data consolidated under INSTANCE_DATA_FOLDER
+        # This includes: pages/, data/, logs/, and config/
         - name: INSTANCE_DATA_FOLDER
           value: "/app/data"
 
         volumeMounts:
-        # Single data volume - contains pages, users, attachments, logs, etc.
+        # Single data volume - contains pages, users, attachments, logs, config, etc.
+        # Config files go in INSTANCE_DATA_FOLDER/config/ (e.g., app-custom-config.json)
         - name: amdwiki-data
           mountPath: /app/data
-
-        # Configuration directory (app-production-config.json)
-        - name: amdwiki-config
-          mountPath: /app/config
 
         resources:
           requests:
@@ -48,7 +48,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /favicon.svg
-            port: 3000
+            port: 3001
           initialDelaySeconds: 60
           periodSeconds: 30
           timeoutSeconds: 10
@@ -57,21 +57,15 @@ spec:
         readinessProbe:
           httpGet:
             path: /favicon.svg
-            port: 3000
+            port: 3001
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
 
       volumes:
-      # Consolidated data directory
+      # Consolidated data directory (includes config/ subdirectory)
       - name: amdwiki-data
         hostPath:
           path: /home/jim/docs/data/systems/mj-infra-flux/amdwiki/data
-          type: DirectoryOrCreate
-
-      # Configuration directory
-      - name: amdwiki-config
-        hostPath:
-          path: /home/jim/docs/data/systems/mj-infra-flux/amdwiki/config
           type: DirectoryOrCreate
