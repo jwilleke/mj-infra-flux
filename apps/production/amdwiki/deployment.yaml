@@ -3,15 +3,25 @@ kind: Deployment
 metadata:
   name: amdwiki
   namespace: amdwiki
+  labels:
+    app: amdwiki
+    app.kubernetes.io/name: amdwiki
+    app.kubernetes.io/component: wiki
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: amdwiki
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
       labels:
         app: amdwiki
+        app.kubernetes.io/name: amdwiki
     spec:
       enableServiceLinks: false  # Disable automatic service environment variable injection
       securityContext:
@@ -21,8 +31,9 @@ spec:
         image: amdwiki:latest
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 3001
+        - containerPort: 3000
           name: http
+          protocol: TCP
         env:
         - name: NODE_ENV
           value: "production"
@@ -33,9 +44,13 @@ spec:
 
         volumeMounts:
         # Single data volume - contains pages, users, attachments, logs, config, etc.
-        # Config files go in INSTANCE_DATA_FOLDER/config/ (e.g., app-custom-config.json)
         - name: amdwiki-data
           mountPath: /app/data
+        # ConfigMap for custom configuration (mounted read-only)
+        - name: amdwiki-config
+          mountPath: /app/data/config/app-custom-config.json
+          subPath: app-custom-config.json
+          readOnly: true
 
         resources:
           requests:
@@ -47,8 +62,8 @@ spec:
 
         livenessProbe:
           httpGet:
-            path: /favicon.svg
-            port: 3001
+            path: /
+            port: 3000
           initialDelaySeconds: 60
           periodSeconds: 30
           timeoutSeconds: 10
@@ -56,8 +71,8 @@ spec:
 
         readinessProbe:
           httpGet:
-            path: /favicon.svg
-            port: 3001
+            path: /
+            port: 3000
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -69,3 +84,8 @@ spec:
         hostPath:
           path: /home/jim/docs/data/systems/mj-infra-flux/amdwiki/data
           type: DirectoryOrCreate
+      # ConfigMap for custom configuration
+      - name: amdwiki-config
+        configMap:
+          name: amdwiki-config
+          optional: true

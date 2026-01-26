@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
 - namespace.yaml
 # - oauth2-secret.yaml  # TODO: Configure OIDC authentication later
+- configmap.yaml
 - deployment.yaml
 - service.yaml
 - certificate.yaml

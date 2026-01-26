@@ -3,12 +3,15 @@ kind: Service
 metadata:
   name: amdwiki
   namespace: amdwiki
+  labels:
+    app: amdwiki
+    app.kubernetes.io/name: amdwiki
 spec:
   selector:
     app: amdwiki
   ports:
   - name: http
     protocol: TCP
-    port: 3001
-    targetPort: 3001
+    port: 9211
+    targetPort: 3000
   type: ClusterIP

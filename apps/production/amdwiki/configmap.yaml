@@ -1,0 +1,24 @@
+# amdWiki Configuration ConfigMap
+# Custom configuration overrides for amdWiki deployment
+#
+# Note: This ConfigMap is mounted read-only. The installation wizard
+# cannot modify it. Admin user and .install-complete marker must
+# pre-exist in the data volume for the wizard to be skipped.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: amdwiki-config
+  namespace: amdwiki
+  labels:
+    app: amdwiki
+    app.kubernetes.io/name: amdwiki
+data:
+  app-custom-config.json: |
+    {
+      "amdwiki.server.host": "0.0.0.0",
+      "amdwiki.server.port": 3000,
+      "amdwiki.baseURL": "https://amd.nerdsbythehour.com",
+      "amdwiki.applicationName": "AMD Wiki",
+      "amdwiki.session.secure": true,
+      "amdwiki.session.sameSite": "lax"
+    }

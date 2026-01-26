@@ -27,7 +27,10 @@
       "Bash(npm outdated:*)",
       "Bash(npm update:*)",
       "Bash(npm audit fix:*)",
-      "Bash(npm audit:*)"
+      "Bash(npm audit:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(docker save:*)",
+      "Bash(sudo k3s ctr images import:*)"
     ],
     "deny": [],
     "ask": []

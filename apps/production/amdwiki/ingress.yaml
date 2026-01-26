@@ -22,4 +22,4 @@ spec:
           service:
             name: amdwiki
             port:
-              number: 3001
+              number: 9211

@@ -70,7 +70,7 @@ mj-infra-flux/
 1. **ARCHITECTURE.md** - Complete architecture, service inventory, URLs, authentication flow
 2. **DEPLOYMENT-GUIDELINES.md** - Deployment best practices, Kustomize patterns
 3. **CODE_STANDARDS.md** - Coding standards and best practices
-4. **CONTRIBUTING.md** - Contribution guidelines
+4. **CONTRIBUTING.md** - Contribution gelines
 5. **SETUP.md** - Initial setup and bootstrapping instructions
 
 **Reference Documentation:**
