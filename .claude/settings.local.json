@@ -30,7 +30,9 @@
       "Bash(npm audit:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(docker save:*)",
-      "Bash(sudo k3s ctr images import:*)"
+      "Bash(sudo k3s ctr images import:*)",
+      "Bash(grep:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
