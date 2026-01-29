@@ -23,6 +23,7 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 
 ## Work Completed
 
+- 2026-01-29-01 - Fix Flux reconciliation and Home Assistant authentication
 - 2026-01-22-05 - Attempt amdwiki fix, created upstream issue
 - 2026-01-22-04 - Fix Dependabot security vulnerabilities in jimsmcp
 - 2026-01-22-03 - Implement service failure monitoring alerts
@@ -35,6 +36,34 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-10-01 - Fixed Home Assistant proxy DNS and WebSocket - "Diagnose and fix ha.nerdsbythehour.com connectivity"
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
+
+## 2026-01-29-01
+
+- Agent: Claude Opus 4.5
+- Subject: Fix Flux reconciliation and Home Assistant authentication
+- Key Decision: Switch HA from ForwardAuth to direct OIDC authentication
+- Current Issue: None - completed successfully
+- Work Done:
+  - Diagnosed Flux apps kustomization stuck in "Reconciliation in progress"
+  - Root cause: Certificates stuck with IncorrectIssuer error (letsencrypt-prod vs letsencrypt-production)
+  - Fixed 5 files referencing wrong ClusterIssuer name
+  - Removed duplicate certificate resources (jimswiki-cert, amdwiki-cert) conflicting with ingress-created certs
+  - Fixed Home Assistant "Unable to connect" error
+  - Removed ForwardAuth middleware from HA ingress - using OIDC auth directly instead
+  - Configured HA trusted_networks to only include local network (192.168.68.0/24) for auto-login
+  - Kept k3s networks in http.trusted_proxies for proxy header trust
+  - HA now uses auth_oidc for user identity via ha.nerdsbythehour.com
+- Commits: 4819c04, 422483c, b7a705d
+- Files Modified:
+  - apps/production/amdwiki/certificate.yaml
+  - apps/production/amdwiki/ingress.yaml
+  - apps/production/amdwiki/kustomization.yaml
+  - apps/production/jimsmcp/ingress.yaml
+  - apps/production/jimswiki/jimswiki-certificate.yaml
+  - apps/production/jimswiki/kustomization.yaml
+  - apps/production/shared-resources/ingress.yaml
+  - apps/production/home-assistant-proxy/ingress.yaml
+  - (external) 192.168.68.20:/config/configuration.yaml
 
 ## 2026-01-22-05
 
