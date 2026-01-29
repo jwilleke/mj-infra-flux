@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: amdwiki-tls
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-production
     kind: ClusterIssuer
   dnsNames:
   - amd.nerdsbythehour.com

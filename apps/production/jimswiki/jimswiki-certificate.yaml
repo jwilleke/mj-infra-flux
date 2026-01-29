@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: jimswiki-tls
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-production
     kind: ClusterIssuer
   dnsNames:
-  - nerdsbythehour.com
+  - jimswiki.nerdsbythehour.com
