@@ -7,4 +7,4 @@ resources:
   - jimswiki-deployment.yaml
   - jimswiki-service.yaml
   - jimswiki-ingress.yaml
-  - jimswiki-certificate.yaml
+  # Certificate auto-created by ingress annotation

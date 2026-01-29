@@ -7,5 +7,5 @@ resources:
 - configmap.yaml
 - deployment.yaml
 - service.yaml
-- certificate.yaml
+# Certificate auto-created by ingress annotation
 - ingress.yaml
