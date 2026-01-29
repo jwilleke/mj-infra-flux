@@ -5,7 +5,7 @@ metadata:
   namespace: home-assistant-proxy
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-production"
-    traefik.ingress.kubernetes.io/router.middlewares: authentik-authentik-forwardauth@kubernetescrd
+    # Using OIDC auth directly in HA instead of ForwardAuth
 spec:
   ingressClassName: traefik
   tls:
