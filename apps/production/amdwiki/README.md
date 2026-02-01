@@ -9,6 +9,9 @@ A simple, file-based wiki application built with Node.js, Express, and Markdown 
 - **Namespace**: amdwiki
 - **Authentication**: Authentik SSO (ForwardAuth)
 - **Source**: https://github.com/jwilleke/amdWiki
+  - cloned at: /home/jim/Documents/amdWiki/
+- data folder use /home/jim/docs/data/systems/mj-infra-flux/amdwiki/data on the host, so it's not inside the container - it's preserved automatically.    
+
 
 ## Features
 

@@ -41,6 +41,8 @@ spec:
         # This includes: pages/, data/, logs/, and config/
         - name: INSTANCE_DATA_FOLDER
           value: "/app/data"
+        - name: HEADLESS_INSTALL
+          value: "true"
 
         volumeMounts:
         # Single data volume - contains pages, users, attachments, logs, config, etc.
