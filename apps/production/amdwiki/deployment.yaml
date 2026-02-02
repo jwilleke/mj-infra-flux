@@ -28,8 +28,8 @@ spec:
         fsGroup: 3003  # apps group for file permissions
       containers:
       - name: amdwiki
-        image: amdwiki:latest
-        imagePullPolicy: IfNotPresent
+        image: ghcr.io/jwilleke/amdwiki:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
           name: http
@@ -84,7 +84,7 @@ spec:
       # Consolidated data directory (includes config/ subdirectory)
       - name: amdwiki-data
         hostPath:
-          path: /home/jim/docs/data/systems/mj-infra-flux/amdwiki/data
+          path: /home/jim/docs/data/systems/wikis/amdWiki-data
           type: DirectoryOrCreate
       # ConfigMap for custom configuration
       - name: amdwiki-config

@@ -10,7 +10,7 @@ A simple, file-based wiki application built with Node.js, Express, and Markdown 
 - **Authentication**: Authentik SSO (ForwardAuth)
 - **Source**: https://github.com/jwilleke/amdWiki
   - cloned at: /home/jim/Documents/amdWiki/
-- data folder use /home/jim/docs/data/systems/mj-infra-flux/amdwiki/data on the host, so it's not inside the container - it's preserved automatically.    
+- data folder use /home/jim/docs/data/systems/wikis/amdWiki-data on the host, so it's not inside the container - it's preserved automatically.    
 
 
 ## Features
@@ -26,7 +26,7 @@ A simple, file-based wiki application built with Node.js, Express, and Markdown 
 
 ## Data Paths
 
-All data is consolidated under `INSTANCE_DATA_FOLDER` at `/home/jim/docs/data/systems/mj-infra-flux/amdwiki/data/`:
+All data is consolidated under `INSTANCE_DATA_FOLDER` at `/home/jim/docs/data/systems/wikis/amdWiki-data/`:
 
 - `pages/` - Wiki pages (Markdown files)
 - `attachments/` - File attachments
