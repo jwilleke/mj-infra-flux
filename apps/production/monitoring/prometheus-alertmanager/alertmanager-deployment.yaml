@@ -23,6 +23,7 @@ spec:
           image: quay.io/prometheus/alertmanager:v0.27.0
           args:
             - "--config.file=/config/alertmanager.yaml"
+            - "--web.external-url=https://grafana.nerdsbythehour.com/alerting/list"
 
           ports:
             - name: api
