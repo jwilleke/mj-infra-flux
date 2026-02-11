@@ -4,6 +4,12 @@ global:
   # This has no impact on alerts from Prometheus, as they always include EndsAt.
   # default = 5m
   resolve_timeout: 5m
+  # Gmail SMTP configuration
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'jwilleke@gmail.com'
+  smtp_auth_username: 'jwilleke@gmail.com'
+  smtp_auth_password_file: '/config/secrets/gmail_app_password'
+  smtp_require_tls: true
 
 route:
   # The (default) notification destination
@@ -45,9 +51,8 @@ inhibit_rules:
 
 receivers:
   - name: "on_call_operator_default"
-    telegram_configs:
-      # note the hardcoded path here to satisfy alertmanager (it uses the current working path by default?)
-      - bot_token_file: "/config/secrets/telegram_bot_token"
+    email_configs:
+      - to: 'jim@willeke.com'
         send_resolved: true
-        # see https://gist.github.com/dazeb/5d6587e9f778ca37345a4f4956031ec1
-        chat_id: 510755639
+        headers:
+          Subject: '{{ if eq .Status "firing" }}🔥{{ else }}✅{{ end }} [{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
