@@ -32,7 +32,12 @@
       "Bash(docker save:*)",
       "Bash(sudo k3s ctr images import:*)",
       "Bash(grep:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git -C /home/jim/Documents/mj-infra-flux log --oneline -5)",
+      "Bash(git -C /home/jim/Documents/mj-infra-flux push)",
+      "Bash(git -C /home/jim/Documents/mj-infra-flux status)",
+      "Bash(git -C /home/jim/Documents/mj-infra-flux add apps/production/monitoring/prometheus-alertmanager/.env.secret.alertmanager.encrypted apps/production/monitoring/prometheus-alertmanager/config/alertmanager.yaml)",
+      "Bash(git -C /home/jim/Documents/mj-infra-flux commit -m \"$\\(cat <<''EOF''\nSwitch alertmanager from Telegram to Gmail\n\nTelegram notifications were failing with 404. Now using Gmail SMTP\nto send alerts to jim@willeke.com.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ],
     "deny": [],
     "ask": []
