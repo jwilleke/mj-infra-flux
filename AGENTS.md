@@ -4,8 +4,10 @@ This file serves as the single source of truth for project context and state. Al
 
 ## Jim's Global Preference
 
+- Remeber this is Using FLUX CI
 In all interactions and commit messages 
 - Be concise and sacrifice grammar for consistion
+- We do Test-Driven-Developement
 - DRY (Don't Repeat Yourself) principle in Documentation and Code. Refer to other Documents.
 - Iterate Progressively. Start with Core features only: Gather feedback.
 - Present a list of unresolved questions to answer, if any.
