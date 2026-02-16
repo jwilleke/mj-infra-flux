@@ -67,6 +67,12 @@ spec:
             # Mount datasource provisioning
             - mountPath: /etc/grafana/provisioning/datasources
               name: grafana-datasources
+            # Mount dashboard provisioning config
+            - mountPath: /etc/grafana/provisioning/dashboards
+              name: grafana-dashboard-providers
+            # Mount dashboard JSON files
+            - mountPath: /var/lib/grafana/dashboards
+              name: grafana-dashboards
       
       securityContext:
         # this user is on the node's os as the file system owner
@@ -84,3 +90,9 @@ spec:
         - name: grafana-datasources
           configMap:
             name: grafana-datasources
+        - name: grafana-dashboard-providers
+          configMap:
+            name: grafana-dashboard-providers
+        - name: grafana-dashboards
+          configMap:
+            name: grafana-dashboards

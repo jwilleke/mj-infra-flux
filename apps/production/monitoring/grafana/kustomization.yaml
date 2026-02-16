@@ -10,6 +10,12 @@ configMapGenerator:
   - name: grafana-datasources
     files:
       - config/provisioning/datasources/prometheus.yaml
+  - name: grafana-dashboard-providers
+    files:
+      - config/provisioning/dashboards/dashboards.yaml
+  - name: grafana-dashboards
+    files:
+      - config/dashboards/jimstest-wiki.json
 
 labels:
   - pairs:
