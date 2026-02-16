@@ -1,0 +1,27 @@
+# NOTE: We use ingress here rather than a simple service so we can route traffic
+#   based on hostname and not only IP. Ingress also has the advantage of being
+#   able to serve TLS.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: otel-collector-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+      - otel.nerdsbythehour.com
+    secretName: otel-nerdsbythehour-com-tls
+  rules:
+  # don't forget to set this up in DNS
+  - host: otel.nerdsbythehour.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: otel-collector
+            port:
+              name: otlp-http

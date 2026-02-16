@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  labels:
+    app: otel-collector
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: otel-collector
+
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8889"
+
+    spec:
+      securityContext:
+        runAsUser: 4040
+        runAsGroup: 4040
+        fsGroup: 4040
+
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:0.145.0
+          args:
+            - "--config=/config/otel-collector-config.yaml"
+
+          ports:
+            - name: otlp-grpc
+              containerPort: 4317
+            - name: otlp-http
+              containerPort: 4318
+            - name: prom-exporter
+              containerPort: 8889
+            - name: health-check
+              containerPort: 13133
+
+          resources:
+            limits:
+              cpu: "1.0"
+              memory: "1Gi"
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: health-check
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: health-check
+            initialDelaySeconds: 10
+            periodSeconds: 15
+
+          volumeMounts:
+            - name: otel-collector-config-volume
+              mountPath: /config
+
+      volumes:
+        # populated by configMapGenerator in kustomization.yaml
+        - name: otel-collector-config-volume
+          configMap:
+            defaultMode: 420
+            name: otel-collector-config

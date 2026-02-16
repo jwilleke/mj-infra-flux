@@ -1,0 +1,14 @@
+resources:
+  - ./otel-collector-deployment.yaml
+  - ./otel-collector-service.yaml
+  - ./otel-collector-ingress.yaml
+
+configMapGenerator:
+  - name: otel-collector-config
+    files:
+      - ./config/otel-collector-config.yaml
+
+labels:
+  - pairs:
+      # use `app.jimwilleke.com/name` to avoid conflicts with other people's resources using "app" label.
+      app.jimwilleke.com/name: otel-collector

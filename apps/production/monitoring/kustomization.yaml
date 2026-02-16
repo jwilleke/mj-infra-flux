@@ -6,6 +6,7 @@ resources:
   - ./prometheus-alertmanager
   - ./prometheus-blackbox-exporter
   - ./grafana
+  - ./otel-collector
 
 namespace: monitoring
 
