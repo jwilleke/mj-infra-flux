@@ -4,5 +4,5 @@ namespace: jimstest
 resources:
   - namespace.yaml
   - external-service.yaml
-  - ingressroute.yaml
+  - ingress.yaml
   - certificate.yaml

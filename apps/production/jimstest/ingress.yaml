@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jimstest
+  namespace: jimstest
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - jimstest.nerdsbythehour.com
+    secretName: jimstest-tls
+  rules:
+  - host: jimstest.nerdsbythehour.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jimstest-external
+            port:
+              number: 3000
