@@ -26,3 +26,4 @@ resources:
   - ./amdwiki
   - ./home-assistant-proxy
   - ./jimsmcp        # MCP server for custom infrastructure features
+  - ./jimstest       # ngdpbase dev/test instance on jminm4

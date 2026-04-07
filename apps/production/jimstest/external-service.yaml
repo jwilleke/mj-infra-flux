@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jimstest-external
+  namespace: jimstest
+  annotations:
+    traefik.ingress.kubernetes.io/service.serversscheme: "http"
+spec:
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+    protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: jimstest-external
+  namespace: jimstest
+subsets:
+  - addresses:
+      - ip: 192.168.68.111
+    ports:
+      - name: http
+        port: 3000
+        protocol: TCP

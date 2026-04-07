@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: jimstest-cert
+  namespace: jimstest
+spec:
+  secretName: jimstest-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+  - jimstest.nerdsbythehour.com

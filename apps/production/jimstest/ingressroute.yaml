@@ -1,0 +1,19 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: jimstest
+  namespace: jimstest
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`jimstest.nerdsbythehour.com`)
+      kind: Rule
+      services:
+        - name: jimstest-external
+          port: 3000
+          scheme: http
+  tls:
+    certResolver: letsencrypt-production
+    domains:
+      - main: jimstest.nerdsbythehour.com
