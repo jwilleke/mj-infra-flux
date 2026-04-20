@@ -11,7 +11,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 10,
-      "title": "HTTP Requests",
+      "title": "Search Index",
       "type": "row"
     },
     {
@@ -22,7 +22,7 @@
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
-            "axisLabel": "req/s",
+            "axisLabel": "rebuilds/s",
             "drawStyle": "line",
             "fillOpacity": 10,
             "lineWidth": 2,
@@ -30,7 +30,7 @@
             "showPoints": "never",
             "spanNulls": false
           },
-          "unit": "reqps"
+          "unit": "ops"
         },
         "overrides": []
       },
@@ -42,12 +42,12 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(jimstest_http_requests_total{service_name=\"jimstest-wiki\"}[$__rate_interval]))",
-          "legendFormat": "Total req/s",
+          "expr": "sum(rate(jimstest_search_rebuilds_total{service_name=\"jimstest-wiki\"}[$__rate_interval]))",
+          "legendFormat": "rebuilds/s",
           "refId": "A"
         }
       ],
-      "title": "Request Rate",
+      "title": "Search Rebuild Rate",
       "type": "timeseries"
     },
     {
@@ -58,7 +58,7 @@
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
-            "axisLabel": "req/s",
+            "axisLabel": "duration",
             "drawStyle": "line",
             "fillOpacity": 10,
             "lineWidth": 2,
@@ -66,7 +66,7 @@
             "showPoints": "never",
             "spanNulls": false
           },
-          "unit": "reqps"
+          "unit": "ms"
         },
         "overrides": []
       },
@@ -78,56 +78,64 @@
       },
       "targets": [
         {
-          "expr": "sum by (route) (rate(jimstest_http_requests_total{service_name=\"jimstest-wiki\"}[$__rate_interval]))",
-          "legendFormat": "{{route}}",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(jimstest_search_rebuild_duration_ms_milliseconds_bucket{service_name=\"jimstest-wiki\"}[$__rate_interval])))",
+          "legendFormat": "p50",
           "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(jimstest_search_rebuild_duration_ms_milliseconds_bucket{service_name=\"jimstest-wiki\"}[$__rate_interval])))",
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(jimstest_search_rebuild_duration_ms_milliseconds_bucket{service_name=\"jimstest-wiki\"}[$__rate_interval])))",
+          "legendFormat": "p99",
+          "refId": "C"
         }
       ],
-      "title": "Request Rate by Route",
+      "title": "Search Rebuild Duration",
       "type": "timeseries"
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisLabel": "req/s",
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 2,
-            "pointSize": 5,
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": { "group": "A", "mode": "normal" }
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
           },
-          "unit": "reqps"
+          "unit": "short"
         },
         "overrides": []
       },
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 1 },
       "id": 3,
       "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
       },
       "targets": [
         {
-          "expr": "sum by (status) (rate(jimstest_http_requests_total{service_name=\"jimstest-wiki\"}[$__rate_interval]))",
-          "legendFormat": "{{status}}",
+          "expr": "sum(jimstest_search_rebuilds_total{service_name=\"jimstest-wiki\"})",
+          "legendFormat": "Total rebuilds",
           "refId": "A"
         }
       ],
-      "title": "Requests by Status Code",
-      "type": "timeseries"
+      "title": "Total Search Rebuilds",
+      "type": "stat"
     },
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
       "id": 11,
-      "title": "Latency",
+      "title": "Engine Init",
       "type": "row"
     },
     {
@@ -150,7 +158,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 10 },
       "id": 4,
       "options": {
         "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
@@ -158,147 +166,22 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(jimstest_http_request_duration_ms_milliseconds_bucket{service_name=\"jimstest-wiki\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(jimstest_engine_init_duration_ms_milliseconds_bucket{service_name=\"jimstest-wiki\"}[$__rate_interval])))",
           "legendFormat": "p50",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(jimstest_http_request_duration_ms_milliseconds_bucket{service_name=\"jimstest-wiki\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(jimstest_engine_init_duration_ms_milliseconds_bucket{service_name=\"jimstest-wiki\"}[$__rate_interval])))",
           "legendFormat": "p95",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(jimstest_http_request_duration_ms_milliseconds_bucket{service_name=\"jimstest-wiki\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(jimstest_engine_init_duration_ms_milliseconds_bucket{service_name=\"jimstest-wiki\"}[$__rate_interval])))",
           "legendFormat": "p99",
           "refId": "C"
         }
       ],
-      "title": "HTTP Request Duration",
-      "type": "timeseries"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisLabel": "duration",
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 2,
-            "pointSize": 5,
-            "showPoints": "never",
-            "spanNulls": false
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
-      "id": 5,
-      "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(jimstest_page_view_duration_ms_milliseconds_bucket{service_name=\"jimstest-wiki\"}[$__rate_interval])))",
-          "legendFormat": "p50",
-          "refId": "A"
-        },
-        {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(jimstest_page_view_duration_ms_milliseconds_bucket{service_name=\"jimstest-wiki\"}[$__rate_interval])))",
-          "legendFormat": "p95",
-          "refId": "B"
-        },
-        {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(jimstest_page_view_duration_ms_milliseconds_bucket{service_name=\"jimstest-wiki\"}[$__rate_interval])))",
-          "legendFormat": "p99",
-          "refId": "C"
-        }
-      ],
-      "title": "Page View Duration",
-      "type": "timeseries"
-    },
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
-      "id": 12,
-      "title": "Page Views & Auth",
-      "type": "row"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisLabel": "views/s",
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 2,
-            "pointSize": 5,
-            "showPoints": "never",
-            "spanNulls": false
-          },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 19 },
-      "id": 6,
-      "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "expr": "sum(rate(jimstest_page_views_total{service_name=\"jimstest-wiki\"}[$__rate_interval]))",
-          "legendFormat": "Page views/s",
-          "refId": "A"
-        }
-      ],
-      "title": "Page Views Rate",
-      "type": "timeseries"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisLabel": "attempts/s",
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 2,
-            "pointSize": 5,
-            "showPoints": "never",
-            "spanNulls": false
-          },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 19 },
-      "id": 7,
-      "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "expr": "sum(rate(jimstest_login_attempts_total{service_name=\"jimstest-wiki\"}[$__rate_interval]))",
-          "legendFormat": "Login attempts/s",
-          "refId": "A"
-        }
-      ],
-      "title": "Login Attempts",
+      "title": "Engine Init Duration",
       "type": "timeseries"
     }
   ],
@@ -310,5 +193,5 @@
   "timezone": "",
   "title": "jimstest-wiki",
   "uid": "jimstest-wiki",
-  "version": 1
+  "version": 2
 }
