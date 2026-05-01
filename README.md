@@ -31,7 +31,6 @@ I stole this from [Activescott](https://github.com/activescott/home-infra-k8s-fl
 
 - **[Authentik](apps/production/authentik/README.md)** - SSO/IdP for all protected services
 - **[JimsWiki](apps/production/jimswiki/README.md)** - 38,004 pages wiki (JSPWiki)
-- **[AMDWiki](apps/production/amdwiki/README.md)** - AMD Technologies wiki
 - **[TeslaMate](apps/production/teslamate/README.md)** - Vehicle tracking
 - **[Home Assistant](apps/production/home-assistant/README.md)** - Home automation
 - **[Home Assistant Proxy](apps/production/home-assistant-proxy/README.md)** - Authentik-protected proxy for Home Assistant

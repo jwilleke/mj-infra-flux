@@ -174,7 +174,6 @@ kubectl logs -n namespace -l app=myapp
 ### Applications
 - **Landing Page** - Public landing page at nerdsbythehour.com
 - **JimsWiki** - 38,004 pages wiki (JSPWiki)
-- **AMDWiki** - AMD Technologies (https://github.com/jwilleke/amdWiki)
 - **TeslaMate** - Vehicle tracking 
 - **Home Assistant** - Home automation
 - **Hoarder** - Bookmark and content management

@@ -97,7 +97,6 @@ Protected services accessible after Authentik login at `https://auth.nerdsbytheh
 | **TeslaMate** | teslamate.nerdsbythehour.com | 4000 | mj | 9 |
 | **Grafana** | grafana.nerdsbythehour.com | 80 | mj | 10 |
 | **Home Assistant** | ha.nerdsbythehour.com | 8123 | mj | Existing |
-| **AMDWiki** | amd.nerdsbythehour.com | — | mj | Existing |
 | **Authentik** | auth.nerdsbythehour.com | — | All | Self-service |
 | **FileBrowser** | TBD | 80 | Protected | TBD |
 
