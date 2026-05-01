@@ -60,7 +60,7 @@ spec:
       volumes:
       - name: shared-data
         hostPath:
-          path: /home/jim/docs/data/systems/shared-resources
+          path: /mnt/tank/jims/data/systems/shared-resources
           type: Directory
       - name: nginx-config
         configMap:

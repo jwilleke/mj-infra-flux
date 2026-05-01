@@ -114,10 +114,10 @@ spec:
           failureThreshold: 10
 
       volumes:
-      # CRITICAL: NFS mount with 38,004 wiki pages - path MUST remain exactly as is
+      # NFS mount with 38,004 wiki pages
       - name: wiki-pages
         hostPath:
-          path: /home/jim/docs/data/systems/wikis/jimswiki
+          path: /mnt/tank/jims/data/systems/wikis/jimswiki
           type: Directory
 
       # Configuration files (NFS mount - editable)
