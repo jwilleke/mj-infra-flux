@@ -56,7 +56,11 @@ data:
         local:
           directory: /loki/rules
       rule_path: /loki/rules-tmp
-      alertmanager_url: http://alertmanager.monitoring:9093
+      # Alertmanager runs with --web.external-url=https://.../alerting/list
+      # which sets a /alerting/list route-prefix; its API lives at
+      # /alerting/list/api/v2/alerts, not /api/v2/alerts. Loki appends
+      # /api/v{1,2}/alerts to this base URL.
+      alertmanager_url: http://alertmanager.monitoring:9093/alerting/list
       enable_alertmanager_v2: true
       enable_api: true
       ring:
