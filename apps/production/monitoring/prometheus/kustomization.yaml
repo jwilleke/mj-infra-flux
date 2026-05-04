@@ -26,6 +26,7 @@ configMapGenerator:
       # monitoring and alerting rules:
       - config/alerting-rules.prometheus.yaml
       - config/alerting-rules.service-health.yaml
+      - config/alerting-rules.k3s-cluster.yaml
       # coinpoet and tayle configs removed
 
 labels:

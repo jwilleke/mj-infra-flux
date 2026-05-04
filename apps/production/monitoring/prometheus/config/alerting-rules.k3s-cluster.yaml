@@ -1,0 +1,102 @@
+groups:
+  - name: k3s_cluster_pod_health
+    interval: 30s
+    rules:
+
+      # Container is in CrashLoopBackOff state. Tolerates a brief blip — only
+      # alerts if the condition persists 5 min so transient image pulls /
+      # initialisation issues don't fire.
+      - alert: PodCrashLoopBackOff
+        expr: |
+          max by (namespace, pod, container) (
+            kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff"}
+          ) == 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} in CrashLoopBackOff"
+          description: |
+            Container has been crash-looping for >5 min.
+            Investigate:
+              k3s kubectl -n {{ $labels.namespace }} describe pod {{ $labels.pod }}
+              k3s kubectl -n {{ $labels.namespace }} logs {{ $labels.pod }} -c {{ $labels.container }} --previous
+
+      # Image pull keeps failing — usually a wrong tag, deleted image, or
+      # registry auth problem.
+      - alert: PodImagePullBackOff
+        expr: |
+          max by (namespace, pod, container) (
+            kube_pod_container_status_waiting_reason{reason=~"ImagePullBackOff|ErrImagePull"}
+          ) == 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} cannot pull image"
+          description: |
+            Container is in {{ $labels.reason }}. Likely wrong image tag,
+            deleted upstream image, or registry credentials issue.
+
+      # Last termination reason was OOMKilled — kernel killed the container
+      # for using too much memory. Different from a clean exit.
+      - alert: PodOOMKilled
+        expr: |
+          increase(kube_pod_container_status_restarts_total[15m]) > 0
+          and on (namespace, pod, container)
+          kube_pod_container_status_last_terminated_reason{reason="OOMKilled"} == 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} was OOMKilled"
+          description: |
+            Last termination of this container was due to memory limits.
+            Either bump the container's memory limit or fix the leak.
+
+      # Node went NotReady — this is a single-node cluster, so this means
+      # k3s itself is in trouble (or the host's kubelet/containerd is unhappy).
+      - alert: NodeNotReady
+        expr: |
+          kube_node_status_condition{condition="Ready", status="true"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "k3s node {{ $labels.node }} is NotReady"
+          description: |
+            The single-node k3s cluster has lost its node Ready condition.
+            Check on deby:
+              systemctl status k3s
+              journalctl -u k3s -e
+
+      # Pod has been stuck in Pending for too long (resource starvation,
+      # missing PVC, etc.).
+      - alert: PodPendingTooLong
+        expr: |
+          max by (namespace, pod) (
+            kube_pod_status_phase{phase="Pending"}
+          ) == 1
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been Pending for >15 min"
+          description: |
+            Pod hasn't been scheduled or hasn't started. Common causes:
+            unsatisfied resource requests, missing PVC, image pull stuck.
+
+      # Container restarting repeatedly — different from CrashLoopBackOff
+      # which only fires once the kubelet gives up. This catches "borderline"
+      # services that restart often without ever fully crashlooping.
+      - alert: PodFrequentRestarts
+        expr: |
+          increase(kube_pod_container_status_restarts_total[1h]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} restarted >5 times in 1h"
+          description: |
+            Container is restarting frequently without entering CrashLoopBackOff.
+            Investigate health checks and container exit reasons.
