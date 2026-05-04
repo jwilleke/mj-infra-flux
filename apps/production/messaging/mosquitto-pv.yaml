@@ -13,7 +13,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
   hostPath:
-    path: /home/jim/docs/data/systems/mj-infra-flux/mosquitto/data
+    path: /mnt/local-k3s-data/mosquitto/data
     type: DirectoryOrCreate
 ---
 apiVersion: v1
@@ -31,5 +31,5 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
   hostPath:
-    path: /home/jim/docs/data/systems/mj-infra-flux/mosquitto/config
+    path: /mnt/local-k3s-data/mosquitto/config
     type: DirectoryOrCreate
