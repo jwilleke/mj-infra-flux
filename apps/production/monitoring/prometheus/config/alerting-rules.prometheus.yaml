@@ -24,10 +24,13 @@ groups:
           summary: "Prometheus TSDB compaction is slow"
           description: "Compaction is taking longer than expected. This can lead to WAL accumulation and startup issues."
 
-      # Alert if Prometheus restart happens more than twice in 24 hours
+      # Alert if Prometheus restart happens more than twice in 24 hours.
+      # Scoped to the prometheus self-scrape job so unrelated processes
+      # (node-exporter on :9100, kube-apiserver on :6443) don't trigger
+      # this just because Prometheus also scrapes them.
       - alert: PrometheusFrequentRestarts
         expr: |
-          rate(process_start_time_seconds[24h]) > 0.000023
+          rate(process_start_time_seconds{job="prometheus self scrape"}[24h]) > 0.000023
         for: 5m
         labels:
           severity: critical

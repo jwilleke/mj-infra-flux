@@ -12,7 +12,13 @@ global:
 
 alerting:
   alertmanagers:
-    - static_configs:
+    # path_prefix matches the alertmanager Deployment's
+    # --web.external-url=https://grafana.nerdsbythehour.com/alerting/list,
+    # which makes alertmanager require /alerting/list as a path prefix on
+    # all incoming requests. Without this, posts to /api/v2/alerts return
+    # 404 and Prometheus alerts never reach Slack/email.
+    - path_prefix: /alerting/list
+      static_configs:
         - targets:
             # the dns name of the alertmanager workload's service per https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/
             - alertmanager.monitoring.svc:9093
