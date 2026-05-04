@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate     # hostPath data; no rolling — only one pod can hold the chunks dir
+  selector:
+    matchLabels:
+      app.jimwilleke.com/name: loki
+  template:
+    metadata:
+      labels:
+        app.jimwilleke.com/name: loki
+    spec:
+      securityContext:
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: loki
+          image: grafana/loki:3.2.1
+          args:
+            - "-config.file=/etc/loki/loki.yaml"
+          ports:
+            - name: http
+              containerPort: 3100
+            - name: grpc
+              containerPort: 9095
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1
+              memory: 1Gi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/loki
+            - name: data
+              mountPath: /loki
+      volumes:
+        - name: config
+          configMap:
+            name: loki-config
+        - name: data
+          # Persistent on the NFS-backed /mnt/tank pool, alongside other
+          # /mnt/tank/jims/data/systems/* state. Survives pod restarts and
+          # gets backed up by deby's nightly NAS->deby push (it's on tank).
+          hostPath:
+            path: /mnt/tank/jims/data/systems/loki
+            type: DirectoryOrCreate
