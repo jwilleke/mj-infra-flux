@@ -17,6 +17,7 @@ configMapGenerator:
   - name: grafana-dashboards
     files:
       - config/dashboards/jimstest-wiki.json
+      - config/dashboards/deby-host-errors.json
 
 labels:
   - pairs:
