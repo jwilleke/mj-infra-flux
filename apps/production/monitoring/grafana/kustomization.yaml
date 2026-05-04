@@ -10,6 +10,7 @@ configMapGenerator:
   - name: grafana-datasources
     files:
       - config/provisioning/datasources/prometheus.yaml
+      - config/provisioning/datasources/elasticsearch.yaml
   - name: grafana-dashboard-providers
     files:
       - config/provisioning/dashboards/dashboards.yaml
