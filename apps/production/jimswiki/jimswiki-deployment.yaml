@@ -56,16 +56,15 @@ spec:
           value: "-Djspwiki.baseURL=https://jimswiki.nerdsbythehour.com/ -Dlog4j.configurationFile=file:///var/jspwiki/etc/log4j2.xml"
         # Override Dockerfile ENV vars with values from jspwiki-custom.properties
         - name: jspwiki_fileSystemProvider_pageDir
-          value: "/home/jim/docs/data/systems/wikis/jimswiki"
+          value: "/mnt/tank/jims/data/systems/wikis/jimswiki"
         - name: jspwiki_basicAttachmentProvider_storageDir
-          value: "/home/jim/docs/data/systems/wikis/jimswiki"
+          value: "/mnt/tank/jims/data/systems/wikis/jimswiki"
         - name: jspwiki_applicationName
           value: "JimsWiki"
 
         volumeMounts:
-        # CRITICAL: Wiki pages - MUST preserve exact path for 38,000+ existing pages
         - name: wiki-pages
-          mountPath: /home/jim/docs/data/systems/wikis/jimswiki
+          mountPath: /mnt/tank/jims/data/systems/wikis/jimswiki
 
         # Configuration files from host
         - name: wiki-config
