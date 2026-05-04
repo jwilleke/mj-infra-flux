@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loki-rules
+data:
+  # Loki rules live in /loki/rules/<tenant>/...; auth_enabled=false means
+  # the implicit tenant is "fake".
+  rules.yaml: |
+    groups:
+      - name: deby_host
+        interval: 1m
+        rules:
+
+          # Fires when fluent-bit hasn't shipped any deby record for >10 min.
+          # Most common cause: fluent-bit is stopped or Loki is unreachable.
+          - alert: HostLogsAbsent
+            expr: 'absent_over_time({host="deby"}[10m]) == 1'
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "No logs received from host deby for >10 min"
+              description: |
+                fluent-bit on deby has not shipped any journal/tcp/forward record
+                in the last 10 minutes. Check `systemctl status fluent-bit` on
+                the host and Loki ingest health.
+
+          # Sustained elevated error rate. Note fluent-bit only ships
+          # PRIORITY 3/4 (err/warning), so any "error" detected_level here
+          # came from a real systemd-priority-3 entry.
+          - alert: HostErrorRate
+            expr: 'sum(count_over_time({host="deby", detected_level="error"}[5m])) > 5'
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Elevated error rate on host deby"
+              description: |
+                More than 5 priority-3 journal entries from deby in the last
+                5 minutes. Investigate via Grafana → Explore → Loki:
+                {host="deby", detected_level="error"}
+
+          # Tripped by a marker line written by backup-deby's OnFailure
+          # handler. See deby:systemd/backup-deby-fail.service.
+          - alert: BackupDebyFailed
+            expr: 'sum(count_over_time({host="deby"} |= "BACKUP-DEBY-FAILED"[15m])) > 0'
+            labels:
+              severity: critical
+            annotations:
+              summary: "backup-deby.service failed"
+              description: |
+                The nightly local backup of deby (to the deby-backup ZFS pool)
+                did not complete successfully. Run on the host:
+                  journalctl -u backup-deby.service -e
+                  cat /deby-backup/host/meta/$(date +%F).log
+
+          # ZFS pool unhealthy as reported by zpool status output captured
+          # in the journal (zfsutils-linux scrub cron / events).
+          - alert: ZfsPoolDegraded
+            expr: 'sum(count_over_time({host="deby"} |~ "(?i)zpool.*(DEGRADED|FAULTED|UNAVAIL)"[5m])) > 0'
+            labels:
+              severity: critical
+            annotations:
+              summary: "A ZFS pool on deby reports DEGRADED/FAULTED/UNAVAIL"
+              description: |
+                Run on the host:  zpool status -v
+                Backup pools (deby-backup, nas-backup) and any others.

@@ -53,10 +53,18 @@ spec:
               mountPath: /etc/loki
             - name: data
               mountPath: /loki
+            # Mount the ruler rules into the tenant subdir.  auth_enabled=false
+            # means the implicit tenant is "fake".
+            - name: rules
+              mountPath: /loki/rules/fake/rules.yaml
+              subPath: rules.yaml
       volumes:
         - name: config
           configMap:
             name: loki-config
+        - name: rules
+          configMap:
+            name: loki-rules
         - name: data
           # Persistent on the NFS-backed /mnt/tank pool, alongside other
           # /mnt/tank/jims/data/systems/* state. Survives pod restarts and

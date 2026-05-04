@@ -56,6 +56,12 @@ data:
         local:
           directory: /loki/rules
       rule_path: /loki/rules-tmp
+      alertmanager_url: http://alertmanager.monitoring:9093
+      enable_alertmanager_v2: true
+      enable_api: true
+      ring:
+        kvstore:
+          store: inmemory
 
     analytics:
       reporting_enabled: false
