@@ -187,9 +187,12 @@ scrape_configs:
 
       - action: labelmap
         regex: __meta_kubernetes_pod_label_(.+)
+      # Scrape-side namespace lives under `kubernetes_namespace` so it
+      # never collides with metric-emitted `namespace` labels (e.g. from
+      # kube-state-metrics). See jwilleke/mj-infra-flux#35.
       - source_labels: [__meta_kubernetes_namespace]
         action: replace
-        target_label: namespace
+        target_label: kubernetes_namespace
       - source_labels: [__meta_kubernetes_pod_name]
         action: replace
         target_label: pod
@@ -248,9 +251,12 @@ scrape_configs:
       #    regex: (https?)
       - action: labelmap
         regex: __meta_kubernetes_service_label_(.+)
+      # Scrape-side namespace lives under `kubernetes_namespace` so it
+      # never collides with metric-emitted `namespace` labels (e.g. from
+      # kube-state-metrics). See jwilleke/mj-infra-flux#35.
       - source_labels: [__meta_kubernetes_namespace]
         action: replace
-        target_label: namespace
+        target_label: kubernetes_namespace
       - source_labels: [__meta_kubernetes_service_name]
         action: replace
         target_label: service

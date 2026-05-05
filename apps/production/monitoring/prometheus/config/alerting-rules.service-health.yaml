@@ -66,10 +66,7 @@ groups:
 
       # Alert if pod is not ready. Excludes terminal pods (Succeeded /
       # Failed) so completed Job pods like helm-install-* don't trigger
-      # this. Annotation uses exported_namespace because kube-state-metrics's
-      # `namespace` label collides with the scrape job's `namespace` label
-      # (the latter wins on conflict; the real one ends up as
-      # exported_namespace).
+      # this.
       - alert: PodNotReady
         expr: |
           kube_pod_status_ready{condition="true"} == 0
@@ -78,8 +75,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Pod {{ $labels.exported_namespace }}/{{ $labels.pod }} not ready"
-          description: "Pod {{ $labels.pod }} in namespace {{ $labels.exported_namespace }} has been not ready for 5 minutes."
+          summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} not ready"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has been not ready for 5 minutes."
 
       # Alert if deployment has zero available replicas (excludes intentionally scaled-down deployments)
       - alert: DeploymentNoReplicas
@@ -95,9 +92,7 @@ groups:
 
       # Alert if StatefulSet has zero ready replicas. Guarded with
       # `kube_statefulset_replicas > 0` so intentionally scaled-down
-      # StatefulSets don't fire. Annotation uses exported_namespace —
-      # see PodNotReady note above on the kube-state-metrics label
-      # collision.
+      # StatefulSets don't fire.
       - alert: StatefulSetNoReplicas
         expr: |
           kube_statefulset_status_replicas_ready == 0
@@ -106,8 +101,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "StatefulSet {{ $labels.exported_namespace }}/{{ $labels.statefulset }} has no replicas"
-          description: "StatefulSet {{ $labels.statefulset }} in namespace {{ $labels.exported_namespace }} has 0 ready replicas."
+          summary: "StatefulSet {{ $labels.namespace }}/{{ $labels.statefulset }} has no replicas"
+          description: "StatefulSet {{ $labels.statefulset }} in namespace {{ $labels.namespace }} has 0 ready replicas."
 
   - name: kubernetes_resource_health
     interval: 60s
