@@ -24,7 +24,7 @@ groups:
           summary: "Prometheus TSDB compaction is slow"
           description: "Compaction is taking longer than expected. This can lead to WAL accumulation and startup issues."
 
-      # Alert if Prometheus restarts more than twice in 24 hours. Uses
+      # Alert if Prometheus restarts more than 5 times in 24 hours. Uses
       # changes() to actually count restart events — rate() on
       # process_start_time_seconds is a step-function gauge so a single
       # restart returns rate ≈ delta_seconds / 86400 (a large number),
@@ -32,9 +32,13 @@ groups:
       # Scoped to the prometheus self-scrape job so unrelated processes
       # (node-exporter on :9100, kube-apiserver on :6443) don't trigger
       # this just because Prometheus also scrapes them.
+      # Threshold is `> 5`: a real CrashLoopBackOff produces 10+ restarts
+      # in minutes, while a heavy maintenance day on this homelab can
+      # legitimately roll the pod 3-4 times (Flux reconciles, config
+      # changes). See jwilleke/mj-infra-flux#33.
       - alert: PrometheusFrequentRestarts
         expr: |
-          changes(process_start_time_seconds{job="prometheus self scrape"}[24h]) > 2
+          changes(process_start_time_seconds{job="prometheus self scrape"}[24h]) > 5
         for: 5m
         labels:
           severity: critical
