@@ -245,19 +245,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const namespace = args?.namespace as string;
 
         // Get pod status
-        const podsResponse = await k8sApi.listNamespacedPod(
+        const podsResponse = await k8sApi.listNamespacedPod({
           namespace,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          `app=${app}`
-        );
+          labelSelector: `app=${app}`,
+        });
 
         // Get service
         let service;
         try {
-          const svcResponse = await k8sApi.readNamespacedService(app, namespace);
+          const svcResponse = await k8sApi.readNamespacedService({ name: app, namespace });
           service = {
             name: (svcResponse as any).metadata?.name,
             type: (svcResponse as any).spec?.type,
@@ -271,7 +267,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const k8sNetworkingApi = kc.makeApiClient(k8s.NetworkingV1Api);
         let ingress;
         try {
-          const ingResponse = await k8sNetworkingApi.listNamespacedIngress(namespace);
+          const ingResponse = await k8sNetworkingApi.listNamespacedIngress({ namespace });
           const matchingIngress = (ingResponse as any).items.find((ing: any) =>
             ing.spec?.rules?.some((r: any) =>
               r.http?.paths?.some((p: any) => p.backend.service?.name === app)
@@ -312,9 +308,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         // Get all ingresses to discover applications
         let ingressResponse;
         if (filterNamespace) {
-          ingressResponse = await k8sNetworkingApi.listNamespacedIngress(
-            filterNamespace
-          );
+          ingressResponse = await k8sNetworkingApi.listNamespacedIngress({
+            namespace: filterNamespace,
+          });
         } else {
           ingressResponse = await k8sNetworkingApi.listIngressForAllNamespaces();
         }
@@ -339,19 +335,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           const [appName, namespace] = appNamespaceStr.split("|");
           try {
             // Get pod status
-            const podsResponse = await k8sApi.listNamespacedPod(
+            const podsResponse = await k8sApi.listNamespacedPod({
               namespace,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              `app=${appName}`
-            );
+              labelSelector: `app=${appName}`,
+            });
 
             // Get service
             let service;
             try {
-              const svcResponse = await k8sApi.readNamespacedService(appName, namespace);
+              const svcResponse = await k8sApi.readNamespacedService({ name: appName, namespace });
               service = {
                 name: (svcResponse as any).metadata?.name,
                 type: (svcResponse as any).spec?.type,
@@ -364,7 +356,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             // Get ingress
             let ingress;
             try {
-              const ingResp = await k8sNetworkingApi.listNamespacedIngress(namespace);
+              const ingResp = await k8sNetworkingApi.listNamespacedIngress({ namespace });
               const matchingIngress = (ingResp as any).items.find((ing: any) =>
                 ing.spec?.rules?.some((r: any) =>
                   r.http?.paths?.some((p: any) => p.backend.service?.name === appName)
@@ -439,11 +431,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         let response;
         if (namespace) {
-          response = await k8sNetworkingApi.listNamespacedIngress({
-            name: namespace,
-          } as any);
+          response = await k8sNetworkingApi.listNamespacedIngress({ namespace });
         } else {
-          response = await k8sNetworkingApi.listIngressForAllNamespaces({} as any);
+          response = await k8sNetworkingApi.listIngressForAllNamespaces();
         }
 
         const urls = (response as any).items.flatMap((ing: any) => {
@@ -467,14 +457,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         // Get Authentik deployment info
         const namespace = "authentik";
         const podsResponse = await k8sApi.listNamespacedPod({
-          name: namespace,
+          namespace,
           labelSelector: "app.kubernetes.io/name=authentik",
-        } as any);
+        });
 
         const k8sNetworkingApi = kc.makeApiClient(k8s.NetworkingV1Api);
-        const ingressResponse = await k8sNetworkingApi.listNamespacedIngress({
-          name: namespace,
-        } as any);
+        const ingressResponse = await k8sNetworkingApi.listNamespacedIngress({ namespace });
 
         const authentikIngress = (ingressResponse as any).items.find(
           (ing: any) => ing.metadata?.name === "authentik"
