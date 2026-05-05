@@ -15,21 +15,3 @@ spec:
   hostPath:
     path: /mnt/local-k3s-data/mosquitto/data
     type: DirectoryOrCreate
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mosquitto-config-pv
-  labels:
-    app: mosquitto
-    type: config
-spec:
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: ""
-  hostPath:
-    path: /mnt/local-k3s-data/mosquitto/config
-    type: DirectoryOrCreate
