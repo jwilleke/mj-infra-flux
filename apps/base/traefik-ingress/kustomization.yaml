@@ -59,7 +59,7 @@ helmCharts:
       #  additionalVolumes:
       #    - name: cert-activescott-com
       #      hostPath:
-      #        path: /mnt/thedatapool/app-data/letsencrypt
+      #        path: /mnt/local-k3s-data/traefik/letsencrypt
       #        type: Directory
       # now add the volumeMount to the traefik container
       #additionalVolumeMounts:

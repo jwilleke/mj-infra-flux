@@ -21,6 +21,6 @@ patches:
             volumes:
               - name: data
                 hostPath:
-                  path: /mnt/thedatapool/app-data/example-app/mariadb-data
+                  path: /mnt/local-k3s-data/example-app/mariadb-data
 
 namespace: mariadb-example-app

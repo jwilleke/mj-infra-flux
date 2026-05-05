@@ -104,4 +104,4 @@ spec:
       volumes:
         - name: data
           hostPath:
-            path: /PATCH_WITH_KUSTOMIZE # e.g /mnt/thedatapool/app-data/example-app/mariadb-data
+            path: /PATCH_WITH_KUSTOMIZE # e.g /mnt/local-k3s-data/<app>/mariadb-data
