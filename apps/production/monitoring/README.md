@@ -42,7 +42,7 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
 ### Prometheus
 - **Version**: 3.0.1
 - **Service**: `prometheus-service.monitoring.svc.cluster.local:80`
-- **Storage**: `/mnt/thedatapool/no-backup/app-data/prometheus/storage`
+- **Storage**: PVC `prometheus-storage-volume-prometheus-0` (60Gi, local-path provisioner); mounted at `/prometheus` in the pod
 - **Retention**: 30 days or 100GB (whichever comes first)
 - **Resources**: 1 CPU / 2Gi RAM
 - **Security**: Runs as UID/GID 4030:4030
@@ -454,8 +454,8 @@ groups:
 # For critical metrics, configure remote write to long-term storage
 
 # Backup current data
-sudo tar -czf prometheus-backup-$(date +%Y%m%d).tar.gz \
-  /mnt/thedatapool/no-backup/app-data/prometheus/storage
+kubectl exec -n monitoring prometheus-0 -- \
+  tar -czf - /prometheus > prometheus-backup-$(date +%Y%m%d).tar.gz
 ```
 
 ### Backup Grafana Dashboards
@@ -558,7 +558,7 @@ Prometheus memory usage grows with:
 
 ```bash
 # Check Prometheus storage usage
-sudo du -sh /mnt/thedatapool/no-backup/app-data/prometheus/storage
+kubectl exec -n monitoring prometheus-0 -- du -sh /prometheus
 
 # Prometheus auto-manages retention, but can manually clean old data
 sudo kubectl exec -n monitoring prometheus-0 -- \
