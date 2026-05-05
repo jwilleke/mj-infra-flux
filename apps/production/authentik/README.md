@@ -7,8 +7,9 @@
 - PostgreSQL and Redis persistence configured
 - Let's Encrypt certificate issued
 - Traefik ForwardAuth middleware created
-- Filebrowser application deployed at https://filebrowser.nerdsbythehour.com
-- DNS records configured for auth and filebrowser subdomains
+- DNS records configured for the `auth` subdomain
+
+> **Note:** This guide was originally written using Filebrowser as the worked example for an Authentik-protected application. That deployment was removed on 2026-05-05 (the SMB stack it served was orphaned — see the related cleanup commit). The Step 1 / Step 2 / Step 3 instructions below still reference Filebrowser by name; treat them as historical reference for the shape of the setup, and substitute your own application's name and URLs when adapting.
 
 🔧 **Pending Configuration:**
 - Complete OAuth2/Proxy Provider setup in Authentik UI (steps below)
@@ -79,31 +80,25 @@ The ForwardAuth middleware has been created in the cluster. To protect a service
 
 ## Protected Services
 
-Currently protected (requires authentication once OAuth2 provider is configured):
-- **Filebrowser**: https://filebrowser.nerdsbythehour.com
-  - Default credentials: admin/admin (change after first login)
-  - Deployment, Service, and Ingress managed by Flux
-  - ForwardAuth middleware applied
+Other services in the cluster apply the Authentik ForwardAuth middleware directly via their ingress annotation (`traefik.ingress.kubernetes.io/router.middlewares: authentik-authentik-forwardauth@kubernetescrd`); see the example in `apps/production/jimsmcp/ingress.yaml`. The original Filebrowser worked-example deployment was removed on 2026-05-05.
 
 Unprotected (accessible without login):
+
 - **Whoami**: https://nerdsbythehour.com and https://deby.nerdsbythehour.com
 
 ## Important URLs
 
 - **Authentik Setup**: https://auth.nerdsbythehour.com/if/flow/initial-setup/
 - **Authentik Admin Portal**: https://auth.nerdsbythehour.com/if/admin/
-- **Filebrowser**: https://filebrowser.nerdsbythehour.com
 
 ## Default Credentials
 
 - **Authentik Admin**: `akadmin` (set password on first login)
-- **Filebrowser**: `admin` / `9Dix_hIlqUA1mnSX` (randomly generated - change after first login)
 
 ## DNS Configuration
 
 All DNS records are configured in Cloudflare with Proxy enabled (orange cloud):
 - auth.nerdsbythehour.com → Cloudflare Proxy → 174.105.183.192 → 192.168.68.71
-- filebrowser.nerdsbythehour.com → Cloudflare Proxy → 174.105.183.192 → 192.168.68.71
 
 ## Troubleshooting
 

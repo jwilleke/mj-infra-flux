@@ -20,7 +20,6 @@ resources:
   - ./landingpage
 
   # Protected Applications
-  - ./filebrowser
   - ./teslamate
   - ./jimswiki
   - ./home-assistant-proxy
