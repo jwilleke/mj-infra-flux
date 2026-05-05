@@ -16,7 +16,7 @@ spec:
       serviceAccountName: jimsmcp
       containers:
       - name: jimsmcp
-        image: jimsmcp:latest
+        image: jimsmcp:2026-05-05
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9210
