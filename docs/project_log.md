@@ -38,6 +38,18 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
 
+## 2026-05-07-07
+
+- Agent: Claude Opus 4.7
+- Subject: Bump geohazardwatch image tag 1.1.3 → 1.1.4
+- Work Done:
+  - Picks up `jwilleke/geohazardwatch#25` which bumps the base ngdpbase image to 3.10.1.
+  - 3.10 is the first ngdpbase release that creates `OrganizationRole` records on headless install, which is required for the seeded `admin` user to actually carry the `admin` role at login — without it, the cluster's admin user resolved to `Anonymous|All` and saw no Edit button or admin dashboard.
+- Files Modified:
+  - apps/production/geohazardwatch/deployment.yaml
+  - apps/production/geohazardwatch/cronjob-import.yaml
+  - docs/project_log.md (this file)
+
 ## 2026-05-07-06
 
 - Agent: Claude Opus 4.7
