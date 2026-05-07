@@ -8,4 +8,4 @@ if [ ! -f "$SOPS_AGE_KEY_FILE" ]; then
 fi
 
 # NOTE: this is the public key corresponding to the priate key in the agekey file
-age_key_public="age1nur86m07v4f94xpc8ugg0cmum9fpyp3hcha2cya6x09uphu4zg5szrtzgt"
+age_key_public="age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj"
