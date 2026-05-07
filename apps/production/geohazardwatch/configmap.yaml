@@ -12,6 +12,9 @@ data:
       "ngdpbase.application-name": "GeoHazardWatch",
       "ngdpbase.session.secure": true,
       "ngdpbase.session.sameSite": "lax",
+      "ngdpbase.page.provider": "versioningfileprovider",
+      "ngdpbase.theme.active": "volcano",
+      "ngdpbase.front-page": "volcanoes-and-earthquakes",
       "ngdpbase.managers.addons-manager.addons-path": ["/app/addons", "/opt/geohazardwatch/addons"],
       "ngdpbase.addons.ve-geology.enabled": true,
       "ngdpbase.addons.ve-geology.dataPath": "/app/data/ve-geology"

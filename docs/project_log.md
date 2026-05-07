@@ -38,6 +38,21 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
 
+## 2026-05-07-06
+
+- Agent: Claude Opus 4.7
+- Subject: Port working theme/front-page/page-provider config from local instance to cluster
+- Symptom: Site logged in as admin, but couldn't edit pages, used the wrong theme, and addon plugins didn't render. Same code worked correctly on the local jminm4 ngdpbase instance at localhost:3333.
+- Diagnosis: Diffed cluster `app-custom-config.json` against the local working `data/config/app-custom-config.json` in the ngdpbase clone. Three production-relevant settings were missing.
+- Fix: Added to the cluster ConfigMap:
+  - `ngdpbase.theme.active: "volcano"` (was defaulting to `default` theme)
+  - `ngdpbase.front-page: "volcanoes-and-earthquakes"` (was defaulting to `Welcome`)
+  - `ngdpbase.page.provider: "versioningfileprovider"` (was defaulting to `filesystemprovider`; versioning provider supports the full editing UI and history)
+- Did NOT port (environment-specific or sensitive): port 3333, local addons path, base-url, session secret (belongs in SOPS Secret), local backup dir, organization metadata.
+- Files Modified:
+  - apps/production/geohazardwatch/configmap.yaml
+  - docs/project_log.md (this file)
+
 ## 2026-05-07-05
 
 - Agent: Claude Opus 4.7
