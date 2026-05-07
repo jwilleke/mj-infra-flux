@@ -38,6 +38,17 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
 
+## 2026-05-07-04
+
+- Agent: Claude Opus 4.7
+- Subject: Bump geohazardwatch image tag 1.1.2 → 1.1.3
+- Work Done:
+  - Bumped `image:` tag in `deployment.yaml` and `cronjob-import.yaml` to `1.1.3` to pick up `geohazardwatch#24` — fix for placeholder UUIDs on seed pages so the wiki actually has content.
+- Files Modified:
+  - apps/production/geohazardwatch/deployment.yaml
+  - apps/production/geohazardwatch/cronjob-import.yaml
+  - docs/project_log.md (this file)
+
 ## 2026-05-07-03
 
 - Agent: Claude Opus 4.7
