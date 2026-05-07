@@ -38,6 +38,18 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
 
+## 2026-05-07-02
+
+- Agent: Claude Opus 4.7
+- Subject: Bump geohazardwatch image tag from 1.0.1 to 1.1.2
+- Work Done:
+  - First publishable image of `ghcr.io/jwilleke/geohazardwatch` is `1.1.2` (1.0.1 was a placeholder; 1.1.0 and 1.1.1 publish workflows failed for separate reasons — see `jwilleke/geohazardwatch` CHANGELOG).
+  - Bumped `image:` tag in `deployment.yaml` and `cronjob-import.yaml` to `1.1.2` so the manifest references a real image.
+- Files Modified:
+  - apps/production/geohazardwatch/deployment.yaml
+  - apps/production/geohazardwatch/cronjob-import.yaml
+  - docs/project_log.md (this file)
+
 ## 2026-05-07-01
 
 - Agent: Claude Opus 4.7

@@ -19,7 +19,7 @@ spec:
             fsGroup: 1000
           containers:
             - name: import
-              image: ghcr.io/jwilleke/geohazardwatch:1.0.1 # {"$imagepolicy": "flux-system:geohazardwatch"}
+              image: ghcr.io/jwilleke/geohazardwatch:1.1.2 # {"$imagepolicy": "flux-system:geohazardwatch"}
               imagePullPolicy: IfNotPresent
               workingDir: /opt/geohazardwatch
               command:
