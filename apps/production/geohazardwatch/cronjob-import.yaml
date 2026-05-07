@@ -17,6 +17,12 @@ spec:
           restartPolicy: OnFailure
           securityContext:
             fsGroup: 1000
+          # See deployment.yaml — Alpine musl needs ndots:1 so external
+          # hostnames resolve correctly via getaddrinfo.
+          dnsConfig:
+            options:
+              - name: ndots
+                value: "1"
           containers:
             - name: import
               image: ghcr.io/jwilleke/geohazardwatch:1.1.3 # {"$imagepolicy": "flux-system:geohazardwatch"}

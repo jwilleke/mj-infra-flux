@@ -38,6 +38,24 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
 
+## 2026-05-07-05
+
+- Agent: Claude Opus 4.7
+- Subject: Fix geohazardwatch DNS resolution for external hostnames (ndots:1)
+- Key Decision: Override `ndots:5` (k8s default) to `ndots:1` via `dnsConfig` on both the Deployment and CronJob pod specs.
+- Symptom: Initial data-import job (`/api/ve-geology/*` data sources at `webservices.volcano.si.edu`, `earthquake.usgs.gov`, etc.) failed with bare `Import failed: fetch failed` — Node's undici error message hides the underlying cause.
+- Diagnosis:
+  - Spawned a one-shot `curlimages/curl` pod in the `geohazardwatch` namespace.
+  - `nslookup webservices.volcano.si.edu` resolved correctly via cluster DNS (10.43.0.10).
+  - `curl https://webservices.volcano.si.edu/` failed with `Could not resolve host`.
+  - `curl https://webservices.volcano.si.edu./` (trailing dot, FQDN) returned HTTP 404 — i.e. server reachable.
+  - Conclusion: Alpine musl `getaddrinfo` mis-handles k8s `/etc/resolv.conf` `search` directive under the default `ndots:5`. The geohazardwatch image is FROM `ghcr.io/jwilleke/ngdpbase` which is FROM `node:20-alpine`. The wiki engine itself doesn't make outbound HTTPS so the issue stayed hidden until the import ran.
+- Fix: Added `dnsConfig.options.ndots: "1"` to both the Deployment and CronJob pod specs. With ndots:1, any name containing at least one dot (all external hostnames) is treated as absolute first, skipping the broken search-list expansion.
+- Files Modified:
+  - apps/production/geohazardwatch/deployment.yaml
+  - apps/production/geohazardwatch/cronjob-import.yaml
+  - docs/project_log.md (this file)
+
 ## 2026-05-07-04
 
 - Agent: Claude Opus 4.7
