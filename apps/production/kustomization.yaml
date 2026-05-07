@@ -15,7 +15,11 @@ resources:
 
   # Public Applications (Guest Services)
   - ./guest-services
-  - ./cloudflared    # Cloudflare Tunnel connector for geohazardwatch.com
+  # NOTE: cloudflared is NOT here. It runs via its own Flux Kustomization
+  # at clusters/deby/cloudflared.yaml with `decryption: sops` enabled, so
+  # it can decrypt its TUNNEL_TOKEN without forcing the apps Kustomization
+  # to also decrypt the existing monitoring/transmission encrypted files
+  # (which use a different age recipient).
 
   # Public & Protected Applications
   - ./landingpage
