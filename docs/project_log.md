@@ -23,6 +23,8 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 
 ## Work Completed
 
+- 2026-05-07-11 - Cloudflare Tunnel live for geohazardwatch.com (carved into its own Flux Kustomization with SOPS)
+- 2026-05-07-10 - Bump geohazardwatch image to 1.1.5 (ngdpbase 3.10.2 ships themes/)
 - 2026-05-07-01 - Add geohazardwatch app with Flux image automation
 - 2026-01-29-01 - Fix Flux reconciliation and Home Assistant authentication
 - 2026-01-22-05 - Attempt amdwiki fix, created upstream issue
@@ -37,6 +39,38 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-10-01 - Fixed Home Assistant proxy DNS and WebSocket - "Diagnose and fix ha.nerdsbythehour.com connectivity"
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
+
+## 2026-05-07-11
+
+- Agent: Claude Opus 4.7
+- Subject: Cloudflare Tunnel live for `https://geohazardwatch.com`
+- Key Decision: Carve cloudflared into its own Flux Kustomization (`clusters/deby/cloudflared.yaml`) scoped to `./apps/production/cloudflared` with `decryption.provider: sops`. Do NOT enable SOPS decryption on the broader `apps` Kustomization, because legacy encrypted files in `apps/production/monitoring/{prometheus,prometheus-alertmanager}/` use a different age recipient (`age1nur86…`) that `flux-system/sops-age` cannot decrypt — turning on SOPS for the whole tree fails the entire build.
+- Work Done:
+  - Discovered the in-cluster `flux-system/sops-age` private key derives public `age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj`, while `scripts/_sops_config.include.sh` was hardcoded to `age1nur86…`. Two age key pairs in play; pre-existing `*.encrypted` files split across both.
+  - Updated `scripts/_sops_config.include.sh` to the Flux key so future `encrypt-env-files.sh` runs target the right recipient.
+  - Re-encrypted the placeholder `apps/production/transmission/.env.secret.transmission.encrypted` to the Flux key (operator confirmed transmission isn't deployed; content swapped for a placeholder).
+  - Left `apps/production/monitoring/{prometheus,prometheus-alertmanager}/.env.secret.*.encrypted` untouched. They live in deployed apps and the operator hasn't authorized re-encryption — they remain consumed as opaque ciphertext via secretGenerator (current production behaviour, unchanged).
+  - Created `clusters/deby/cloudflared.yaml` (new Flux Kustomization, SOPS enabled, scoped to `./apps/production/cloudflared`).
+  - Reverted SOPS decryption from `clusters/deby/apps.yaml` and removed `- ./cloudflared` from `apps/production/kustomization.yaml`.
+  - End-to-end verified: `https://geohazardwatch.com/` → 302 to `/view/volcanoes-and-earthquakes`, served via Cloudflare edge (`104.21.54.107`) → tunnel → `cloudflared` Deployment (2/2 ready, Cloudflare connectors healthy) → `Service/geohazardwatch:80` → wiki pod. Traefik bypassed on the public path as designed (geohazardwatch#14).
+- Follow-up: rotate the tunnel token (it was visible in the agent transcript while wiring this up). After the operator re-encrypts the monitoring secrets to the Flux key, the `apps` Kustomization can also turn SOPS on if desired.
+- Files Modified:
+  - clusters/deby/cloudflared.yaml (new)
+  - clusters/deby/apps.yaml (reverted to no decryption)
+  - apps/production/kustomization.yaml (removed cloudflared entry, added explanatory note)
+  - scripts/_sops_config.include.sh (correct recipient)
+  - apps/production/transmission/.env.secret.transmission.encrypted (placeholder, re-encrypted)
+  - docs/project_log.md (this file)
+
+## 2026-05-07-10
+
+- Agent: Claude Opus 4.7
+- Subject: Bump geohazardwatch image to 1.1.5 (ngdpbase 3.10.2 ships `themes/`)
+- Symptom on cluster: Volcano theme set in app-custom-config.json had no effect; `/themes/core.css` and `/themes/volcano/...` returned 404; `VolcanoMap` plugin's Leaflet rendering broke because core CSS variables didn't load. Filed as `geohazardwatch#26`.
+- Root cause: `ghcr.io/jwilleke/ngdpbase:3.10.1` runtime image was missing the `themes/` directory. `TemplateManager` regenerated a fallback `default.css` on boot, but `core.css`, `core-variables-empty.css`, and every theme directory (`default/`, `flatly/`, `fairways/`, `volcano/`) were absent.
+- Fix: Upstream PR `jwilleke/ngdpbase#652` added `COPY --from=builder /app/themes ./themes` to the Dockerfile. Released as ngdpbase v3.10.2. Bumped geohazardwatch (`jwilleke/geohazardwatch#27`) to use 3.10.2, released as v1.1.5. mj-infra-flux image tag bumped 1.1.3 → 1.1.4 (in #53) → 1.1.5 (in #55) over the day.
+- Verified post-rollout: `/themes/core.css` 200, `/themes/volcano/css/variables.css` 200, `/themes/volcano/assets/favicon.svg` 200, theme + favicon visually applied, VolcanoMap renders.
+- Closed: `geohazardwatch#26`.
 
 ## 2026-05-07-09
 
