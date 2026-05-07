@@ -38,6 +38,22 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
 
+## 2026-05-07-08
+
+- Agent: Claude Opus 4.7
+- Subject: Pre-seed anchor Organization JSON-LD so ngdpbase 3.10+ can bind admin role
+- Symptom: After bumping geohazardwatch to v1.1.4 (ngdpbase 3.10.1), boot logs showed `Created Person record for admin` and `Created default admin user`, but `/app/data/roles/` and `/app/data/organizations/` remained empty. Admin user still resolved to `Anonymous|All` because no role record was bound.
+- Root cause: `UserManager.applyRoleDiff` calls `syncRoleAdd`, which silently skips when "the install has no anchor org" (per its own JSDoc). 3.10's headless install path explicitly does NOT seed the anchor Organization from config — `services/InstallService.ts:637`: "Operators wanting a pre-seeded anchor org pre-supply the JSON-LD file alongside their custom config."
+- Fix:
+  - Added `geohazardwatch.json` data key to the ConfigMap with the JSON-LD Organization record (`@id: https://geohazardwatch.com`, name `GeoHazardWatch`).
+  - Added `ngdpbase.application.organization.file: "geohazardwatch.json"` to `app-custom-config.json` so OrganizationManager loads it.
+  - Mounted the new key into `/app/data/organizations/geohazardwatch.json` via a second `org` configMap volume + subPath.
+- Follow-up after merge (one-time, on the cluster): scale to 0, sudo-delete `users.json` and the orphaned 3.9-era Person record at `/mnt/tank/jims/data/systems/geohazardwatch/persons/b4de08d8-…json`, scale back to 1. ngdpbase will see zero users, run `createDefaultAdmin`, and bind the admin role to the now-loaded Organization.
+- Files Modified:
+  - apps/production/geohazardwatch/configmap.yaml
+  - apps/production/geohazardwatch/deployment.yaml
+  - docs/project_log.md (this file)
+
 ## 2026-05-07-07
 
 - Agent: Claude Opus 4.7
