@@ -47,7 +47,7 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
   - Created `apps/production/geohazardwatch/` (namespace, configmap, deployment, service, ingress, certificate, cronjob-import, image-policy, kustomization, README).
   - Used hostPath `/mnt/tank/jims/data/systems/geohazardwatch` for `/app/data` (matches jimswiki convention; avoids `wiki` in the path per operator preference).
   - ngdpbase configured via ConfigMap to set addons-path `/opt/geohazardwatch/addons` and enable the `ve-geology` addon with `dataPath: /app/data/ve-geology`.
-  - Added Flux `ImageRepository` + `ImagePolicy` (semver `>=1.0.0 <2.0.0`) + `ImageUpdateAutomation` watching `ghcr.io/jwilleke/geohazardwatch`. Auto-bumps minor/patch; majors require manual `range` widening.
+  - Drafted Flux `ImageRepository` + `ImagePolicy` (semver `>=1.0.0 <2.0.0`) + `ImageUpdateAutomation` in `image-policy.yaml`, but **NOT** added to the kustomization yet — the production cluster's Flux was bootstrapped without `image-reflector-controller` / `image-automation-controller`, so the CRDs don't exist. Bootstrap step documented in the app's README; once added, enable by uncommenting the resource line.
   - Nightly `CronJob` runs `import-volcanoes`, `import-earthquakes`, `import-hans` against `/app/data/ve-geology` at 08:00 UTC.
   - Registered app in `apps/production/kustomization.yaml`.
   - Pairs with `jwilleke/geohazardwatch#19` which adds the Dockerfile + image-publish workflow + Renovate.

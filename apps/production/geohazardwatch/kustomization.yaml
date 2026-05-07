@@ -9,4 +9,9 @@ resources:
   - ingress.yaml
   - certificate.yaml
   - cronjob-import.yaml
-  - image-policy.yaml
+  # image-policy.yaml is intentionally NOT in this list yet.
+  # The production cluster's Flux is bootstrapped without
+  # image-reflector-controller / image-automation-controller, so the
+  # ImageRepository / ImagePolicy / ImageUpdateAutomation CRDs do not
+  # exist. Bootstrap those controllers first (see README), then add
+  # `- image-policy.yaml` here to enable auto-updates.

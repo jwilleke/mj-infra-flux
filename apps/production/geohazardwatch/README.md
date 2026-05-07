@@ -11,15 +11,37 @@ Built on the [`ngdpbase`](https://github.com/jwilleke/ngdpbase) wiki engine with
 - **Public path**: Cloudflare Tunnel → cluster Service direct (bypasses Traefik). Wired up separately — see geohazardwatch issues #14-18.
 - **Internal path**: Traefik IngressRoute on `geohazardwatch.nerdsbythehour.com` with a cert-manager Let's Encrypt cert. Used to verify the pod independently of the tunnel.
 
-## Auto-update flow
+## Auto-update flow (requires one-time bootstrap step)
 
-1. New `ngdpbase` image published → Renovate (in the `geohazardwatch` repo) opens a PR bumping the base image; minor/patch auto-merge.
-2. Merge to `master` triggers `publish-image.yml` → new `ghcr.io/jwilleke/geohazardwatch:X.Y.Z`.
-3. Flux `ImageRepository` + `ImagePolicy` (this app) detect the new tag (semver range `>=1.0.0 <2.0.0`).
-4. `ImageUpdateAutomation` rewrites the `image:` line in `deployment.yaml` and `cronjob-import.yaml` and commits to `master`.
-5. Flux reconciles → rolling deploy.
+The production cluster's Flux currently runs with only the four core controllers (`source`, `kustomize`, `helm`, `notification`). Image automation is **not yet enabled** — `image-reflector-controller` and `image-automation-controller` need to be added before `image-policy.yaml` can be activated.
+
+### One-time bootstrap
+
+Re-run `flux bootstrap` with the extra components, e.g.:
+
+```bash
+flux bootstrap github \
+  --owner=jwilleke \
+  --repository=mj-infra-flux \
+  --branch=master \
+  --path=clusters/production \
+  --components-extra=image-reflector-controller,image-automation-controller
+```
+
+(Or hand-edit `clusters/production/flux-system/gotk-components.yaml` and add the two controllers + their CRDs.)
+
+### Once bootstrapped
+
+1. Add `- image-policy.yaml` to `kustomization.yaml` here.
+2. New `ngdpbase` image published → Renovate (in the `geohazardwatch` repo) opens a PR bumping the base image; minor/patch auto-merge.
+3. Merge to `master` triggers `publish-image.yml` → new `ghcr.io/jwilleke/geohazardwatch:X.Y.Z`.
+4. Flux `ImageRepository` + `ImagePolicy` detect the new tag (semver range `>=1.0.0 <2.0.0`).
+5. `ImageUpdateAutomation` rewrites the `image:` line in `deployment.yaml` and `cronjob-import.yaml` and commits to `master`.
+6. Flux reconciles → rolling deploy.
 
 Major bumps (e.g., `1.x.x` → `2.0.0`) are NOT auto-deployed — the `ImagePolicy` range must be widened by hand.
+
+Until image automation is bootstrapped, image bumps are entirely manual: edit the `image:` lines in `deployment.yaml` and `cronjob-import.yaml`, commit, and let Flux roll out.
 
 ## Data refresh
 
