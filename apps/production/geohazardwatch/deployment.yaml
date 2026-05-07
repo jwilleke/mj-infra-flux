@@ -57,6 +57,10 @@ spec:
               mountPath: /app/data/config/app-custom-config.json
               subPath: app-custom-config.json
               readOnly: true
+            - name: org
+              mountPath: /app/data/organizations/geohazardwatch.json
+              subPath: geohazardwatch.json
+              readOnly: true
           resources:
             requests:
               cpu: "100m"
@@ -91,4 +95,10 @@ spec:
             items:
               - key: app-custom-config.json
                 path: app-custom-config.json
+        - name: org
+          configMap:
+            name: geohazardwatch-config
+            items:
+              - key: geohazardwatch.json
+                path: geohazardwatch.json
       restartPolicy: Always

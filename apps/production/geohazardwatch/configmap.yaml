@@ -15,7 +15,22 @@ data:
       "ngdpbase.page.provider": "versioningfileprovider",
       "ngdpbase.theme.active": "volcano",
       "ngdpbase.front-page": "volcanoes-and-earthquakes",
+      "ngdpbase.application.organization.file": "geohazardwatch.json",
       "ngdpbase.managers.addons-manager.addons-path": ["/app/addons", "/opt/geohazardwatch/addons"],
       "ngdpbase.addons.ve-geology.enabled": true,
       "ngdpbase.addons.ve-geology.dataPath": "/app/data/ve-geology"
+    }
+  # Anchor Organization JSON-LD record. Required by ngdpbase 3.10+ headless
+  # installs so that UserManager.applyRoleDiff() can bind admin role membership
+  # to a real org @id. Without it, createDefaultAdmin silently skips role
+  # assignment and the seeded admin user resolves to Anonymous|All on every
+  # request. See `ngdpbase` `services/InstallService.ts` and
+  # `managers/UserManager.ts:syncRoleAdd` for the bypass logic.
+  geohazardwatch.json: |
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": "https://geohazardwatch.com",
+      "name": "GeoHazardWatch",
+      "url": "https://geohazardwatch.com"
     }
