@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: geohazardwatch
+  namespace: geohazardwatch
+  labels:
+    app: geohazardwatch
+spec:
+  type: ClusterIP
+  selector:
+    app: geohazardwatch
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+      protocol: TCP

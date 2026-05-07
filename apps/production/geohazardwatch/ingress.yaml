@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: geohazardwatch
+  namespace: geohazardwatch
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - geohazardwatch.nerdsbythehour.com
+      secretName: geohazardwatch-tls
+  rules:
+    - host: geohazardwatch.nerdsbythehour.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: geohazardwatch
+                port:
+                  number: 80
