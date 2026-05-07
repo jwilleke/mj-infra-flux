@@ -38,6 +38,18 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
 
+## 2026-05-07-03
+
+- Agent: Claude Opus 4.7
+- Subject: Fix geohazardwatch addons-path so built-in ngdpbase addons keep loading
+- Key Decision: Use array form for `ngdpbase.managers.addons-manager.addons-path`. ngdpbase's `AddonsManager` accepts either a string or an array, but a string REPLACES the default `./addons`, killing the built-in addon scan. Array preserves built-ins AND adds the external geohazardwatch addon.
+- Work Done:
+  - Changed `ngdpbase.managers.addons-manager.addons-path` from `"/opt/geohazardwatch/addons"` to `["/app/addons", "/opt/geohazardwatch/addons"]`.
+  - Verified the behaviour by reading `src/managers/AddonsManager.ts` in the upstream `ngdpbase` repo (lines 208-219): the value is split on whether it's `Array.isArray()`, single strings replace; arrays scan all entries.
+- Files Modified:
+  - apps/production/geohazardwatch/configmap.yaml
+  - docs/project_log.md (this file)
+
 ## 2026-05-07-02
 
 - Agent: Claude Opus 4.7
