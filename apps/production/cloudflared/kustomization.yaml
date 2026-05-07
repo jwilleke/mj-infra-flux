@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: cloudflared
+resources:
+  - namespace.yaml
+  - deployment.yaml
+
+# The encrypted .env file is decrypted by Flux's kustomize-controller (SOPS)
+# before Kustomize processes secretGenerator. The resulting Secret is named
+# `cloudflared-token` and contains TUNNEL_TOKEN=<value> from the file.
+secretGenerator:
+  - name: cloudflared-token
+    envs:
+      - .env.secret.cloudflared.encrypted
+
+# Don't append the kustomize hash suffix to the Secret name — the Deployment
+# references it by a stable name.
+generatorOptions:
+  disableNameSuffixHash: true
