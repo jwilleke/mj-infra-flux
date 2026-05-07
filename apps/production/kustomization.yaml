@@ -15,6 +15,7 @@ resources:
 
   # Public Applications (Guest Services)
   - ./guest-services
+  - ./cloudflared    # Cloudflare Tunnel connector for geohazardwatch.com
 
   # Public & Protected Applications
   - ./landingpage
