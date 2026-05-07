@@ -1,0 +1,48 @@
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: geohazardwatch
+  namespace: flux-system
+spec:
+  image: ghcr.io/jwilleke/geohazardwatch
+  interval: 10m
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: geohazardwatch
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: geohazardwatch
+  policy:
+    semver:
+      # Auto-update minor and patch within the current major.
+      # Bumping past the next major requires updating this range manually.
+      range: ">=1.0.0 <2.0.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImageUpdateAutomation
+metadata:
+  name: geohazardwatch
+  namespace: flux-system
+spec:
+  interval: 10m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump geohazardwatch to {{range .Updated.Images}}{{.}} {{end}}
+    push:
+      branch: master
+  update:
+    path: ./apps/production/geohazardwatch
+    strategy: Setters

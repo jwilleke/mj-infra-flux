@@ -1,0 +1,56 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: geohazardwatch-data-refresh
+  namespace: geohazardwatch
+spec:
+  # 04:00 America/New_York (08:00 UTC) — low-traffic
+  schedule: "0 8 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            fsGroup: 1000
+          containers:
+            - name: import
+              image: ghcr.io/jwilleke/geohazardwatch:1.1.2 # {"$imagepolicy": "flux-system:geohazardwatch"}
+              imagePullPolicy: IfNotPresent
+              workingDir: /opt/geohazardwatch
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  DATA_DIR=/app/data/ve-geology
+                  mkdir -p "$DATA_DIR"
+                  echo "Importing GVP volcanoes + eruptions + global activity..."
+                  node addons/ve-geology/import/import-volcanoes.js \
+                    --eruptions --activity --data-dir "$DATA_DIR"
+                  echo "Importing USGS earthquakes..."
+                  node addons/ve-geology/import/import-earthquakes.js \
+                    --data-dir "$DATA_DIR"
+                  echo "Importing USGS HANS volcano alerts..."
+                  node addons/ve-geology/import/import-hans.js \
+                    --data-dir "$DATA_DIR"
+                  echo "Refresh complete."
+              volumeMounts:
+                - name: data
+                  mountPath: /app/data
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "256Mi"
+                limits:
+                  cpu: "1000m"
+                  memory: "1Gi"
+          volumes:
+            - name: data
+              hostPath:
+                path: /mnt/tank/jims/data/systems/geohazardwatch
+                type: DirectoryOrCreate

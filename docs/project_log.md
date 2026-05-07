@@ -23,6 +23,7 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 
 ## Work Completed
 
+- 2026-05-07-01 - Add geohazardwatch app with Flux image automation
 - 2026-01-29-01 - Fix Flux reconciliation and Home Assistant authentication
 - 2026-01-22-05 - Attempt amdwiki fix, created upstream issue
 - 2026-01-22-04 - Fix Dependabot security vulnerabilities in jimsmcp
@@ -36,6 +37,37 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-10-01 - Fixed Home Assistant proxy DNS and WebSocket - "Diagnose and fix ha.nerdsbythehour.com connectivity"
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
+
+## 2026-05-07-02
+
+- Agent: Claude Opus 4.7
+- Subject: Bump geohazardwatch image tag from 1.0.1 to 1.1.2
+- Work Done:
+  - First publishable image of `ghcr.io/jwilleke/geohazardwatch` is `1.1.2` (1.0.1 was a placeholder; 1.1.0 and 1.1.1 publish workflows failed for separate reasons — see `jwilleke/geohazardwatch` CHANGELOG).
+  - Bumped `image:` tag in `deployment.yaml` and `cronjob-import.yaml` to `1.1.2` so the manifest references a real image.
+- Files Modified:
+  - apps/production/geohazardwatch/deployment.yaml
+  - apps/production/geohazardwatch/cronjob-import.yaml
+  - docs/project_log.md (this file)
+
+## 2026-05-07-01
+
+- Agent: Claude Opus 4.7
+- Subject: Add `geohazardwatch` app with image automation
+- Key Decision: Bypass Traefik on the public path. The Cloudflare Tunnel will target the `geohazardwatch` Service directly (decided in `jwilleke/geohazardwatch#14`); Traefik IngressRoute is kept only for internal LAN verification on `geohazardwatch.nerdsbythehour.com`.
+- Work Done:
+  - Created `apps/production/geohazardwatch/` (namespace, configmap, deployment, service, ingress, certificate, cronjob-import, image-policy, kustomization, README).
+  - Used hostPath `/mnt/tank/jims/data/systems/geohazardwatch` for `/app/data` (matches jimswiki convention; avoids `wiki` in the path per operator preference).
+  - ngdpbase configured via ConfigMap to set addons-path `/opt/geohazardwatch/addons` and enable the `ve-geology` addon with `dataPath: /app/data/ve-geology`.
+  - Drafted Flux `ImageRepository` + `ImagePolicy` (semver `>=1.0.0 <2.0.0`) + `ImageUpdateAutomation` in `image-policy.yaml`, but **NOT** added to the kustomization yet — the production cluster's Flux was bootstrapped without `image-reflector-controller` / `image-automation-controller`, so the CRDs don't exist. Bootstrap step documented in the app's README; once added, enable by uncommenting the resource line.
+  - Nightly `CronJob` runs `import-volcanoes`, `import-earthquakes`, `import-hans` against `/app/data/ve-geology` at 08:00 UTC.
+  - Registered app in `apps/production/kustomization.yaml`.
+  - Pairs with `jwilleke/geohazardwatch#19` which adds the Dockerfile + image-publish workflow + Renovate.
+- Files Modified:
+  - `apps/production/geohazardwatch/*` (10 new files)
+  - `apps/production/kustomization.yaml`
+  - `docs/project_log.md` (this file)
+- Follow-up: Cloudflare Tunnel wiring (`jwilleke/geohazardwatch#15-18`) — only after the site is verifiable on the LAN.
 
 ## 2026-01-29-01
 
