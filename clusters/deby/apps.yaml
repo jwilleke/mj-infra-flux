@@ -16,3 +16,11 @@ spec:
   prune: true
   wait: true
   timeout: 5m0s
+  # SOPS-encrypted secrets in apps/production/<app>/.env.secret.*.encrypted
+  # are decrypted by kustomize-controller using the age key in
+  # `sops-age` (flux-system namespace) before kustomize secretGenerator
+  # turns them into k8s Secrets.
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
