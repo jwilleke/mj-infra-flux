@@ -38,6 +38,21 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
 
+## 2026-05-07-09
+
+- Agent: Claude Opus 4.7
+- Subject: Add cloudflared Deployment for the public Cloudflare Tunnel to geohazardwatch.com
+- Work Done:
+  - Created `apps/production/cloudflared/` (namespace, deployment with 2 replicas of cloudflare/cloudflared:2026.5.0, kustomization with secretGenerator from SOPS-encrypted .env, README).
+  - Tunnel `tunnel-infra-flux` was created in the Cloudflare Zero Trust dashboard (Tunnel ID f222996a-d5ae-42dc-9803-08feffffeddf). Public Hostname route on the dashboard side targets `geohazardwatch.geohazardwatch.svc.cluster.local:80` with HTTP Host Header `geohazardwatch.com` — bypassing Traefik on the public path per geohazardwatch#14.
+  - Encrypted the tunnel token to `apps/production/cloudflared/.env.secret.cloudflared.encrypted` via the existing scripts/encrypt-env-files.sh on deby (where the age private key lives).
+  - Registered `- ./cloudflared` in `apps/production/kustomization.yaml` under "Public Applications".
+- Files Modified:
+  - apps/production/cloudflared/* (new dir, 5 files including encrypted secret)
+  - apps/production/kustomization.yaml
+  - docs/project_log.md (this file)
+- Follow-up: rotate the tunnel token after the deployment is verified — the token was visible in the agent conversation transcript during setup.
+
 ## 2026-05-07-08
 
 - Agent: Claude Opus 4.7
