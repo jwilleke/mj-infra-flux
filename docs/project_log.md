@@ -23,6 +23,7 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 
 ## Work Completed
 
+- 2026-05-08-01 - Disable self-registration on geohazardwatch.com (set `ngdpbase.application.registration: false`, image bump to 1.1.6)
 - 2026-05-07-11 - Cloudflare Tunnel live for geohazardwatch.com (carved into its own Flux Kustomization with SOPS)
 - 2026-05-07-10 - Bump geohazardwatch image to 1.1.5 (ngdpbase 3.10.2 ships themes/)
 - 2026-05-07-01 - Add geohazardwatch app with Flux image automation
@@ -39,6 +40,30 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-10-01 - Fixed Home Assistant proxy DNS and WebSocket - "Diagnose and fix ha.nerdsbythehour.com connectivity"
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
+
+## 2026-05-08-01
+
+- Agent: Claude Opus 4.7
+- Subject: Lock down self-registration on geohazardwatch.com (image bump to 1.1.6)
+- Current Issue: PR #61 (merged)
+- Tests: end-to-end verified post-rollout — see Verification below
+- Work Done:
+  - Picks up `jwilleke/geohazardwatch#28` (which itself rebases on `jwilleke/ngdpbase#654` carrying the new `ngdpbase.application.registration` flag).
+  - `apps/production/geohazardwatch/configmap.yaml` — added `"ngdpbase.application.registration": false` to `app-custom-config.json`.
+  - `apps/production/geohazardwatch/deployment.yaml` — image tag `1.1.5` → `1.1.6`.
+  - `apps/production/geohazardwatch/cronjob-import.yaml` — image tag `1.1.5` → `1.1.6`.
+  - Reconciled (`flux -n flux-system reconcile kustomization apps --with-source`), restarted (`kubectl -n geohazardwatch rollout restart deploy/geohazardwatch`), waited for rollout to complete.
+- Verification:
+  - `GET https://geohazardwatch.com/register` → HTTP 404
+  - `POST https://geohazardwatch.com/register` → HTTP 404
+  - `GET https://geohazardwatch.com/wiki/request-access` → 301 → `/view/request-access` → HTTP 200 (page renders)
+  - Header for anonymous visitors shows `Login` + `Request access` (link to `/wiki/request-access`); the old `Register` button is gone.
+- Commits: `62352f9f`
+- Files Modified:
+  - apps/production/geohazardwatch/configmap.yaml
+  - apps/production/geohazardwatch/deployment.yaml
+  - apps/production/geohazardwatch/cronjob-import.yaml
+  - docs/project_log.md (this file)
 
 ## 2026-05-07-11
 
