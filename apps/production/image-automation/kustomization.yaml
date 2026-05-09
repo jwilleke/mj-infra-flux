@@ -1,8 +1,0 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-# No `namespace:` directive: every resource here lives in `flux-system`
-# (where image-reflector-controller / image-automation-controller look)
-# and declares its namespace explicitly.
-resources:
-  - geohazardwatch-policy.yaml
-  - geohazardwatch-ghcr.sops.yaml
