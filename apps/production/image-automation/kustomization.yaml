@@ -6,3 +6,4 @@ kind: Kustomization
 resources:
   - geohazardwatch-policy.yaml
   - geohazardwatch-ghcr.sops.yaml
+  - flux-system-git-auth.sops.yaml
