@@ -424,7 +424,7 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 
 ### Tech Debt (surfaced 2026-05-09)
 
-- [ ] Revoke old GHCR PAT (`ghp_dUUY1T9N…`) — exposed in chat session, replaced by fine-grained PAT.
+- [x] Revoke old GHCR PAT (`ghp_dUUY1T9N…`) — completed 2026-05-09; rotated to fine-grained PAT earlier same day.
 - [ ] Re-encrypt the two prometheus SOPS files (`apps/production/monitoring/prometheus/.env.secret.prometheus-self-scrape.encrypted`, `apps/production/monitoring/prometheus-alertmanager/.env.secret.alertmanager.encrypted`) to the unified `age1sr8j…` recipient. Blocks any future "enable decryption on the apps Kustomization" cleanup.
 
 ## Notes & Context
