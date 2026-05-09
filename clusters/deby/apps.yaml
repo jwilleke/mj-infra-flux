@@ -16,14 +16,3 @@ spec:
   prune: true
   wait: true
   timeout: 5m0s
-  # Re-enabled after the legacy encrypted files (monitoring, transmission)
-  # were aligned to the same sops-age recipient as cloudflared and the
-  # ghcr-geohazardwatch pull secret introduced by #65 — see commit
-  # a736401 "fix(sops): align all encrypted files with the Flux sops-age
-  # recipient". Without this stanza, kustomize-controller passes the
-  # SOPS ciphertext through unmodified and reconciliation fails on
-  # any encrypted Secret under apps/production/.
-  decryption:
-    provider: sops
-    secretRef:
-      name: sops-age
