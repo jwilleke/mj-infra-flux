@@ -44,7 +44,7 @@ spec:
         email: fluxcdbot@users.noreply.github.com
         name: fluxcdbot
       messageTemplate: |
-        chore(image-automation): bump geohazardwatch to {{range .Updated.Images}}{{.}} {{end}}
+        chore(image-automation): bump geohazardwatch to {{range .Changed.Changes}}{{.NewValue}} {{end}}
     push:
       branch: master
   update:
