@@ -64,9 +64,6 @@ spec:
             - name: prometheus-config-volume
               mountPath: /etc/prometheus
 
-            - name: prometheus-secret-volume
-              mountPath: /etc/prometheus/secrets
-
             - name: prometheus-storage-volume
               mountPath: /prometheus
 
@@ -83,11 +80,6 @@ spec:
           configMap:
             defaultMode: 420
             name: prometheus-config
-
-        # we generate these secrets in kustomization.yaml and save each key as a file in this mount
-        - name: prometheus-secret-volume
-          secret:
-            secretName: prometheus-secrets
 
   volumeClaimTemplates:
     - metadata:

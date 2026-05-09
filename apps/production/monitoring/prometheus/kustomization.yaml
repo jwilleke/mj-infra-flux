@@ -8,11 +8,9 @@ resources:
   - ./prometheus-ingress.yaml
   - ./authentik-middleware.yaml
 
-secretGenerator:
-  - name: prometheus-secrets
-    envs:
-      # secrets for the prometheus scrape config:
-      - .env.secret.prometheus-self-scrape.encrypted
+# prometheus-secrets removed: prometheus switched from basic auth to Authentik
+# ForwardAuth (web.yaml removed below); the encrypted env file held unused
+# prom_srape_username/password and a stale age recipient. See AGENTS.md "Tech Debt".
 
 # kustomize help on configMapGenerator: https://kubectl.docs.kubernetes.io/references/kustomize/builtins/#_configmapgenerator_
 configMapGenerator:
