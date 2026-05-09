@@ -1,0 +1,23 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: image-automation
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  # Scoped strictly to apps/production/image-automation so SOPS decryption
+  # only touches files we know are encrypted to the Flux sops-age recipient.
+  # Mirrors the cloudflared pattern — the broader `apps` Kustomization
+  # deliberately doesn't enable decryption because legacy prometheus
+  # encrypted files use a different, unavailable age key.
+  path: ./apps/production/image-automation
+  prune: true
+  wait: true
+  timeout: 5m0s
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age

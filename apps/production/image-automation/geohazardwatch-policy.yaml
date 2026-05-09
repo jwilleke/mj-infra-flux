@@ -6,6 +6,10 @@ metadata:
 spec:
   image: ghcr.io/jwilleke/geohazardwatch
   interval: 10m
+  # GHCR package is private; without this secretRef the scan returns an empty
+  # tag list and ImagePolicy / ImageUpdateAutomation never advance the pin.
+  secretRef:
+    name: ghcr-geohazardwatch
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImagePolicy
@@ -44,5 +48,8 @@ spec:
     push:
       branch: master
   update:
+    # Setters scan deployment.yaml / cronjob-import.yaml in the geohazardwatch
+    # app dir for the `# {"$imagepolicy": "flux-system:geohazardwatch"}` marker
+    # — that path is unchanged even though this manifest now lives elsewhere.
     path: ./apps/production/geohazardwatch
     strategy: Setters
