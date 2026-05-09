@@ -14,7 +14,12 @@ spec:
   # deliberately doesn't enable decryption because legacy prometheus
   # encrypted files use a different, unavailable age key.
   path: ./apps/production/image-automation
-  prune: true
+  # Temporarily prune: false so the upcoming deletion of this Kustomization
+  # (folding image-automation back into the apps Kustomization now that all
+  # encrypted files share one age recipient) won't garbage-collect the
+  # ImageRepository / ImagePolicy / ImageUpdateAutomation / ghcr Secret
+  # between when this Kustomization is removed and when apps adopts them.
+  prune: false
   wait: true
   timeout: 5m0s
   decryption:

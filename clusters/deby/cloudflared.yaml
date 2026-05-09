@@ -15,7 +15,12 @@ spec:
   # encrypted to a different, unavailable age key — see
   # apps/production/kustomization.yaml comment.
   path: ./apps/production/cloudflared
-  prune: true
+  # Temporarily prune: false so the upcoming deletion of this Kustomization
+  # (folding cloudflared back into the apps Kustomization now that all
+  # encrypted files share one age recipient) won't garbage-collect the
+  # cloudflared resources between when this Kustomization is removed and
+  # when apps adopts them via server-side apply.
+  prune: false
   wait: true
   timeout: 5m0s
   decryption:
