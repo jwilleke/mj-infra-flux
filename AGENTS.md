@@ -341,6 +341,20 @@ kubectl port-forward -n namespace svc/myservice 8080:80
   - `/opt/traefik/landingpage/serve.json` (created serve config with specific rewrites)
   - `/opt/traefik/landingpage/Dockerfile` (updated to use serve.json for routing control)
 
+### Session: 2026-05-09 (geohazardwatch image automation end-to-end)
+- Agent: Claude Opus 4.7
+- Work Done:
+  - Closed issue #64. Image automation now runs end-to-end for geohazardwatch: GHCR scan → ImagePolicy resolves to highest semver in range → fluxcdbot pushes auto-bump commit → Flux reconciles → rolling deploy.
+  - Regenerated `clusters/deby/flux-system/gotk-components.yaml` via `flux install --components=...,image-reflector-controller,image-automation-controller --version=v2.7.3 --export`. The previous file referenced these controllers only in RBAC; the Deployments were missing.
+  - Established a new pattern for cluster-level Flux automation: `apps/production/image-automation/` (no `namespace:` directive in its kustomization) reconciled by a dedicated Flux Kustomization at `clusters/deby/image-automation.yaml` with `decryption: sops`. Mirrors the cloudflared pattern; sidesteps the apps Kustomization (which can't enable decryption while legacy prometheus SOPS files use an unavailable age recipient).
+  - Out-of-band `flux-system-git-auth` Secret on the cluster (matches the `sops-age` pattern) gives fluxcdbot push access via a fine-grained PAT scoped to mj-infra-flux only.
+  - Replicate this layout for jimsmcp / future apps: drop a `<app>-policy.yaml` + `<app>-ghcr.sops.yaml` next to the existing files.
+- PRs: #65 (reverted), #66 (reverted), #67 (revert), #68 (final structural fix).
+- Files Modified: `clusters/deby/flux-system/gotk-components.yaml`, `clusters/deby/flux-system/gotk-sync.yaml`, `clusters/deby/image-automation.yaml`, `apps/production/image-automation/{kustomization,geohazardwatch-policy,geohazardwatch-ghcr.sops}.yaml`, `apps/production/geohazardwatch/{deployment,kustomization,README}.md`, `apps/production/geohazardwatch/image-policy.yaml` (deleted), `docs/project_log.md`, `AGENTS.md`.
+- Follow-ups outstanding:
+  - Revoke the old GHCR PAT (`ghp_dUUY1T9N…`) — rotated to a fine-grained PAT during this session.
+  - Re-encrypt `apps/production/monitoring/prometheus/.env.secret.prometheus-self-scrape.encrypted` and `apps/production/monitoring/prometheus-alertmanager/.env.secret.alertmanager.encrypted` from `age1nur86…` to the unified `age1sr8j…` — currently apply as garbled-but-functional env vars; blocks any future "enable SOPS on apps Kustomization" cleanup.
+
 ### Session: 2025-12-11 (Night)
 - Agent: Claude
 - Work Done:
@@ -407,6 +421,11 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 - [ ] Optimize resource requests/limits across services
 - [ ] Review and update security policies
 - [ ] Consider implementing network policies
+
+### Tech Debt (surfaced 2026-05-09)
+
+- [ ] Revoke old GHCR PAT (`ghp_dUUY1T9N…`) — exposed in chat session, replaced by fine-grained PAT.
+- [ ] Re-encrypt the two prometheus SOPS files (`apps/production/monitoring/prometheus/.env.secret.prometheus-self-scrape.encrypted`, `apps/production/monitoring/prometheus-alertmanager/.env.secret.alertmanager.encrypted`) to the unified `age1sr8j…` recipient. Blocks any future "enable decryption on the apps Kustomization" cleanup.
 
 ## Notes & Context
 
@@ -508,4 +527,4 @@ kubectl get pods -A
 
 **Important:** Keep this file synchronized and updated. It's the bridge between different agents and sessions working on the same project.
 
-**Last Updated:** 2026-01-22 by Claude (Implemented service failure monitoring alerts)
+**Last Updated:** 2026-05-09 by Claude Opus 4.7 (geohazardwatch image automation end-to-end, #64 closed)

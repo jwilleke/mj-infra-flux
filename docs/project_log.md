@@ -23,6 +23,7 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 
 ## Work Completed
 
+- 2026-05-09-01 - End-to-end image automation for geohazardwatch (#64): controllers installed, scoped image-automation Flux Kustomization, GHCR PAT rotated, fluxcdbot push live
 - 2026-05-08-01 - Disable self-registration on geohazardwatch.com (set `ngdpbase.application.registration: false`, image bump to 1.1.6)
 - 2026-05-07-11 - Cloudflare Tunnel live for geohazardwatch.com (carved into its own Flux Kustomization with SOPS)
 - 2026-05-07-10 - Bump geohazardwatch image to 1.1.5 (ngdpbase 3.10.2 ships themes/)
@@ -40,6 +41,42 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - 2025-12-10-01 - Fixed Home Assistant proxy DNS and WebSocket - "Diagnose and fix ha.nerdsbythehour.com connectivity"
 - 2025-12-11-01 - Added zero-threat.html static page - "Create unprotected zero-threat.html page on landing page"
 - 2025-12-11-02 - Security vulnerability analysis and remediation plan - "Analyze ZeroThreat security scan and create SECURITY.md"
+
+## 2026-05-09-01
+
+- Agent: Claude Opus 4.7
+- Subject: End-to-end image automation for geohazardwatch (#64) — controllers installed, scoped Flux Kustomization, fluxcdbot push live
+- Key Decisions:
+  - Image automation manifests live in `apps/production/image-automation/`, NOT under per-app dir (per-app kustomization stamps `namespace: <app>` over everything; image-reflector resources need `flux-system`)
+  - Dedicated Flux Kustomization at `clusters/deby/image-automation.yaml` with `decryption: sops`, scoped narrowly to that one dir (mirrors cloudflared pattern; intentionally sidesteps the apps Kustomization which can't enable decryption while two legacy prometheus encrypted files use the unavailable `age1nur86…` recipient)
+  - Out-of-band kubectl-applied Secret `flux-system-git-auth` for git push creds (matches `sops-age` pattern; not in repo)
+  - Single fine-grained PAT (Contents: R/W, Packages: Read) scoped to mj-infra-flux only — covers both git push and GHCR pull
+- Current Issue: None — #64 closed end-to-end
+- Tests: ImageRepository scans 12 tags; ImagePolicy resolves to 1.2.2 (highest in `>=1.0.0 <2.0.0`); ImageUpdateAutomation `Ready: True repository up-to-date`; fluxcdbot push verified (commit `aa1e944` chore(image-automation): bump geohazardwatch to 1.2.2); pod running `1.2.2`
+- Work Done:
+  - Investigated #64 → surfaced three latent blockers: missing `secretRef` on ImageRepository, image-reflector/image-automation controllers not actually running on the cluster (only RBAC subjects in `gotk-components.yaml`, no Deployment manifests), SOPS decryption stripped from apps Kustomization in #59 revert
+  - First-attempt PRs #65 + #66 reverted via #67 after surfacing that two prometheus SOPS files (`apps/production/monitoring/prometheus/.env.secret.prometheus-self-scrape.encrypted`, `apps/production/monitoring/prometheus-alertmanager/.env.secret.alertmanager.encrypted`) are encrypted to `age1nur86…` — a recipient the cluster's `sops-age` Secret has no key for. Enabling decryption on the apps Kustomization failed the entire build on those files
+  - Final solution PR #68: regenerated `clusters/deby/flux-system/gotk-components.yaml` via `flux install --components=...,image-reflector-controller,image-automation-controller --version=v2.7.3 --export`; restored `apps/production/image-automation/`; added new dedicated Flux Kustomization at `clusters/deby/image-automation.yaml`
+  - Follow-up commits to fix CRD/template drift: `3df6e58` (ImageUpdateAutomation `v1beta1` → `v1beta2` — CRD no longer serves v1beta1), `16cdfe8` (template `.Updated` → `.Changed.Changes`)
+  - `8f32556` — manual one-shot bump of `deployment.yaml` from 1.1.6 → 1.2.2 to match policy resolution (couldn't be auto-pushed yet because GitRepository was anonymous-HTTPS-read with no write creds)
+  - `4837ef8` — rotated GHCR PAT (old one exposed in chat session) to a fine-grained PAT, re-encrypted ghcr-geohazardwatch SOPS Secret, kubectl-applied `flux-system-git-auth` Secret on cluster, patched `gotk-sync.yaml` to add `secretRef`. After the user enabled `Contents: Read and write` on the PAT, fluxcdbot's push succeeded immediately
+- Commits: 9aed87d (#68 squash), 3df6e58, 16cdfe8, 8f32556, 4837ef8, aa1e944 (fluxcdbot)
+- PRs: #65 (reverted), #66 (reverted), #67 (revert), #68 (final)
+- Files Modified:
+  - `clusters/deby/flux-system/gotk-components.yaml` (regenerated to v2.7.3 with image controllers)
+  - `clusters/deby/flux-system/gotk-sync.yaml` (added `secretRef.name: flux-system-git-auth`)
+  - `clusters/deby/image-automation.yaml` (created — dedicated Flux Kustomization with `decryption: sops`)
+  - `apps/production/image-automation/kustomization.yaml` (created)
+  - `apps/production/image-automation/geohazardwatch-policy.yaml` (created — ImageRepository with secretRef, ImagePolicy, ImageUpdateAutomation v1beta2)
+  - `apps/production/image-automation/geohazardwatch-ghcr.sops.yaml` (created, then re-encrypted with new PAT)
+  - `apps/production/geohazardwatch/deployment.yaml` (1.1.6 → 1.2.2, manual one-shot)
+  - `apps/production/geohazardwatch/kustomization.yaml` (drop stale comment about image-policy.yaml)
+  - `apps/production/geohazardwatch/README.md` (drop stale "controllers not installed" section, document new flow)
+  - `apps/production/geohazardwatch/image-policy.yaml` (deleted; moved to `apps/production/image-automation/`)
+  - `private/encrypt-ghcr-secret.sh`, `private/rotate-and-wire-pat.sh` (gitignored helper scripts)
+- Follow-ups (not in this session):
+  - Revoke the old exposed GHCR PAT (`ghp_dUUY1T9N…`) at https://github.com/settings/tokens
+  - Re-encrypt the two prometheus SOPS files to `age1sr8j…` (needs the legacy private key or cleartext) so the apps Kustomization can enable decryption in the future
 
 ## 2026-05-08-01
 
