@@ -15,11 +15,7 @@ resources:
 
   # Public Applications (Guest Services)
   - ./guest-services
-  # NOTE: cloudflared is NOT here. It runs via its own Flux Kustomization
-  # at clusters/deby/cloudflared.yaml with `decryption: sops` enabled, so
-  # it can decrypt its TUNNEL_TOKEN without forcing the apps Kustomization
-  # to also decrypt the existing monitoring/transmission encrypted files
-  # (which use a different age recipient).
+  - ./cloudflared    # Cloudflare Tunnel connector for geohazardwatch.com (folded back in 2026-05-09; SOPS decryption now on apps Kustomization)
 
   # Public & Protected Applications
   - ./landingpage
@@ -31,3 +27,9 @@ resources:
   - ./jimsmcp        # MCP server for custom infrastructure features
   - ./jimstest       # ngdpbase dev/test instance on jminm4
   - ./geohazardwatch # ngdpbase + ve-geology addon at geohazardwatch.com
+
+  # Cluster-level Flux image automation (ImageRepository / ImagePolicy /
+  # ImageUpdateAutomation, all in flux-system namespace; the inner
+  # kustomization deliberately has no `namespace:` directive so they
+  # stay there).
+  - ./image-automation
