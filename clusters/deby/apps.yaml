@@ -16,3 +16,14 @@ spec:
   prune: true
   wait: true
   timeout: 5m0s
+  # Originally added in #58, reverted in #59 because legacy prometheus +
+  # transmission encrypted files used the unavailable age1nur86… recipient.
+  # All encrypted files under apps/production are now aligned to age1sr8j…
+  # (transmission via a736401, prometheus self-scrape file deleted as unused
+  # in bedcce0, alertmanager re-encrypted in 35ba6ed). Re-enabling so that
+  # alertmanager's gmail_app_password actually decrypts at apply time —
+  # otherwise SMTP auth gets the ciphertext as the password and silently fails.
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
