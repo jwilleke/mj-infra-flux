@@ -31,3 +31,8 @@ resources:
   - ./jimsmcp        # MCP server for custom infrastructure features
   - ./jimstest       # ngdpbase dev/test instance on jminm4
   - ./geohazardwatch # ngdpbase + ve-geology addon at geohazardwatch.com
+
+  # Cluster-level Flux image automation (ImageRepository / ImagePolicy /
+  # ImageUpdateAutomation, all in flux-system) for apps above that publish
+  # to private GHCR. Pull secrets are SOPS-encrypted alongside.
+  - ./image-automation
