@@ -23,6 +23,7 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 
 ## Work Completed
 
+- 2026-05-09-02 - Followup: alertmanager Gmail fix (#46 unblocker), fold cloudflared+image-automation back into apps, migrate hand-applied Secrets (#46), file #69 (v1beta2 deprecation)
 - 2026-05-09-01 - End-to-end image automation for geohazardwatch (#64): controllers installed, scoped image-automation Flux Kustomization, GHCR PAT rotated, fluxcdbot push live
 - 2026-05-08-01 - Disable self-registration on geohazardwatch.com (set `ngdpbase.application.registration: false`, image bump to 1.1.6)
 - 2026-05-07-11 - Cloudflare Tunnel live for geohazardwatch.com (carved into its own Flux Kustomization with SOPS)
@@ -77,6 +78,51 @@ See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGEL
 - Follow-ups (not in this session):
   - Revoke the old exposed GHCR PAT (`ghp_dUUY1T9N…`) at https://github.com/settings/tokens
   - Re-encrypt the two prometheus SOPS files to `age1sr8j…` (needs the legacy private key or cleartext) so the apps Kustomization can enable decryption in the future
+
+## 2026-05-09-02
+
+- Agent: Claude Opus 4.7
+- Subject: Followup work to 2026-05-09-01 — alertmanager Gmail fix, scoped-Kustomization consolidation, in-repo Secrets migration (#46)
+- Key Decisions:
+  - The 2026-05-09-01 follow-up to "re-encrypt prometheus SOPS files" turned out to be two distinct cleanups: the prometheus-self-scrape file held unused basic-auth credentials (replaced by Authentik ForwardAuth long ago — file deleted, not re-encrypted), and the alertmanager file was stale-since-`fd8922a` (held only `telegram_bot_token` while alertmanager.yaml expected `gmail_app_password` — re-encrypted with the actual Gmail app password)
+  - With all encrypted files under `apps/production/` now unified to `age1sr8j…`, re-enabled `decryption: { provider: sops, secretRef: { name: sops-age } }` on the apps Flux Kustomization (originally added in #58, reverted in #59 because of legacy recipient mismatch). This is what *actually* unbroke alertmanager Gmail SMTP — the file alone wasn't enough; without decryption the Secret applied with ciphertext as the password value
+  - The cloudflared and image-automation dedicated Flux Kustomizations existed only because the apps Kustomization couldn't enable decryption (#59's blocker). Now that it can, folded them back into apps via a 2-step `prune: false` handoff. Net: 5 Flux Kustomizations → 3, fewer reconciliation surfaces, no pod restarts during ownership transfer
+  - For #46: chose Option 2 (SOPS) over Option 1 (sealed-secrets). SOPS infrastructure was already operational from earlier work; matched existing pattern for cloudflared/transmission/alertmanager
+  - For the jimsmcp GHCR pull secret (#46 step 1): the `jwilleke/jimsmcp` GHCR package is not linked to any GitHub repo (`gh api user/packages/container/jimsmcp` → `repository:null`), so a fine-grained PAT couldn't be scoped to it. Used a classic PAT with `read:packages` only — narrow enough for a single-user homelab
+  - For the fluxcdbot git-push secret (#46 step 2): re-used the same fine-grained PAT minted earlier today; just stored declaratively now under `apps/production/image-automation/` so apps Kustomization decrypts and applies it
+- Current Issue: None — everything Ready: True at session end
+- Tests: All 3 Flux Kustomizations Ready: True at master HEAD; image automation chain (ImageRepository → ImagePolicy → ImageUpdateAutomation) all Ready: True with successful scan and `repository up-to-date`; alertmanager pod rolled after Secret data flipped from ciphertext to cleartext (confirms decryption took effect); zero failing pods cluster-wide
+- Work Done:
+  - Sub-task A: deleted `apps/production/monitoring/prometheus/.env.secret.prometheus-self-scrape.encrypted` (unused — basic auth replaced by Authentik ForwardAuth in `web.yaml removed - using Authentik ForwardAuth instead of basic auth` long ago); removed `secretGenerator` block + `prometheus-secret-volume` mount in statefulset (35ba6ed; bedcce0 was the followup that fixed the orphaned references the first commit left dangling)
+  - Sub-task B: re-encrypted `apps/production/monitoring/prometheus-alertmanager/.env.secret.alertmanager.encrypted` with `gmail_app_password=<value>` to `age1sr8j…` via `private/encrypt-alertmanager-secret.sh` (35ba6ed)
+  - Re-enabled `decryption: sops` on apps Kustomization (b5116c1) — fixes Gmail SMTP auth that had been silently broken since `fd8922a`
+  - Folded `cloudflared` + `image-automation` Flux Kustomizations back into apps:
+    - Step 1 (3584d75): set `prune: false` on both, so finalizers don't garbage-collect their inventory on Kustomization deletion
+    - Step 2 (e3db92a): added `./cloudflared` and `./image-automation` to `apps/production/kustomization.yaml`; deleted `clusters/deby/cloudflared.yaml` + `clusters/deby/image-automation.yaml`. Apps adopted resources via server-side apply; cloudflared pods stayed at 44h uptime, no restart
+  - Filed issue #69 — `image.toolkit.fluxcd.io/v1beta2` ImageRepository/ImagePolicy/ImageUpdateAutomation deprecated, should bump to `v1` (low priority)
+  - #46 step 1 (9e27187): migrated `jimsmcp/ghcr-jimsmcp` to in-repo SOPS Secret at `apps/production/jimsmcp/ghcr-jimsmcp.sops.yaml` (classic PAT with `read:packages` since GHCR package isn't repo-linked). Helper script: `private/encrypt-jimsmcp-ghcr-secret.sh`
+  - #46 step 2 (718bfd4): migrated `flux-system/flux-system-git-auth` to in-repo SOPS Secret at `apps/production/image-automation/flux-system-git-auth.sops.yaml`. Same fluxcdbot PAT, just declarative now. Helper script: `private/encrypt-flux-git-auth-secret.sh`
+  - #46 step 3 (c1b5dc6): wrote `docs/secrets-inventory.md` — categorizes every cluster Secret by source-of-truth (auto-generated / Helm-state / in-repo SOPS / bootstrap / hand-applied / stale) + documents the cluster-rebuild recovery procedure
+- Commits: 35ba6ed, bedcce0, b5116c1, 7df0b8f, 3584d75, e3db92a, 9e27187, 718bfd4, c1b5dc6
+- Issues: #46 (substantially advanced — 3 of 5 candidate Secrets migrated; cloudflare-api-token + 3 authentik/* still TODO), #69 (filed)
+- Files Modified:
+  - `apps/production/monitoring/prometheus-alertmanager/.env.secret.alertmanager.encrypted` (re-encrypted with `gmail_app_password`, now to `age1sr8j…`)
+  - `apps/production/monitoring/prometheus/.env.secret.prometheus-self-scrape.encrypted` (deleted)
+  - `apps/production/monitoring/prometheus/kustomization.yaml`, `apps/production/monitoring/prometheus/prometheus-statefulset.yaml` (drop prometheus-secrets references)
+  - `clusters/deby/apps.yaml` (re-enabled `decryption: sops`)
+  - `clusters/deby/cloudflared.yaml`, `clusters/deby/image-automation.yaml` (deleted — folded back in)
+  - `apps/production/kustomization.yaml` (added `./cloudflared` and `./image-automation`)
+  - `apps/production/jimsmcp/kustomization.yaml`, `apps/production/jimsmcp/ghcr-jimsmcp.sops.yaml` (in-repo Secret manifest)
+  - `apps/production/image-automation/kustomization.yaml`, `apps/production/image-automation/flux-system-git-auth.sops.yaml` (in-repo Secret manifest)
+  - `AGENTS.md` (Tech Debt section updated; old PAT marked revoked)
+  - `docs/secrets-inventory.md` (new)
+  - `private/encrypt-alertmanager-secret.sh`, `private/encrypt-jimsmcp-ghcr-secret.sh`, `private/encrypt-flux-git-auth-secret.sh` (gitignored helpers)
+- Follow-ups (not in this session):
+  - Migrate `cert-manager/cloudflare-api-token` (the one true remaining hand-applied drift item) — same script pattern, ~5 min
+  - Investigate `authentik/{authentik,authentik-postgresql,authentik-secrets}` — likely Helm-chart-owned but missing the release label, need to confirm before migrating
+  - Verify durable backup of `~/.config/sops/age/keys.txt` (1Password / external) — losing this loses every in-repo Secret
+  - Resolve issue #69 — bump `image.toolkit.fluxcd.io/v1beta2` → `v1` in `apps/production/image-automation/geohazardwatch-policy.yaml`
+  - Update `apps/production/jimsmcp/README.md` to drop any "hand-applied imagePullSecret" caveat (cosmetic)
 
 ## 2026-05-08-01
 
