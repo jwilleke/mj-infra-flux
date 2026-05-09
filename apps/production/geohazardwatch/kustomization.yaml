@@ -9,8 +9,9 @@ resources:
   - ingress.yaml
   - certificate.yaml
   - cronjob-import.yaml
-
-# Image automation (ImageRepository / ImagePolicy / ImageUpdateAutomation)
-# lives in apps/production/image-automation/ — those resources are in the
-# flux-system namespace and would be rewritten to `geohazardwatch` if listed
-# here (the top-level `namespace:` above overrides per-resource values).
+  # image-policy.yaml is intentionally NOT in this list yet.
+  # The production cluster's Flux is bootstrapped without
+  # image-reflector-controller / image-automation-controller, so the
+  # ImageRepository / ImagePolicy / ImageUpdateAutomation CRDs do not
+  # exist. Bootstrap those controllers first (see README), then add
+  # `- image-policy.yaml` here to enable auto-updates.
