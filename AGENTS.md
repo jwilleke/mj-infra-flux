@@ -425,7 +425,7 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 ### Tech Debt (surfaced 2026-05-09)
 
 - [x] Revoke old GHCR PAT (`ghp_dUUY1T9N…`) — completed 2026-05-09; rotated to fine-grained PAT earlier same day.
-- [ ] Re-encrypt the two prometheus SOPS files (`apps/production/monitoring/prometheus/.env.secret.prometheus-self-scrape.encrypted`, `apps/production/monitoring/prometheus-alertmanager/.env.secret.alertmanager.encrypted`) to the unified `age1sr8j…` recipient. Blocks any future "enable decryption on the apps Kustomization" cleanup.
+- [x] Re-encrypt / clean up the two prometheus SOPS files — completed 2026-05-09. The prometheus self-scrape file held unused basic-auth credentials (replaced by Authentik ForwardAuth long ago); deleted along with its volume mount. The alertmanager file held a stale `telegram_bot_token` from before the Telegram→Gmail switch (`fd8922a`); replaced with `gmail_app_password` re-encrypted to `age1sr8j…`. Then SOPS decryption was re-enabled on the apps Kustomization (commit `b5116c1`) — fixed Gmail SMTP auth which had been silently failing since `fd8922a`.
 
 ## Notes & Context
 
