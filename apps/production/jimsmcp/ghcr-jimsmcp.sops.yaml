@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: ghcr-jimsmcp
+    namespace: jimsmcp
+type: kubernetes.io/dockerconfigjson
+data:
+    .dockerconfigjson: ENC[AES256_GCM,data:5MWZNG1WeFiEUoT7Ldvt6FinSEOcznxKjwk+7PO9AsRY6QjfUutlZBxUNEy2uAUNjGP42YZ3+NDqvuCHZL+7/PN/PTPcLW63PYdPz9PZh/CxsVwdQR5RNPep9I/3pyxOeATLjxHUCZtGLVAES6X7415uzIs056FsYYb5mMgiybe8M+NXLrKZWA==,iv:75WuDakgffGFqFWbS7S3Y13UTXulJ0g3O/aoC9uSkLg=,tag:UDNsH3jVsMERXqiwmzB1cw==,type:str]
+sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age:
+        - recipient: age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBuK2lIdHlLSTJScU5TLzgz
+            WHA3djdFQjk4QjloWkU0V0NaaHIxR1gxbDFFCmFSMUxKd1hYSEJkb0o4ZGxIS2hR
+            djl1U0JNZUNMNm9JajNmUHR5d1BiTFkKLS0tIDhCbVZyQUE3QVZza1VTSXkySSs1
+            R2R5bGJYWjY0ODNqSk5qN0M3VDVyZ0UKdsEJdzhoSgwkWtTAMhSlbbQkPfA4EO8M
+            X0rwBseYngOzQDqi2fEc63K9oQ4QtA20kWuk92f7vE2Z1wAS4p1YpA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-05-09T15:18:45Z"
+    mac: ENC[AES256_GCM,data:UPoYDBY+aAIqoT/zuAzlbL+RBjTC7m0GUczXUagyJSViLBbijUBxQfX/rjkAkcqKfy5G3MG06HwvHAHyt/WnYgZe9NnVWEg5O/EUd7VigwaYpq5ZBItrfqAFTYT88UrKhNdyqoy5+3vGInN803Y2fT6MQaPVBJVlqzD6j+iZFUw=,iv:evtbDfcuLsmA5In3WmQO24suGmj9BMy4Urb8RT229/s=,tag:gyuJoYPBsDdbuULZH7HNzA==,type:str]
+    pgp: []
+    encrypted_regex: ^(data|stringData)$
+    version: 3.9.3
