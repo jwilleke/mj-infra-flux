@@ -53,10 +53,6 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /app/data
-            - name: config
-              mountPath: /app/data/config/app-custom-config.json
-              subPath: app-custom-config.json
-              readOnly: true
             - name: org
               mountPath: /app/data/organizations/geohazardwatch.json
               subPath: geohazardwatch.json
@@ -89,12 +85,6 @@ spec:
           hostPath:
             path: /mnt/tank/jims/data/systems/geohazardwatch
             type: DirectoryOrCreate
-        - name: config
-          configMap:
-            name: geohazardwatch-config
-            items:
-              - key: app-custom-config.json
-                path: app-custom-config.json
         - name: org
           configMap:
             name: geohazardwatch-config
