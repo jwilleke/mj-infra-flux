@@ -4,23 +4,11 @@ metadata:
   name: geohazardwatch-config
   namespace: geohazardwatch
 data:
-  app-custom-config.json: |
-    {
-      "ngdpbase.server.host": "0.0.0.0",
-      "ngdpbase.server.port": 3000,
-      "ngdpbase.application.base-url": "https://geohazardwatch.com",
-      "ngdpbase.application-name": "GeoHazardWatch",
-      "ngdpbase.session.secure": true,
-      "ngdpbase.session.sameSite": "lax",
-      "ngdpbase.application.registration": false,
-      "ngdpbase.page.provider": "versioningfileprovider",
-      "ngdpbase.theme.active": "volcano",
-      "ngdpbase.front-page": "volcanoes-and-earthquakes",
-      "ngdpbase.application.organization.file": "geohazardwatch.json",
-      "ngdpbase.managers.addons-manager.addons-path": ["/app/addons", "/opt/geohazardwatch/addons"],
-      "ngdpbase.addons.geohazardwatch.enabled": true,
-      "ngdpbase.addons.geohazardwatch.dataPath": "/app/data/ve-geology"
-    }
+  # NOTE (2026-05-10): app-custom-config.json no longer lives in this
+  # ConfigMap. Runtime config is on the persistent volume at
+  # /mnt/tank/jims/data/systems/geohazardwatch/config/app-custom-config.json
+  # — edited via the in-app /admin/configuration UI, via the NAS share
+  # on a Mac, or via SSH to the host. See mj-infra-flux@840b87c.
   # Anchor Organization JSON-LD record. Required by ngdpbase 3.10+ headless
   # installs so that UserManager.applyRoleDiff() can bind admin role membership
   # to a real org @id. Without it, createDefaultAdmin silently skips role
