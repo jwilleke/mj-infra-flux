@@ -18,8 +18,8 @@ data:
       "ngdpbase.front-page": "volcanoes-and-earthquakes",
       "ngdpbase.application.organization.file": "geohazardwatch.json",
       "ngdpbase.managers.addons-manager.addons-path": ["/app/addons", "/opt/geohazardwatch/addons"],
-      "ngdpbase.addons.ve-geology.enabled": true,
-      "ngdpbase.addons.ve-geology.dataPath": "/app/data/ve-geology"
+      "ngdpbase.addons.geohazardwatch.enabled": true,
+      "ngdpbase.addons.geohazardwatch.dataPath": "/app/data/ve-geology"
     }
   # Anchor Organization JSON-LD record. Required by ngdpbase 3.10+ headless
   # installs so that UserManager.applyRoleDiff() can bind admin role membership
