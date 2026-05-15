@@ -10,6 +10,7 @@ spec:
   ref:
     branch: master
   url: https://github.com/jwilleke/mj-infra-flux.git
+  provider: github
   secretRef:
     name: flux-system-git-auth
 ---
