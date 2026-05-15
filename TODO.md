@@ -9,19 +9,13 @@ GitOps repo for the **deby** k3s cluster (Flux v2.7.3 / source-controller v1.7.3
   - `GitRepository/flux-system` given `spec.provider: github` — committed (`1e31ab2`) and the live resource patched to break the auth-can't-pull-its-own-fix deadlock.
   - Verified: `GitRepository` + `Kustomization` `READY=True`, image-automation `geohazardwatch` `READY=True`. Pull path proven. Push path uses the same secret and will surface the GitHub App identity (in place of `fluxcdbot`) on the next geohazardwatch image bump — final visual confirmation.
 
+- **2026-05-15 — PAT decommission** (companion to ngdpbase #725):
+  - [x] Removed `.github/workflows/pat-health-check.yml` (commit `3d66dd8c`).
+  - [x] `FLUXCDBOT_PAT_HEALTHCHECK` secret — confirmed it never existed (no Actions secrets on the repo); nothing to delete. This was the subject of #71.
+  - [x] Closed #71 and #72 as obsolete.
+  - [ ] **Operator-only, still pending:** revoke the old `fluxcdbot` PAT in GitHub account settings (<https://github.com/settings/tokens>). Cannot be done via CLI/API — manual. Until done, the (now-unused) token remains valid.
+
 ## Open
-
-### Obsoleted by the GitHub App migration — ready to close
-
-- **#71** [BUG] `FLUXCDBOT_PAT_HEALTHCHECK` secret is not set — the PAT canary is moot; auth no longer uses the PAT.
-- **#72** [BUG] PAT health check: all jobs have failed — same root cause; the `pat-health-check.yml` workflow should be removed.
-
-Decommission checklist (companion to ngdpbase #725):
-
-- [ ] Revoke the old `fluxcdbot` PAT in GitHub settings.
-- [ ] Delete `.github/workflows/pat-health-check.yml`.
-- [ ] Delete the `FLUXCDBOT_PAT_HEALTHCHECK` repository secret.
-- [ ] Close #71 and #72.
 
 ### Bugs
 
