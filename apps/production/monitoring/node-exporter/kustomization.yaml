@@ -7,22 +7,13 @@ resources:
   - node-exporter-daemonset.yaml
   - node-exporter-service.yaml
 
-patches:
-  - patch: |
-      apiVersion: apps/v1
-      kind: DaemonSet
-      metadata:
-        name: node-exporter
-      spec:
-        template:
-          spec:
-            containers:
-            - name: node-exporter
-              args:
-              - --no-collector.systemd  # Disable systemd collector to avoid D-Bus errors
-    target:
-      kind: DaemonSet
-      name: node-exporter
+# NOTE (mj-infra-flux#74): a strategic-merge patch used to add
+# --no-collector.systemd here. kustomize REPLACES a scalar `args` list
+# (no merge key), so that patch would have clobbered the DaemonSet's
+# --path.* / --collector.textfile.directory args down to a single flag.
+# It was also inert until now (node-exporter was not in the monitoring
+# kustomization). Collector flags are the DaemonSet's sole source of
+# truth — edit node-exporter-daemonset.yaml, not a patch here.
 
 labels:
   - pairs:

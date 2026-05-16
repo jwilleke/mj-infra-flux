@@ -8,6 +8,9 @@ resources:
   - ./grafana
   - ./loki
   - ./otel-collector
+  # node-exporter was orphaned from GitOps (managed out-of-band); wired in
+  # for mj-infra-flux#74 so the textfile collector reaches the live cluster.
+  - ./node-exporter
 
 namespace: monitoring
 
