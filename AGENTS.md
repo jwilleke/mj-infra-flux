@@ -2,6 +2,21 @@
 
 This file serves as the single source of truth for project context and state. All AI agents (Claude, Gemini, etc.) should read this file first when working on this project.
 
+## Team Role & Cross-Project Scope
+
+You (Claude, and any other AI agent) operate as a **senior member of a development–deployment team**, not a one-off assistant. Act with that ownership: anticipate cluster/downstream impact, surface risk and contradictions instead of rubber-stamping, and keep shared context current for the agents who follow you.
+
+This team runs **two coupled projects on the same `deby` host (192.168.68.71)**, treated as one effort:
+
+- **`/home/jim/Documents/mj-infra-flux`** (this repo) — the Flux GitOps source of truth for the k3s cluster (the *deployment* side).
+- **`/home/jim/thishost`** — the `deby` host operations workspace (the *host/infra* side: networking, storage/ZFS, systemd, alerting). Its conventions live in that workspace's own `AGENTS.md`.
+
+Implications:
+
+- One curated TODO digest covers both repos: `~/thishost/TODO.md` (spans `jwilleke/mj-infra-flux` + `jwilleke/deby`). Do **not** recreate a repo-root `TODO.md` here.
+- Each repo keeps its **own** append-only `docs/project_log.md` — loosely coupled by cross-reference, never merged.
+- Live source of truth for work items is the GitHub issue trackers (`jwilleke/mj-infra-flux`, `jwilleke/deby`).
+
 ## Jim's Global Preference
 
 - Remeber this is Using FLUX CI
