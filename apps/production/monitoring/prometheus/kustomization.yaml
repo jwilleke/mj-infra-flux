@@ -25,6 +25,8 @@ configMapGenerator:
       - config/alerting-rules.prometheus.yaml
       - config/alerting-rules.service-health.yaml
       - config/alerting-rules.k3s-cluster.yaml
+      # Loki-independent storage/backup alerts (mj-infra-flux#74)
+      - config/alerting-rules.storage-backup.yaml
       # coinpoet and tayle configs removed
 
 labels:

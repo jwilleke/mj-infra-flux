@@ -55,13 +55,21 @@ data:
                   cat /deby-backup/host/meta/$(date +%F).log
 
           # ZFS pool unhealthy as reported by zpool status output captured
-          # in the journal (zfsutils-linux scrub cron / events).
+          # in the journal, OR a pool suspension / uncorrectable I/O / hung
+          # task. The 2026-05-06 incident logged "uncorrectable I/O failure
+          # and has been suspended" with pools still ONLINE — the old
+          # zpool.*(DEGRADED|FAULTED|UNAVAIL) form would not have matched, so
+          # the suspension/IO/hung-task phrases are matched anywhere on the
+          # line (no zpool prefix). Companion Prometheus alerts
+          # (ZfsPoolUnhealthy / BackupDebyStale) cover the Loki-down case.
           - alert: ZfsPoolDegraded
-            expr: 'sum(count_over_time({host="deby"} |~ "(?i)zpool.*(DEGRADED|FAULTED|UNAVAIL)"[5m])) > 0'
+            expr: 'sum(count_over_time({host="deby"} |~ "(?i)(zpool.*(degraded|faulted|unavail)|uncorrectable i/o failure|has been suspended|suspended|blocked for more than .* seconds|hung_task)"[5m])) > 0'
             labels:
               severity: critical
             annotations:
-              summary: "A ZFS pool on deby reports DEGRADED/FAULTED/UNAVAIL"
+              summary: "A ZFS pool on deby is unhealthy (degraded/faulted/unavail/suspended/IO error)"
               description: |
                 Run on the host:  zpool status -v
                 Backup pools (deby-backup, nas-backup) and any others.
+                Triggers on DEGRADED/FAULTED/UNAVAIL, pool suspension,
+                uncorrectable I/O failure, or kernel hung-task / blocked-task.

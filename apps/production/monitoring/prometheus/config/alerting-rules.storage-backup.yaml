@@ -1,0 +1,80 @@
+groups:
+  - name: deby_storage_backup
+    interval: 30s
+    rules:
+
+      # mj-infra-flux#74 — Loki-INDEPENDENT storage/backup alerting.
+      #
+      # These fire off node-exporter textfile metrics written by the deby
+      # host (jwilleke/deby: node-exporter-textfile.{service,timer} ->
+      # /var/lib/node_exporter/textfile/deby-storage.prom). node-exporter
+      # is healthy and independent of Loki/NFS, so this path stays up when
+      # the Loki ruler is down (the 2026-05-06 incident). The Loki
+      # ZfsPoolDegraded / BackupDebyFailed rules are kept as the second,
+      # independent path (defense in depth).
+      #
+      # Metric contract (host producer must emit exactly these):
+      #   deby_zfs_pool_healthy{pool="<name>"}            1 healthy / 0 not
+      #   deby_backup_deby_last_success_timestamp_seconds  unix ts
+      #   deby_textfile_collected_timestamp_seconds        unix ts (heartbeat)
+
+      # A ZFS pool is not healthy: not ONLINE, or suspended / hit an
+      # uncorrectable I/O failure. The producer collapses all of those into
+      # deby_zfs_pool_healthy == 0 (it greps `zpool status` + the pool
+      # suspension state, the cases the old narrow Loki regex missed).
+      - alert: ZfsPoolUnhealthy
+        expr: |
+          min by (pool) (deby_zfs_pool_healthy) == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ZFS pool {{ $labels.pool }} on deby is not healthy"
+          description: |
+            deby_zfs_pool_healthy=0 for pool {{ $labels.pool }} (degraded /
+            faulted / unavail / suspended / uncorrectable I/O). This path is
+            independent of Loki. Run on the host:
+              zpool status -v {{ $labels.pool }}
+              zpool status -v
+
+      # backup-deby has not recorded a SUCCESSFUL run in >2 days. Unlike the
+      # Loki BackupDebyFailed rule (marker-line based — silent if the job
+      # never runs / wedges, exactly the 2026-05-06 failure), this is a
+      # staleness check, so a missing/hung backup also fires.
+      - alert: BackupDebyStale
+        expr: |
+          time() - max(deby_backup_deby_last_success_timestamp_seconds) > 2 * 86400
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "backup-deby has no successful run in >2 days"
+          description: |
+            Last successful backup-deby was
+            {{ $value | humanizeDuration }} ago (threshold 2d). The nightly
+            local backup to the deby-backup ZFS pool is stale, missing, or
+            wedged. Check on the host:
+              systemctl status backup-deby.service backup-deby.timer
+              journalctl -u backup-deby.service -e
+              ls -l /deby-backup/host/meta/
+
+      # Dead-man's switch. If the host textfile producer stops, the two
+      # alerts above go silent — re-creating the very "alerts go quiet"
+      # failure class #74 exists to fix. This catches that: the heartbeat
+      # metric is absent or older than 30m (producer runs every ~10m).
+      - alert: DebyStorageMetricsStale
+        expr: |
+          absent(deby_textfile_collected_timestamp_seconds)
+          or (time() - max(deby_textfile_collected_timestamp_seconds) > 1800)
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "deby storage/backup textfile metrics are stale or absent"
+          description: |
+            node-exporter is not seeing fresh deby-storage textfile metrics,
+            so ZfsPoolUnhealthy / BackupDebyStale are effectively blind.
+            Check on the host:
+              systemctl status node-exporter-textfile.service node-exporter-textfile.timer
+              journalctl -u node-exporter-textfile.service -e
+              ls -l /var/lib/node_exporter/textfile/

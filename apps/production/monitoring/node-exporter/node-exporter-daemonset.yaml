@@ -33,6 +33,12 @@ spec:
           - --collector.processes
           - --collector.systemd
           - --no-collector.ipvs
+          # Loki-independent host metrics (mj-infra-flux#74): the deby host
+          # writes ZFS pool health + backup-deby freshness .prom files here
+          # via a systemd timer (jwilleke/deby). NOTE: the inert
+          # --no-collector.systemd patch in kustomization.yaml does not reach
+          # the live DaemonSet, so this arg belongs here, not in that patch.
+          - --collector.textfile.directory=/host/textfile
         ports:
         - containerPort: 9100
           protocol: TCP
@@ -55,6 +61,9 @@ spec:
           mountPath: /host/root
           mountPropagation: HostToContainer
           readOnly: true
+        - name: textfile
+          mountPath: /host/textfile
+          readOnly: true
         securityContext:
           runAsNonRoot: true
           runAsUser: 65534
@@ -76,3 +85,10 @@ spec:
       - name: root
         hostPath:
           path: /
+      # mj-infra-flux#74: host-written node-exporter textfile metrics
+      # (ZFS pool health, backup-deby freshness). DirectoryOrCreate so the
+      # pod starts even before the deby producer first runs.
+      - name: textfile
+        hostPath:
+          path: /var/lib/node_exporter/textfile
+          type: DirectoryOrCreate
