@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: loki-data
+spec:
+  # Default k3s storageclass: rancher.io/local-path -> node-local internal
+  # disk. Chosen specifically to decouple Loki from the /mnt/tank NFS
+  # automount failure domain it is supposed to alert on (#73).
+  storageClassName: local-path
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      # local-path does not hard-enforce this; sized for ~30d retention
+      # (loki-config retention_period: 30d) on a low-volume home cluster.
+      storage: 20Gi

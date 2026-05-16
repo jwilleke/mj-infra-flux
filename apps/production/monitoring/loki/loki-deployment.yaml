@@ -5,7 +5,7 @@ metadata:
 spec:
   replicas: 1
   strategy:
-    type: Recreate     # hostPath data; no rolling — only one pod can hold the chunks dir
+    type: Recreate     # RWO local-path PVC; single-attach, no rolling — only one pod can hold the chunks dir
   selector:
     matchLabels:
       app.jimwilleke.com/name: loki
@@ -66,9 +66,10 @@ spec:
           configMap:
             name: loki-rules
         - name: data
-          # Persistent on the NFS-backed /mnt/tank pool, alongside other
-          # /mnt/tank/jims/data/systems/* state. Survives pod restarts and
-          # gets backed up by deby's nightly NAS->deby push (it's on tank).
-          hostPath:
-            path: /mnt/tank/jims/data/systems/loki
-            type: DirectoryOrCreate
+          # Node-local internal disk via the default local-path storageclass.
+          # Deliberately NOT on the /mnt/tank NFS automount: Loki + its ruler
+          # must not share the storage/NFS failure domain they are meant to
+          # alert on (jwilleke/mj-infra-flux#73). Log history is short-retention
+          # telemetry, so node-local (un-backed-up) is the correct trade-off.
+          persistentVolumeClaim:
+            claimName: loki-data

@@ -5,6 +5,7 @@ namespace: monitoring
 
 resources:
   - ./loki-config.yaml
+  - ./loki-pvc.yaml
   - ./loki-deployment.yaml
   - ./loki-rules.yaml
   - ./loki-service.yaml
