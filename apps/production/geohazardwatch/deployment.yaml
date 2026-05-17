@@ -31,7 +31,7 @@ spec:
             value: "1"
       containers:
         - name: geohazardwatch
-          image: ghcr.io/jwilleke/geohazardwatch:1.2.12 # {"$imagepolicy": "flux-system:geohazardwatch"}
+          image: ghcr.io/jwilleke/geohazardwatch:1.2.13 # {"$imagepolicy": "flux-system:geohazardwatch"}
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
