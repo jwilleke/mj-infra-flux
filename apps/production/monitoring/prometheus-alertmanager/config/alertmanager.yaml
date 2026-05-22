@@ -52,7 +52,7 @@ inhibit_rules:
 receivers:
   - name: "on_call_operator_default"
     email_configs:
-      - to: 'jim@willeke.com'
+      - to: 'mjsservers@willeke.com'
         send_resolved: true
         headers:
           Subject: '{{ if eq .Status "firing" }}🔥{{ else }}✅{{ end }} [{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'

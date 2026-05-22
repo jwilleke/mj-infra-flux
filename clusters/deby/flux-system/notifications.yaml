@@ -1,5 +1,5 @@
 # Flux notification-controller routes reconciliation events to the
-# in-cluster Alertmanager. Alertmanager dedups and emails to jim@willeke.com
+# in-cluster Alertmanager. Alertmanager dedups and emails to mjsservers@willeke.com
 # via the existing Gmail receiver, so Flux failures arrive in the same
 # inbox as host/cluster alerts.
 ---
