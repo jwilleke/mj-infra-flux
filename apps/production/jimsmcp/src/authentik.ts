@@ -222,6 +222,78 @@ export class AuthentikClient {
   }
 
   /**
+   * Get a single application by slug. Returns the full object including
+   * `provider` (the bound provider PK, or null). 404 → null.
+   */
+  async getApplication(slug: string) {
+    try {
+      const response = await this.client.get(`/core/applications/${encodeURIComponent(slug)}/`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 404) return null;
+      throw new Error(`Failed to get application ${slug}: ${error.message || error}`);
+    }
+  }
+
+  /**
+   * Delete an Authentik application by slug.
+   * Endpoint: DELETE /api/v3/core/applications/{slug}/ → 204.
+   * 404 is treated as already-gone (idempotent).
+   */
+  async deleteApplication(slug: string): Promise<{ deleted: boolean; status: number; slug: string }> {
+    try {
+      const response = await this.client.delete(`/core/applications/${encodeURIComponent(slug)}/`);
+      return { deleted: true, status: response.status, slug };
+    } catch (error: any) {
+      const status = error.response?.status;
+      if (status === 404) return { deleted: false, status: 404, slug };
+      throw new Error(`Failed to delete application ${slug}: ${error.message || error}`);
+    }
+  }
+
+  /**
+   * Delete an Authentik provider by primary key.
+   * Endpoint: DELETE /api/v3/providers/all/{pk}/ → 204.
+   * 404 is treated as already-gone (idempotent).
+   */
+  async deleteProvider(pk: number): Promise<{ deleted: boolean; status: number; pk: number }> {
+    try {
+      const response = await this.client.delete(`/providers/all/${pk}/`);
+      return { deleted: true, status: response.status, pk };
+    } catch (error: any) {
+      const status = error.response?.status;
+      if (status === 404) return { deleted: false, status: 404, pk };
+      throw new Error(`Failed to delete provider pk=${pk}: ${error.message || error}`);
+    }
+  }
+
+  /**
+   * Convenience: retire an application end-to-end. Looks up the application
+   * by slug, records its bound provider PK (if any), then deletes the
+   * application first (drops policy bindings) and the provider second. Returns
+   * a summary; safe to call when either side is already gone (idempotent).
+   */
+  async retireApplication(slug: string): Promise<{
+    appDeleted: { deleted: boolean; status: number; slug: string };
+    providerDeleted: { deleted: boolean; status: number; pk: number } | null;
+    providerPk: number | null;
+    appName: string | null;
+  }> {
+    const app = await this.getApplication(slug);
+    const providerPk: number | null = app?.provider ?? null;
+    const appName: string | null = app?.name ?? null;
+
+    const appDeleted = await this.deleteApplication(slug);
+
+    let providerDeleted: { deleted: boolean; status: number; pk: number } | null = null;
+    if (providerPk != null) {
+      providerDeleted = await this.deleteProvider(providerPk);
+    }
+
+    return { appDeleted, providerDeleted, providerPk, appName };
+  }
+
+  /**
    * Get embedded outpost (usually the first one)
    */
   async getEmbeddedOutpost() {

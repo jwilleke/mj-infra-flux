@@ -172,6 +172,39 @@ const TOOLS: Tool[] = [
     },
   },
   {
+    name: "authentik_delete_application",
+    description: "Delete an Authentik application by slug (DELETE /api/v3/core/applications/{slug}/). Idempotent: 404 is reported as 'already gone'. Production-affecting — verify the slug first via authentik_list_applications.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        slug: { type: "string", description: "Application slug (e.g. 'jimswiki')." },
+      },
+      required: ["slug"],
+    },
+  },
+  {
+    name: "authentik_delete_provider",
+    description: "Delete an Authentik provider by primary key (DELETE /api/v3/providers/all/{pk}/). Idempotent: 404 is reported as 'already gone'. Production-affecting — verify pk first via authentik_list_providers; deleting an in-use provider can break ForwardAuth.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        pk: { type: "number", description: "Provider primary key (numeric)." },
+      },
+      required: ["pk"],
+    },
+  },
+  {
+    name: "authentik_retire_application",
+    description: "Retire an application end-to-end: looks up the application by slug, deletes the application first (drops policy bindings), then deletes its bound provider. Idempotent on both halves. Use when retiring a complete service from SSO.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        slug: { type: "string", description: "Application slug (e.g. 'jimswiki')." },
+      },
+      required: ["slug"],
+    },
+  },
+  {
     name: "stocks_get_price",
     description: "Get latest stock quote from Alpha Vantage (GLOBAL_QUOTE). Input: { symbol: 'AAPL' }",
     inputSchema: {
@@ -595,6 +628,116 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [{
               type: "text",
               text: `❌ Error binding provider to outpost: ${error.message}`
+            }],
+            isError: true,
+          };
+        }
+      }
+
+      case "authentik_delete_application": {
+        try {
+          const authentikClient = new AuthentikClient();
+          const slug = args?.slug as string;
+          if (!slug) {
+            return {
+              content: [{ type: "text", text: "❌ Error: slug is required" }],
+              isError: true,
+            };
+          }
+
+          const result = await authentikClient.deleteApplication(slug);
+
+          const msg = result.deleted
+            ? `✅ Application '${slug}' deleted (HTTP ${result.status}).`
+            : `ℹ️  Application '${slug}' was already gone (HTTP 404). No-op.`;
+
+          return {
+            content: [{ type: "text", text: msg }],
+          };
+        } catch (error: any) {
+          return {
+            content: [{
+              type: "text",
+              text: `❌ Error deleting application: ${error.message}`
+            }],
+            isError: true,
+          };
+        }
+      }
+
+      case "authentik_delete_provider": {
+        try {
+          const authentikClient = new AuthentikClient();
+          const pk = args?.pk as number;
+          if (typeof pk !== "number") {
+            return {
+              content: [{ type: "text", text: "❌ Error: pk (number) is required" }],
+              isError: true,
+            };
+          }
+
+          const result = await authentikClient.deleteProvider(pk);
+
+          const msg = result.deleted
+            ? `✅ Provider pk=${pk} deleted (HTTP ${result.status}).`
+            : `ℹ️  Provider pk=${pk} was already gone (HTTP 404). No-op.`;
+
+          return {
+            content: [{ type: "text", text: msg }],
+          };
+        } catch (error: any) {
+          return {
+            content: [{
+              type: "text",
+              text: `❌ Error deleting provider: ${error.message}`
+            }],
+            isError: true,
+          };
+        }
+      }
+
+      case "authentik_retire_application": {
+        try {
+          const authentikClient = new AuthentikClient();
+          const slug = args?.slug as string;
+          if (!slug) {
+            return {
+              content: [{ type: "text", text: "❌ Error: slug is required" }],
+              isError: true,
+            };
+          }
+
+          const result = await authentikClient.retireApplication(slug);
+          const lines: string[] = [];
+
+          // Application result
+          if (result.appDeleted.deleted) {
+            lines.push(`✅ Application '${slug}'${result.appName ? ` (${result.appName})` : ""} deleted (HTTP ${result.appDeleted.status}).`);
+          } else {
+            lines.push(`ℹ️  Application '${slug}' was already gone (HTTP 404).`);
+          }
+
+          // Provider result
+          if (result.providerPk == null) {
+            lines.push(`ℹ️  No provider was bound to '${slug}' (or the application was already gone before lookup). No provider delete attempted.`);
+          } else if (result.providerDeleted?.deleted) {
+            lines.push(`✅ Provider pk=${result.providerPk} deleted (HTTP ${result.providerDeleted.status}).`);
+          } else if (result.providerDeleted) {
+            lines.push(`ℹ️  Provider pk=${result.providerPk} was already gone (HTTP ${result.providerDeleted.status}).`);
+          }
+
+          // Operational note
+          lines.push("");
+          lines.push("Note: the Authentik embedded-outpost ingress may take ~30 s to drop the host from its rule list. If it doesn't, restart authentik-worker (`kubectl rollout restart deployment authentik-worker -n authentik`).");
+
+          return {
+            content: [{ type: "text", text: lines.join("\n") }],
+          };
+        } catch (error: any) {
+          return {
+            content: [{
+              type: "text",
+              text: `❌ Error retiring application: ${error.message}`
             }],
             isError: true,
           };
