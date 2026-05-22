@@ -1,5 +1,19 @@
 # cert-manager
 
+## Ownership split as of 2026-05-22
+
+Not all of cert-manager is in Flux's hands. Two distinct ownership domains:
+
+| Concern | Where it lives | Flux-reconciled? |
+| --- | --- | --- |
+| cert-manager **workload** (Deployment, cainjector, webhook, CRDs, RBAC) | this directory (`apps/base/cert-manager/`) — manifests + `overlays/prod/` | **No.** Never wired into a Flux Kustomization. Hand-applied at cluster bootstrap (2024-02, 477+ d ago). Still running fine. |
+| **ClusterIssuers** (`letsencrypt-{staging,production}`) | `apps/production/cert-manager/letsencrypt-*-clusterissuer.yaml` | **Yes** (moved 2026-05-22 in mj-infra-flux#81). |
+| Cloudflare API token Secret (DNS-01 solver auth) | `apps/production/cert-manager/cloudflare-api-token.sops.yaml` | **Yes** (moved 2026-05-22 in mj-infra-flux#77 item 1). |
+
+Why the split: #81 resolved the declarative-config drift (ClusterIssuers + their Secret) without touching the running workload — separate concern. Bringing the workload itself into Flux is a future cleanup; the workload predates the GitOps repo, so careful sequencing required.
+
+The previous `letsencrypt-{staging,production}-clusterissuer.yaml` files in `base/other/` were **deleted** because they declared HTTP-01 only and never matched the hand-applied live state (DNS-01 Cloudflare). They were also never reconciled by Flux, so deleting them affects nothing live.
+
 ## cert-manager prep
 
 kubectl get deployment cert-manager-5ff58bc8db-csx7b -o yaml > deployment.yaml

@@ -1,8 +1,10 @@
 resources:
   - cert-manager-deployment.yaml
   - cert-manager-cainjector-deployment.yaml
-  - ./letsencrypt-staging-clusterissuer.yaml
-  - ./letsencrypt-production-clusterissuer.yaml
+# ClusterIssuers (letsencrypt-{staging,production}) moved 2026-05-22 to
+# apps/production/cert-manager/ so they're Flux-reconciled and match live
+# (DNS-01 Cloudflare) — see mj-infra-flux#81. The deleted files here had
+# declared HTTP-01 only and never matched the hand-applied live state.
 # - ./letsencrypt-staging-certificate-photos.scott.willeke.com.yaml
 #- ./test-certificateissuer.yaml # for testing only
 

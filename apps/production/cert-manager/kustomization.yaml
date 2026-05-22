@@ -1,13 +1,20 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# cert-manager-namespace operational Secrets that need to be in Git (not the
-# cert-manager workload itself — that lives under apps/base/cert-manager/, which
-# is currently not Flux-reconciled; tracked as a separate drift item).
+# cert-manager declarative config that needs to be Flux-reconciled.
 #
-# This kustomization just owns the cloudflare-api-token Secret used by the live
-# ClusterIssuers' DNS-01 solver. Migrated out of hand-applied state on
-# 2026-05-22 as part of mj-infra-flux#77 item 1.
+# In scope: the cloudflare-api-token Secret (migrated 2026-05-22 in
+# mj-infra-flux#77 item 1) AND the two ClusterIssuers that reference it
+# (migrated 2026-05-22 in mj-infra-flux#81 — live spec preserved byte-identical;
+# the old apps/base/cert-manager/base/other/letsencrypt-*-clusterissuer.yaml
+# manifests declared HTTP-01 only and never matched live state).
+#
+# Out of scope (still hand-applied): the cert-manager workload itself
+# (Deployment, CRDs, webhook, RBAC) — separate concern, lives under
+# apps/base/cert-manager/ and is intentionally not wired into Flux. See
+# apps/base/cert-manager/README-cert-manager.md.
 
 resources:
   - ./cloudflare-api-token.sops.yaml
+  - ./letsencrypt-staging-clusterissuer.yaml
+  - ./letsencrypt-production-clusterissuer.yaml

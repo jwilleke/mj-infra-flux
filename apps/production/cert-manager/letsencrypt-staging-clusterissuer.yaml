@@ -1,0 +1,27 @@
+apiVersion: cert-manager.io/v1
+# NOTE: ClusterIssuer is non-namespaced; valid across all namespaces.
+# Migrated into a Flux-reconciled path 2026-05-22 in mj-infra-flux#81.
+# Live spec preserved byte-identical from the hand-applied state at bootstrap.
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    # The ACME server URL (Let's Encrypt staging — rate-limit-friendly, untrusted certs)
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    # Email address used for ACME registration. Real human contact, not an
+    # alert distribution list — Let's Encrypt requires a reachable inbox here.
+    email: jim@willeke.com
+    # Name of the Secret used to store the ACME account private key (managed
+    # by cert-manager; auto-created on first reconcile).
+    privateKeySecretRef:
+      name: letsencrypt-staging-issuer-secret-key
+    solvers:
+      # DNS-01 challenge via Cloudflare. The cloudflare-api-token Secret is
+      # SOPS-encrypted in apps/production/cert-manager/cloudflare-api-token.sops.yaml
+      # and Flux-managed since b993868.
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api-token
