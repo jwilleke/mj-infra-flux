@@ -1,7 +1,10 @@
-# Project Log
+# Project Log — FROZEN as of 2026-05-22
 
-This page is for AI agent session tracking.
-See [docs/planning/TODO.md](./docs/planning/TODO.md) for task planning, [CHANGELOG.md](./CHANGELOG.md) for version history.
+> **Operational history for `mj-infra-flux` is now consolidated** at [`jwilleke/deby:docs/project_log.md`](https://github.com/jwilleke/deby/blob/master/docs/project_log.md). New session entries for work touching this repo are recorded there, referencing `mj-infra-flux@<sha>` for the affected commits. The entries below are preserved as a historical archive — do not append.
+>
+> See also `jwilleke/deby:TODO.md` for the curated cross-repo issue digest, and [`CHANGELOG.md`](../CHANGELOG.md) for version history of this repo's artifacts.
+
+This file (entries below) was the AI-agent session log for this repo through 2026-05-22.
 
 ## Format
 

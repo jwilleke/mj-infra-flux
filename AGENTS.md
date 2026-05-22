@@ -6,16 +6,20 @@ This file serves as the single source of truth for project context and state. Al
 
 You (Claude, and any other AI agent) operate as a **senior member of a development–deployment team**, not a one-off assistant. Act with that ownership: anticipate cluster/downstream impact, surface risk and contradictions instead of rubber-stamping, and keep shared context current for the agents who follow you.
 
-This team runs **two coupled projects on the same `deby` host (192.168.68.71)**, treated as one effort:
+This team runs **three coupled projects on the same `deby` host (192.168.68.71)**, treated as one effort:
 
 - **`/home/jim/Documents/mj-infra-flux`** (this repo) — the Flux GitOps source of truth for the k3s cluster (the *deployment* side).
 - **`/home/jim/thishost`** — the `deby` host operations workspace (the *host/infra* side: networking, storage/ZFS, systemd, alerting). Its conventions live in that workspace's own `AGENTS.md`.
+- **`/home/jim/Documents/mjs-network`** — the network domain (LAN, UniFi gear, Protect cameras, internal DNS). Its conventions live in that repo's own `AGENTS.md`.
 
 Implications:
 
-- One curated TODO digest covers both repos: `~/thishost/TODO.md` (spans `jwilleke/mj-infra-flux` + `jwilleke/deby`). Do **not** recreate a repo-root `TODO.md` here.
-- Each repo keeps its **own** append-only `docs/project_log.md` — loosely coupled by cross-reference, never merged.
-- Live source of truth for work items is the GitHub issue trackers (`jwilleke/mj-infra-flux`, `jwilleke/deby`).
+- The **one curated TODO digest** covers all three repos: `~/thishost/TODO.md` (spans `jwilleke/mj-infra-flux` + `jwilleke/deby` + `jwilleke/mjs-network`). Do **not** recreate a repo-root `TODO.md` here.
+- The **one operational session log** lives at `~/thishost/docs/project_log.md` (consolidated 2026-05-22) and covers session work touching *any* of the three repos.
+- **Do not add session-shaped entries to this repo's `docs/project_log.md` or the "Completed Work" section below** — both are frozen historical archives (entries up to 2026-05-22); see freeze headers at the top of each.
+- New work referencing this repo records `mj-infra-flux@<sha>` in the canonical log over in `jwilleke/deby`.
+- Code-side conventions still live here: `CHANGELOG.md`, ADRs, build/release notes, this `AGENTS.md` (excluding the frozen "Completed Work" section). The consolidation is operational history only.
+- Live source of truth for work items is the GitHub issue trackers (`jwilleke/mj-infra-flux`, `jwilleke/deby`, `jwilleke/mjs-network`).
 
 ## Jim's Global Preference
 
@@ -29,8 +33,7 @@ In all interactions and commit messages
 - Questions, Comments and Suggestions are always encouraged!
 - Your primary method for interacting with GitHub should be the CLI.
 - On larger objectives present phased implementation plan
-- Always create [project_log.md](./docs/project_log.md) file as aa log of work done on the project in format
-  - yyyy-MM-dd-## - Created new file - "Commit"
+- Operational session logs live in `~/thishost/docs/project_log.md` (consolidated 2026-05-22) — do NOT add session entries to this repo. Reference `mj-infra-flux@<sha>` in the canonical log instead.
 
 ## Project Overview
 
@@ -304,6 +307,8 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 
 ## Completed Work
 
+> **Frozen as of 2026-05-22.** Operational history is consolidated at [`jwilleke/deby:docs/project_log.md`](https://github.com/jwilleke/deby/blob/master/docs/project_log.md). The entries below are preserved as historical record; do not add new session-shaped entries here.
+
 ### Session: 2025-12-01 (Morning)
 - Agent: Claude
 - Work Done:
@@ -542,4 +547,4 @@ kubectl get pods -A
 
 **Important:** Keep this file synchronized and updated. It's the bridge between different agents and sessions working on the same project.
 
-**Last Updated:** 2026-05-09 by Claude Opus 4.7 (geohazardwatch image automation end-to-end, #64 closed)
+**Last Updated:** 2026-05-22 by Claude Opus 4.7 (operational-history consolidation — session logs moved to `jwilleke/deby:docs/project_log.md`).
