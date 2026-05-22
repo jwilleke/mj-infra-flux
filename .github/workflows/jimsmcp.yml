@@ -1,0 +1,94 @@
+name: jimsmcp
+
+# Build + type-check + (on master) publish image for apps/production/jimsmcp.
+# Closes mj-infra-flux#42. Triggered only by changes under that path so unrelated
+# repo activity doesn't burn CI minutes.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'apps/production/jimsmcp/**'
+      - '.github/workflows/jimsmcp.yml'
+  pull_request:
+    paths:
+      - 'apps/production/jimsmcp/**'
+      - '.github/workflows/jimsmcp.yml'
+
+permissions:
+  contents: read
+  packages: write  # push to ghcr.io/jwilleke/jimsmcp (master only)
+
+concurrency:
+  group: jimsmcp-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+  IMAGE_NAME: ghcr.io/jwilleke/jimsmcp
+
+jobs:
+  build:
+    name: build + type-check + (master) publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/production/jimsmcp/package-lock.json
+
+      - name: Install dependencies
+        working-directory: apps/production/jimsmcp
+        run: npm ci --include=dev
+
+      - name: Type check (tsc --noEmit)
+        working-directory: apps/production/jimsmcp
+        run: npx tsc --noEmit
+
+      - name: Build (tsc → dist/)
+        working-directory: apps/production/jimsmcp
+        run: npm run build
+
+      - name: Compute image tags
+        id: tags
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          SHA=$(git rev-parse --short HEAD)
+          {
+            echo "date=${DATE}"
+            echo "sha=${SHA}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build (PR) / Build + push (master)
+        uses: docker/build-push-action@v5
+        with:
+          context: apps/production/jimsmcp
+          file: apps/production/jimsmcp/Dockerfile
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ steps.tags.outputs.date }}
+            ${{ env.IMAGE_NAME }}:sha-${{ steps.tags.outputs.sha }}
+            ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha,scope=jimsmcp
+          cache-to: type=gha,scope=jimsmcp,mode=max
+          labels: |
+            org.opencontainers.image.source=https://github.com/jwilleke/mj-infra-flux
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ steps.tags.outputs.date }}
