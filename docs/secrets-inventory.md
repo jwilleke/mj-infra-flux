@@ -79,15 +79,15 @@ The two previously-listed orphans (`default/prometheus-secrets-g224cmcfd8`, `def
 
 The four previously-listed `default/*-tls` Secrets were re-classified as auto-generated (legitimate cert-manager certs for Ingresses in `default` ns; not stale).
 
-## cert-manager ClusterIssuer drift (separate problem, surfaced 2026-05-22)
+## cert-manager ClusterIssuer drift — resolved 2026-05-22 (#81)
 
-Discovered during `cloudflare-api-token` migration: live `ClusterIssuer/letsencrypt-{production,staging}` have a DNS-01 Cloudflare solver, but Git declares HTTP-01 only. Both carry `kubectl.kubernetes.io/last-applied-configuration` annotations, no Flux ownership labels — hand-applied at bootstrap.
+Surfaced during `cloudflare-api-token` migration: live ClusterIssuers had DNS-01 Cloudflare config that Git didn't declare. Resolved in `mj-infra-flux@33353c5` by moving the ClusterIssuers into `apps/production/cert-manager/` (now Flux-reconciled) with the live spec preserved byte-identical.
 
-**Root cause:** `apps/base/cert-manager/` is referenced *only in a comment* in `apps/production/kustomization.yaml` ("Infrastructure - Traefik ingress controller and cert-manager / These are in apps/base/ and work properly"), never as a resource. Flux has never reconciled cert-manager paths.
+Both ClusterIssuers now carry `kustomize.toolkit.fluxcd.io/*` labels; delete-and-reconcile acceptance verified on the staging issuer.
 
-**Implication:** A fresh-cluster rebuild from `mj-infra-flux@HEAD` would NOT have DNS-01 working; certs requiring DNS-01 (e.g., wildcard or for services not externally reachable for HTTP-01) would fail to issue. HTTP-01 ones would still work.
+**Still hand-applied** (separate concern, NOT covered by #81): the cert-manager **workload** (Deployment, cainjector, webhook, CRDs, RBAC). Lives under `apps/base/cert-manager/`, never wired into a Flux Kustomization, 477+ d old, predates the GitOps repo.
 
-**Out of scope for #77 item 1.** Tracked separately as **#81**.
+See `apps/base/cert-manager/README-cert-manager.md` "Ownership split" section. Worth its own narrowly-scoped issue when there's a reason to migrate.
 
 ## Recovery procedure (if `deby` is rebuilt)
 
@@ -96,10 +96,10 @@ In order:
 1. **Bootstrap age key**: restore `~/.config/sops/age/keys.txt` from the `/deby-backup/.../flux-sops-age.key` artifact, then `kubectl -n flux-system create secret generic sops-age --from-file=age.agekey=…`.
 2. **`flux bootstrap`** against this repo. Once flux-system reconciles, *all* in-repo SOPS Secrets are re-applied automatically.
 3. **Authentik downstream Secrets** (`authentik`, `authentik-postgresql`) are then rendered by the Helm chart from values read out of `authentik-secrets` via `valuesFrom`. No manual step.
-4. **Re-apply the live ClusterIssuer DNS-01 config** (see "cert-manager ClusterIssuer drift" above) — operator memory until #81 is resolved.
+4. The ClusterIssuers themselves are now Flux-reconciled (#81 resolved 2026-05-22) and will be re-applied automatically alongside the Secret in step 2 — no separate operator action.
 5. **Confirm cert-manager re-issues TLS Secrets** by checking `kubectl get certificate -A` shows `Ready: True` for each. ACME rate-limits apply if many certs renew at once.
 
 ## Open follow-ups
 
-- **Resolve cert-manager ClusterIssuer drift** (#81) — either bring the live DNS-01 config into Git (under a Flux-reconciled path) or document why it stays hand-applied.
+- **Bring the cert-manager workload into Flux** — separate from #81 (which only resolved the ClusterIssuer + Secret drift). The Deployment / cainjector / webhook / CRDs are still hand-applied (477+ d, predates the GitOps repo). File when there's a reason to do it.
 - **Operator-held off-disk copy of the sops-age key** — `deby-backup` is local-only (not geo-redundant). Out-of-band, can't be automated; password-manager or offline drive.
