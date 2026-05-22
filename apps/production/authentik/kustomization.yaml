@@ -2,6 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - namespace.yaml
+  - authentik-secrets.sops.yaml   # seed Secret read by helmrelease valuesFrom (secret_key + postgresql_password); migrated 2026-05-22 in #82
   - helmrepository.yaml
   - helmrelease.yaml
   - traefik-middleware.yaml
