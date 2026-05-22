@@ -81,7 +81,6 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
 - **Monitored Services**:
   - https://nerdsbythehour.com (landing page)
   - https://auth.nerdsbythehour.com (Authentik SSO)
-  - https://jimswiki.nerdsbythehour.com
   - https://teslamate.nerdsbythehour.com
   - https://grafana.nerdsbythehour.com
   - https://ha.nerdsbythehour.com (Home Assistant)
@@ -416,7 +415,7 @@ Configure notification routing in:
 
 ```promql
 # Good - specific labels
-http_requests_total{service="jimswiki", method="GET", status="200"}
+http_requests_total{service="teslamate", method="GET", status="200"}
 
 # Bad - too many cardinality
 http_requests_total{user_id="12345"}  # Avoid high-cardinality labels
@@ -567,14 +566,6 @@ sudo kubectl exec -n monitoring prometheus-0 -- \
 
 ## Monitoring Your Apps
 
-### jimswiki (JSPWiki on Tomcat)
-
-JMX metrics can be exposed via jmx_exporter:
-- JVM heap usage
-- Thread count
-- Garbage collection
-- Tomcat request rates
-
 ### TeslaMate
 
 TeslaMate has built-in Prometheus metrics at `:4000/metrics`:
@@ -630,7 +621,7 @@ Authentik exposes metrics at `:9300/metrics`:
 ### Low Priority
 - [ ] Add custom recording rules for common queries
 - [ ] Set up remote write for long-term metric storage
-- [ ] Add application-specific metrics (TeslaMate, JimsWiki JMX)
+- [ ] Add application-specific metrics (TeslaMate)
 - [ ] Configure Grafana alerting as backup to Alertmanager
 
 ### Known Issues
