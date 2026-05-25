@@ -10,3 +10,6 @@ resources:
   - recorder-configmap.yaml
   - recorder-deployment.yaml
   - recorder-service.yaml
+  - recorder-basic-auth.sops.yaml
+  - recorder-middleware.yaml
+  - recorder-ingress.yaml

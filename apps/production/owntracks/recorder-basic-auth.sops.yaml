@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: owntracks-basic-auth
+    namespace: owntracks
+type: Opaque
+stringData:
+    users: ENC[AES256_GCM,data:yNrMcpuCkjcXj8EHNoGNyVmscx6L+7A545yamI6xeGa0tuufsOlf0wocsUSOo3oYxRz/ohhWdLtn4iklLLdlTAvhXGYFOjgy9LDlS8PYl0+dYyL0B4JwFbRbjrQyIKRlKWzqEszFn/8PMj9OLW59NUq4oDwsVabdpZFywJWoyGARjrw0,iv:Wzq53yCHjG6a/T+3pMFpp5STyd+YXIXLpYAvlOgxtlE=,tag:Y08O6DkqDYtH5NlEGZ9DvA==,type:str]
+sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age:
+        - recipient: age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA2dklQRVdMdFQ4L0JZcS9B
+            Tkx6ckwwVDRhUUUzQ2Rrci9PZFNKWGtnRUd3Cng3ZktuWUJtTk1PTVZUSzFIQlBV
+            T0V4REV5RW5VWmpKeFY2YW5wYWpuMW8KLS0tIFNjZnJKMkQyekh2Z3JTbDBSK25x
+            MWtWczVxM3lUWFNVNFRIMERBek5qZlUKk3AUGvpAEX+zZbqcmvUyfoEOf6VviOjg
+            l/3sUJUGOu05zamVfuBkuBWmNAIQ9d4BbuxQJ2e4uux0iycHzCqscg==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-05-25T14:44:43Z"
+    mac: ENC[AES256_GCM,data:ZtWrqQ6Z4/JslQbI5ox8WQnLQJDH15L7/taTWrXjYCedFAxuLMAyd05ulYW3QKbdbuyUNA4Rr9s7Q+XJwXIGRYpJZCqKEDuqre8pbVTAWcOY2Jh0rX82BL1L4JLYXf9bXdMiCnItaegjhINrxA2pwlpl0vMBV7OzbFH/cXSDCMo=,iv:+ksqQCO6ktT2n/O2qjoW6qHlzLaaD0GTktFnnh6qi/4=,tag:wpTPgBCvQFBrlVRmsjYt5g==,type:str]
+    pgp: []
+    encrypted_regex: ^(data|stringData)$
+    version: 3.9.3

@@ -4,7 +4,7 @@ OwnTracks Recorder for phone-location telemetry. Receives HTTP POSTs from the Ow
 
 - **URL (public + LAN):** `https://owntracks.nerdsbythehour.com`
 - **Backend service:** `owntracks-recorder.owntracks.svc.cluster.local:8083`
-- **Public path:** Cloudflare Tunnel → connector pods in `cloudflared/` → this service. Bypasses Traefik. Cloudflare Access policy gates `/pub` with a service-token and everything else with interactive SSO.
+- **Public path:** Cloudflare Tunnel → connector pods in `cloudflared/` → Traefik → this service. Traefik `basicAuth` middleware (`owntracks-basic-auth`, this app dir) gates all paths with per-user credentials from the `owntracks-basic-auth` Secret. No Cloudflare Access in the path — Cloudflare provides edge TLS + DDoS only.
 - **MQTT broker:** `mosquitto.messaging.svc.cluster.local:1883` (anonymous; see `apps/production/messaging/`)
 - **Topic prefix:** `owntracks/#`
 - **Persistent store:** PV `owntracks-store-pv`, hostPath `/mnt/local-k3s-data/owntracks/store` (5 Gi, Retain)
@@ -15,14 +15,14 @@ OwnTracks Recorder for phone-location telemetry. Receives HTTP POSTs from the Ow
 Phones (LAN + off-LAN)              Browser (anywhere)
        │                                    │
        └─────────► Cloudflare Edge ◄────────┘
-                        │
-       (Cloudflare Access:
-          /pub  → service token       (phones)
-          else  → interactive SSO     (browser viewers))
-                        │
+                        │ (edge TLS only)
                         ▼ outbound tunnel (existing connectors)
                 cloudflared (apps/production/cloudflared/)
                         │
+                        ▼ HTTP, Host: owntracks.nerdsbythehour.com
+                traefik.kube-system.svc.cluster.local:80
+                        │  (basicAuth middleware: owntracks-basic-auth)
+                        │  401 unless Authorization: Basic <user:pass>
                         ▼ HTTP
             owntracks-recorder.owntracks.svc.cluster.local:8083
                         │
@@ -47,14 +47,12 @@ These steps live outside this repo and have to be done manually:
    - Subdomain: `owntracks`
    - Domain: `nerdsbythehour.com`
    - Type: `HTTP`
-   - URL: `owntracks-recorder.owntracks.svc.cluster.local:8083`
-2. **Cloudflare Zero Trust → Access → Service Auth → Service Tokens → Create:** name it `owntracks-mobile`. Save the Client ID + Client Secret — needed once per phone.
-3. **Cloudflare Zero Trust → Access → Applications → Add application → Self-hosted:**
-   - Application domain: `owntracks.nerdsbythehour.com`
-   - Add two policies:
-     - **Phone publish** — Action: Service Auth. Include: Service Token = `owntracks-mobile`. Path: `/pub`.
-     - **Browser view** — Action: Allow. Include: Emails = `jim@willeke.com` (or your IdP group). Path: everything else.
-4. **OwnTracks mobile app** (per phone) — Mode: HTTP. URL: `https://owntracks.nerdsbythehour.com/pub`. Add custom headers `CF-Access-Client-Id` and `CF-Access-Client-Secret` from step 2. Set a unique Device ID per phone.
+   - URL: `traefik.kube-system.svc.cluster.local:80`
+   - HTTP Settings → HTTP Host Header: `owntracks.nerdsbythehour.com`
+   - Confirm there is **no Cloudflare Access application** attached to this hostname — auth lives in Traefik, not at the edge.
+2. **Remove any pre-existing redirect or page rule for `owntracks.nerdsbythehour.com`.** Before this change the hostname 301-redirected to `deby.nerdsbythehour.com/pub`; that redirect (Page Rule / Bulk Redirect / Worker) must be deleted or it will shadow the new tunnel route.
+3. **Rotate the basic-auth credentials in `recorder-basic-auth.sops.yaml` when a phone is lost:** generate a new bcrypt hash with `htpasswd -nbB <user> <new-pass>`, replace the line for that user inside the (decrypted) Secret, re-encrypt with `sops`, commit. Flux rolls the Secret; Traefik picks up the new hash immediately. The plaintext goes into the password manager and onto the remaining phones.
+4. **OwnTracks mobile app** (per phone) — Mode: HTTP. URL: `https://owntracks.nerdsbythehour.com/pub`. Username = `jim` or `molly` (matches the bcrypt line). Password = the corresponding plaintext from the password manager. Set a unique Device ID per phone.
 5. **Home Assistant @ 192.168.68.20** — Enable the **OwnTracks** integration (subscribes to `owntracks/#` on the existing MQTT integration; no extra wiring needed beyond having the MQTT integration already pointed at `deby.nerdsbythehour.com:1883`).
 
 ## Topic isolation
