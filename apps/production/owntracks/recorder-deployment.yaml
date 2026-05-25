@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: recorder
-          image: owntracks/recorder:0.9.10
+          image: owntracks/recorder:1.0.1
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:

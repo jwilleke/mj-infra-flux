@@ -81,4 +81,4 @@ kubectl run -it --rm mqtt-sub --image=eclipse-mosquitto:2 --restart=Never -- \
 
 ## Image
 
-Pinned to `owntracks/recorder:0.9.10`. Image-automation is not wired up for this app yet; bump the tag in `recorder-deployment.yaml` and let Flux roll.
+Pinned to `owntracks/recorder:1.0.1` (latest stable on Docker Hub as of 2026-05; floating `:latest` exists but pinning avoids surprise rolls). Image-automation is not wired up for this app yet; bump the tag in `recorder-deployment.yaml` and let Flux roll.
