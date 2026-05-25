@@ -17,6 +17,14 @@ spec:
       labels:
         app: owntracks-recorder
     spec:
+      # Alpine musl + k8s default ndots:5 makes the FQDN
+      # mosquitto.messaging.svc.cluster.local go through search-list expansion
+      # first; libmosquitto's connect path gives up before absolute lookup
+      # resolves. Same workaround as cloudflared/ and geohazardwatch.
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
       containers:
         - name: recorder
           image: owntracks/recorder:1.0.1
