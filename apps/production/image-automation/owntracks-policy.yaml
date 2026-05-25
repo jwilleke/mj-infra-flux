@@ -1,0 +1,53 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: owntracks-recorder
+  namespace: flux-system
+spec:
+  image: docker.io/owntracks/recorder
+  interval: 1h
+  # Public Docker Hub image — scanned anonymously, no pull secret.
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: owntracks-recorder
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: owntracks-recorder
+  policy:
+    semver:
+      # Auto-update minor and patch within the current major.
+      # OwnTracks also publishes -NN suffix tags (e.g. 1.0.1-43) which are
+      # treated as pre-releases by semver and excluded automatically.
+      # Bumping past the next major requires updating this range manually.
+      range: ">=1.0.0 <2.0.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: owntracks-recorder
+  namespace: flux-system
+spec:
+  interval: 1h
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump owntracks-recorder to {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans recorder-deployment.yaml in the owntracks app dir for the
+    # `# {"$imagepolicy": "flux-system:owntracks-recorder"}` marker.
+    path: ./apps/production/owntracks
+    strategy: Setters

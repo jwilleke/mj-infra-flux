@@ -81,4 +81,4 @@ kubectl run -it --rm mqtt-sub --image=eclipse-mosquitto:2 --restart=Never -- \
 
 ## Image
 
-Pinned to `owntracks/recorder:1.0.1` (latest stable on Docker Hub as of 2026-05; floating `:latest` exists but pinning avoids surprise rolls). Image-automation is not wired up for this app yet; bump the tag in `recorder-deployment.yaml` and let Flux roll.
+Tag is set by Flux image-automation (`apps/production/image-automation/owntracks-policy.yaml`) — ImagePolicy semver range `>=1.0.0 <2.0.0`. Manifest-side marker is `# {"$imagepolicy": "flux-system:owntracks-recorder"}` on the `image:` line of `recorder-deployment.yaml`; the controller scans every hour and pushes a `chore(image-automation): bump owntracks-recorder to <tag>` commit when a newer in-range tag appears. To pin manually (e.g. to roll back), remove the marker comment and set the tag by hand. OwnTracks also publishes `1.0.1-43`-style tags; those are treated as semver pre-releases and excluded automatically.

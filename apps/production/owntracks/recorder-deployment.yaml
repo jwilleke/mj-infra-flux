@@ -27,7 +27,7 @@ spec:
             value: "1"
       containers:
         - name: recorder
-          image: owntracks/recorder:1.0.1
+          image: owntracks/recorder:1.0.1 # {"$imagepolicy": "flux-system:owntracks-recorder"}
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
