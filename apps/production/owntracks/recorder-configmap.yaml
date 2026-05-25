@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: owntracks-recorder-config
+  namespace: owntracks
+data:
+  OTR_HOST: mosquitto.messaging.svc.cluster.local
+  OTR_PORT: "1883"
+  OTR_TOPICS: "owntracks/#"
+  OTR_STORAGEDIR: /store
+  OTR_PORT_HTTP: "8083"
+  OTR_HTTPHOST: "0.0.0.0"

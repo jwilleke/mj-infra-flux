@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: owntracks-recorder
+  namespace: owntracks
+  labels:
+    app: owntracks-recorder
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: owntracks-recorder
+  template:
+    metadata:
+      labels:
+        app: owntracks-recorder
+    spec:
+      containers:
+        - name: recorder
+          image: owntracks/recorder:0.9.10
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: owntracks-recorder-config
+          ports:
+            - name: http
+              containerPort: 8083
+              protocol: TCP
+          volumeMounts:
+            - name: store
+              mountPath: /store
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          livenessProbe:
+            tcpSocket:
+              port: 8083
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8083
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: store
+          persistentVolumeClaim:
+            claimName: owntracks-store-pvc
+      restartPolicy: Always

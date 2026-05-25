@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: owntracks
+  labels:
+    app.kubernetes.io/name: owntracks
+    app.kubernetes.io/component: telemetry
