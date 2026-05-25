@@ -1,6 +1,6 @@
 # OwnTracks
 
-OwnTracks Recorder for phone-location telemetry. Receives HTTP POSTs from the OwnTracks mobile app, stores tracks to disk (LMDB), and republishes received locations onto the shared MQTT bus under `owntracks/<user>/<device>` so consumers like Home Assistant can subscribe.
+OwnTracks Recorder for phone-location telemetry. Receives HTTP POSTs from the OwnTracks mobile app, stores tracks to disk (LMDB), and republishes received locations onto the shared MQTT bus under `owntracks/<user>/<device>` so consumers like Home Assistant can subscribe. The HTTP→MQTT republish is *not* native recorder behaviour — it's done by the small Lua hook in `recorder-lua-hook-configmap.yaml`, with a loop guard wired into the recorder configmap (see "MQTT republish via Lua hook" below).
 
 - **URL (public + LAN):** `https://owntracks.nerdsbythehour.com`
 - **Backend service:** `owntracks-recorder.owntracks.svc.cluster.local:8083`
@@ -27,17 +27,33 @@ Phones (LAN + off-LAN)              Browser (anywhere)
             owntracks-recorder.owntracks.svc.cluster.local:8083
                         │
                         ├──► PVC: /store  (LMDB tracks)
-                        └──► MQTT publish: owntracks/<user>/<device>
+                        └──► Lua otr_hook (recorder-lua-hook-configmap.yaml)
+                                 if data._http and _type == "location"
                                        │
-                                       ▼
+                                       ▼ otr.publish(topic, payload, qos=1, retain=true)
                           mosquitto.messaging.svc.cluster.local:1883
                                        ▲
                                        │ subscribes owntracks/#
                                        │
                           Home Assistant @ 192.168.68.20 (LAN)
+
+The recorder itself subscribes to `none/#`, not `owntracks/#` — that's the
+loop guard (see "MQTT republish via Lua hook" below). It still receives
+HTTP arrivals normally; OTR_TOPICS has no bearing on the HTTP path.
 ```
 
 The recorder's own built-in viewer is at `/view/`; the standalone OwnTracks Frontend (a separate React app) is not deployed here — add later if the built-in viewer isn't enough.
+
+## MQTT republish via Lua hook
+
+The upstream OwnTracks Recorder does **not** republish HTTP-arrived messages onto MQTT — upstream `doc/HOOKS.md` calls this out explicitly and suggests a Lua hook as the workaround. We do that here:
+
+- `recorder-lua-hook-configmap.yaml` ships a small self-contained hook (`hook.lua`) with an inline JSON encoder. On every received message the hook checks `data._http` (recorder-set flag indicating HTTP origin); if set and `_type == "location"`, it re-emits the payload via `otr.publish(topic, payload, 1, true)` — same `owntracks/<user>/<device>` topic, QoS 1, `retain=true` so new MQTT subscribers (Home Assistant on (re)start) immediately see last-known position.
+- The hook ships as a ConfigMap mounted read-only at `/lua/hook.lua`; the recorder finds it via `OTR_LUASCRIPT: /lua/hook.lua` in `recorder-configmap.yaml`.
+- **Loop guard:** the recorder is configured with `OTR_TOPICS: none/#` (not `owntracks/#`). Otherwise the recorder would receive its own publish back through its MQTT subscription, fire the hook again on the MQTT-arrived copy, store a duplicate, and (since `data._http` is false on MQTT arrivals) only avoid the publish-side loop by accident. Setting `OTR_TOPICS=none/#` removes the entire risk: the recorder still receives HTTP arrivals normally, but does not subscribe to its own publishes. Verified at startup via `+ Subscribing to none/# (qos=2)` in the pod log.
+- **Verify:** `kubectl -n owntracks logs deploy/owntracks-recorder -f` and watch for `otr_publish(owntracks/<user>/<device>, {...}, 1, 0) == 0` after each HTTP `/pub`. The trailing `== 0` is libmosquitto's success code.
+
+If you need to disable the republish (e.g. to debug the HTTP path in isolation), delete the `OTR_LUASCRIPT` line from `recorder-configmap.yaml` and Flux-reconcile; the recorder will skip Lua entirely. The ConfigMap can stay mounted.
 
 ## Out-of-band setup (one-time)
 
