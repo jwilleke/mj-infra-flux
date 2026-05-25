@@ -39,6 +39,9 @@ spec:
           volumeMounts:
             - name: store
               mountPath: /store
+            - name: lua-hook
+              mountPath: /lua
+              readOnly: true
           resources:
             requests:
               cpu: "50m"
@@ -65,4 +68,7 @@ spec:
         - name: store
           persistentVolumeClaim:
             claimName: owntracks-store-pvc
+        - name: lua-hook
+          configMap:
+            name: owntracks-recorder-lua
       restartPolicy: Always

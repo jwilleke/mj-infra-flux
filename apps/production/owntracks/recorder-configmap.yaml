@@ -6,7 +6,12 @@ metadata:
 data:
   OTR_HOST: mosquitto.messaging.svc.cluster.local
   OTR_PORT: "1883"
-  OTR_TOPICS: "owntracks/#"
+  # Inert subscription on purpose: the Lua hook republishes HTTP-arrived
+  # messages onto owntracks/<user>/<device>, and we must not let the recorder
+  # subscribe to its own publish (would loop + double-store). HTTP arrivals
+  # are unaffected by OTR_TOPICS.
+  OTR_TOPICS: "none/#"
+  OTR_LUASCRIPT: /lua/hook.lua
   OTR_STORAGEDIR: /store
   OTR_PORT_HTTP: "8083"
   OTR_HTTPHOST: "0.0.0.0"

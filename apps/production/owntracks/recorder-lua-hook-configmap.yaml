@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: owntracks-recorder-lua
+  namespace: owntracks
+data:
+  hook.lua: |
+    -- Republishes HTTP-arrived OwnTracks location messages onto MQTT so
+    -- subscribers (Home Assistant, etc.) see them. Recorder does not do this
+    -- natively in HTTP mode — see upstream HOOKS.md. Loop guard lives in the
+    -- recorder configmap: OTR_TOPICS=none/# means the recorder does not
+    -- subscribe to its own publish.
+
+    local function escape_str(s)
+      return (tostring(s)
+              :gsub("\\", "\\\\")
+              :gsub('"', '\\"')
+              :gsub("\n", "\\n")
+              :gsub("\r", "\\r")
+              :gsub("\t", "\\t"))
+    end
+
+    local function encode_value(v)
+      local t = type(v)
+      if t == "string" then
+        return '"' .. escape_str(v) .. '"'
+      elseif t == "number" then
+        if v ~= v or v == math.huge or v == -math.huge then return "null" end
+        if v == math.floor(v) and math.abs(v) < 1e15 then
+          return string.format("%d", v)
+        end
+        return tostring(v)
+      elseif t == "boolean" then
+        return v and "true" or "false"
+      elseif t == "nil" then
+        return "null"
+      elseif t == "table" then
+        local is_array, n = true, 0
+        for k, _ in pairs(v) do
+          n = n + 1
+          if type(k) ~= "number" or k ~= n then is_array = false; break end
+        end
+        local parts = {}
+        if is_array and n > 0 then
+          for i = 1, n do parts[i] = encode_value(v[i]) end
+          return "[" .. table.concat(parts, ",") .. "]"
+        end
+        for k, vv in pairs(v) do
+          parts[#parts + 1] = '"' .. escape_str(tostring(k)) .. '":' .. encode_value(vv)
+        end
+        return "{" .. table.concat(parts, ",") .. "}"
+      end
+      return "null"
+    end
+
+    function otr_init()
+      otr.log("republish-http-to-mqtt: hook loaded")
+      return 0
+    end
+
+    function otr_exit()
+    end
+
+    function otr_hook(topic, _type, data)
+      if not data._http then return end
+      if _type ~= "location" then return end
+
+      local out = {}
+      out._type = data._type
+      for k, v in pairs(data) do
+        if string.sub(k, 1, 1) ~= "_" then
+          out[k] = v
+        end
+      end
+
+      otr.publish(topic, encode_value(out), 1, true)
+    end
