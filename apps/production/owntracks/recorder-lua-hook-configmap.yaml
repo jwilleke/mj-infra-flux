@@ -73,5 +73,7 @@ data:
         end
       end
 
-      otr.publish(topic, encode_value(out), 1, true)
+      -- retain must be integer 0/1 — Lua booleans are not coerced by the
+      -- recorder binding (observed as "..., 1, 0)" in logs when passing true).
+      otr.publish(topic, encode_value(out), 1, 1)
     end
