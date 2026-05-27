@@ -68,7 +68,12 @@ spec:
           httpGet:
             path: /
             port: 4000
-          initialDelaySeconds: 30
+          # initialDelaySeconds bumped 30→120 per mj-infra-flux#85: Phoenix VM
+          # cold-start exceeds the prior 120s budget after a host reboot, so the
+          # probe killed and re-pulled the container on each boot (20 restarts
+          # over 184d, mostly reboot-driven). Slower fault detection on a real
+          # post-startup hang is acceptable for teslamate.
+          initialDelaySeconds: 120
           periodSeconds: 30
         readinessProbe:
           httpGet:
