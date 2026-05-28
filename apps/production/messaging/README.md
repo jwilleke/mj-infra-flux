@@ -9,8 +9,8 @@ Single Mosquitto MQTT broker instance serving multiple applications with topic-b
 - **Namespace**: `messaging`
 - **Service**: `mosquitto.messaging.svc.cluster.local:1883`
 - **Protocol**: MQTT v3.1.1 / v5.0
-- **Data Location**: `/home/jim/docs/data/systems/mj-infra-flux/mosquitto/`
-- **Security**: Runs as apps:apps (3003:3003), anonymous auth for internal use
+- **Data Location**: `/mnt/local-k3s-data/mosquitto/data/` (hostPath PV on `deby`)
+- **Security**: Runs as mosquitto user (UID 1883, image default), anonymous auth for internal use
 
 ## Applications & Topics
 
@@ -110,10 +110,10 @@ Current settings:
 
 Message persistence is stored at:
 ```
-/home/jim/docs/data/systems/mj-infra-flux/mosquitto/data/
+/mnt/local-k3s-data/mosquitto/data/
 ```
 
-This ensures messages survive pod restarts.
+This is a hostPath PV on `deby` (local NVMe, not NFS — LMDB-on-NFS was deliberately avoided). Messages survive pod restarts.
 
 ## Backup
 
@@ -121,8 +121,10 @@ MQTT data is automatically persisted. For complete backup:
 
 ```bash
 # Backup MQTT persistence data
-sudo tar -czf mosquitto-backup-$(date +%Y%m%d).tar.gz /home/jim/docs/data/systems/mj-infra-flux/mosquitto/
+sudo tar -czf mosquitto-backup-$(date +%Y%m%d).tar.gz /mnt/local-k3s-data/mosquitto/
 ```
+
+The host-level `backup-deby.sh` already covers `/mnt/local-k3s-data/` as part of its rsync block (see deby#16), so MQTT data is included in the nightly backup automatically.
 
 ## Troubleshooting
 
@@ -178,10 +180,10 @@ docker stop teslamate-mosquitto
 
 # 2. Copy persistence data
 sudo cp -r /var/lib/docker/volumes/teslamate_mosquitto-data/_data/* \
-  /home/jim/docs/data/systems/mj-infra-flux/mosquitto/data/
+  /mnt/local-k3s-data/mosquitto/data/
 
-# 3. Set ownership
-sudo chown -R 3003:3003 /home/jim/docs/data/systems/mj-infra-flux/mosquitto/
+# 3. Set ownership (mosquitto user, UID 1883)
+sudo chown -R 1883:1883 /mnt/local-k3s-data/mosquitto/
 
 # 4. Deploy k8s Mosquitto
 sudo kubectl apply -k apps/production/messaging/
