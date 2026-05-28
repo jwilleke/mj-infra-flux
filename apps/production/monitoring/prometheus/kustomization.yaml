@@ -27,6 +27,8 @@ configMapGenerator:
       - config/alerting-rules.k3s-cluster.yaml
       # Loki-independent storage/backup alerts (mj-infra-flux#74)
       - config/alerting-rules.storage-backup.yaml
+      # Loki-independent Docker container liveness alerts (mj-infra-flux#76)
+      - config/alerting-rules.docker.yaml
       # coinpoet and tayle configs removed
 
 labels:

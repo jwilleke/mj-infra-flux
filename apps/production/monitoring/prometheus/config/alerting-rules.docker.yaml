@@ -1,0 +1,62 @@
+groups:
+  - name: deby_docker_liveness
+    interval: 30s
+    rules:
+
+      # mj-infra-flux#76 — Docker container liveness alerting on `deby`.
+      #
+      # The host runs plain-Docker stacks (sist2, etc.) outside k3s.
+      # Prometheus in k3s has no view of dockerd, so a stopped/exited
+      # container produces zero signal anywhere — sist2 was down 22 h
+      # silently after the 2026-05-18 reboot before manual inspection
+      # found it. These rules fire off node-exporter textfile metrics
+      # written by the deby host script docker-health-watch.sh, mirroring
+      # the textfile/Prometheus pattern that flux#74 already proved for
+      # ZFS/backup signals. node-exporter is healthy and independent of
+      # Loki and the Docker stacks themselves, so this path stays up when
+      # those are the things that failed.
+      #
+      # Metric contract (host producer must emit exactly these):
+      #   deby_docker_container_up{name="<container>"}      1 running / 0 not
+      #   deby_docker_textfile_collected_timestamp_seconds  unix ts (heartbeat)
+
+      # An expected-running container is not running (exited, dead,
+      # missing, etc.). Producer collapses all non-running states into 0.
+      - alert: DockerContainerDown
+        expr: |
+          min by (name) (deby_docker_container_up) == 0
+        for: 5m
+        labels:
+          severity: warning
+          host: deby
+        annotations:
+          summary: "Docker container {{ $labels.name }} on deby is not running"
+          description: |
+            deby_docker_container_up=0 for container {{ $labels.name }}.
+            The container is in the producer's EXPECTED list but its current
+            state is not 'running' (exited / dead / missing / docker daemon
+            down). Diagnose on the host:
+              docker ps -a --filter name={{ $labels.name }}
+              docker inspect {{ $labels.name }}
+              journalctl -u docker.service -e
+
+      # Dead-man's switch. If the host textfile producer stops,
+      # DockerContainerDown goes silent — re-creating the "alerts go
+      # quiet" failure class flux#74 / #76 exist to fix. Threshold 30m
+      # (producer runs every 15m + at boot).
+      - alert: DebyDockerMetricsStale
+        expr: |
+          absent(deby_docker_textfile_collected_timestamp_seconds)
+          or (time() - max(deby_docker_textfile_collected_timestamp_seconds) > 1800)
+        for: 10m
+        labels:
+          severity: warning
+          host: deby
+        annotations:
+          summary: "deby docker-liveness textfile metrics are stale or absent"
+          description: |
+            node-exporter is not seeing fresh deby-docker textfile metrics,
+            so DockerContainerDown is effectively blind. Check on the host:
+              systemctl status docker-health-watch.service docker-health-watch.timer
+              journalctl -u docker-health-watch.service -e
+              ls -l /var/lib/node_exporter/textfile/
