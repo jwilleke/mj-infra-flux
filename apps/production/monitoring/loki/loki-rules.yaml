@@ -185,6 +185,38 @@ data:
                 The event payload includes UNIFIclientHostname,
                 UNIFIclientMac, UNIFIlastConnectedToDeviceName and Port.
 
+          # Camera-specific disconnect. Protect cameras are expected to
+          # stay connected 24/7; ANY disconnect is interesting, not just
+          # the >1d connected case caught by UDMProLongRunningClientOffline.
+          # Matches the operator's camera inventory (see
+          # thishost/docs/network-monitoring.md) by alias: known UniFi
+          # camera names + the "Temp-G[3-5]-N" pattern + GRM-EAST/WEST +
+          # any alias starting with "Cam " or model-numbered "G[3-5] ".
+          # Add to the alternation as new cameras are adopted. Fires
+          # for `for: 1m` so brief flaps land in /alerting/history but
+          # don't trigger immediately on a single sample. Adds the
+          # `device: camera` label so the route can subgroup if needed
+          # via mj-infra-flux#86's unified delivery design.
+          - alert: UDMProCameraDisconnected
+            expr: 'sum(count_over_time({source="udmpro"} |~ "(WiFi|Wired) Client Disconnected" |~ "(?i)UNIFIclientAlias=(Temp-G[3-5]|GRM-(EAST|WEST)|Cam |Garage |Back |Drive |Office Camera|UP AI Port|G4 Bullet|G3 |G4 |G5 )"[10m])) > 0'
+            for: 1m
+            labels:
+              severity: warning
+              device: camera
+            annotations:
+              summary: "A Protect camera disconnected from the UniFi network"
+              description: |
+                One or more cameras in the operator's inventory has
+                disconnected from WiFi/wired in the last 10 min. Cameras
+                are expected to stay connected 24/7; ANY disconnect is
+                worth investigating (vs UDMProLongRunningClientOffline
+                which only fires on >1d-connected clients). Identify
+                which camera via:
+                  {source="udmpro"} |~ "(WiFi|Wired) Client Disconnected" |~ "(?i)UNIFIclientAlias=(Temp-G[3-5]|GRM-|Cam |Garage|Back|Drive|Office Camera|UP AI Port|G4 Bullet)"
+                in Grafana → Explore → Loki. The event payload includes
+                UNIFIclientAlias, UNIFIclientMac, UNIFIduration, and
+                UNIFIlastConnectedToDeviceName/Port.
+
           # WAN connection lost. The "Internet and WAN" category covers
           # ISP connectivity transitions. Severity critical because the
           # entire LAN's outbound is affected. Includes "down",
