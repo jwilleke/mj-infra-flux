@@ -73,3 +73,134 @@ data:
                 Backup pools (deby-backup, nas-backup) and any others.
                 Triggers on DEGRADED/FAULTED/UNAVAIL, pool suspension,
                 uncorrectable I/O failure, or kernel hung-task / blocked-task.
+
+      # ───────────────────────────────────────────────────────────────
+      # Central syslog Phase 3 (jwilleke/deby#20) — LogQL alerts over
+      # the UDM Pro CEF stream landed in Loki via Phase 2 (deby#17).
+      # Surfaces UniFi events in Grafana /alerting/list alongside the
+      # host/cluster rules. Calibrated to today's empirical category
+      # distribution (deby#20 issue body for full counts); thresholds
+      # are conservative starters — tune over a ~7-day soak window.
+      # ───────────────────────────────────────────────────────────────
+      - name: deby_udmpro_syslog
+        interval: 1m
+        rules:
+
+          # Dead-man's switch on the UDM Pro syslog feed itself. If the
+          # rsyslog → fluent-bit → Loki path stops shipping for any
+          # reason (UDM rebooted, rsyslog wedged, fluent-bit down),
+          # downstream alerts go silent — this catches that. Tied to
+          # the `{source="udmpro"}` label set by fluent-bit's
+          # record_modifier filter in fluent-bit.conf.
+          - alert: UDMProSyslogSilent
+            expr: 'absent_over_time({source="udmpro"}[10m]) == 1'
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "No UDM Pro syslog received for >10 min"
+              description: |
+                The UDM Pro CEF stream has not reached Loki in 10 min.
+                UDM Pro reboots typically take 2-3 min; sustained silence
+                past that means a pipeline failure. Check on the host:
+                  systemctl status rsyslog fluent-bit
+                  sudo tail /var/log/remote/udmpro/udmpro.log
+                  ss -lnt | grep -E ':5140|:5141'
+
+          # Any event in the "Critical" category. Rare by design — UniFi
+          # reserves this for genuinely high-severity events (Spectrum
+          # WAN flap, cluster-wide auth issue, etc.). 0 historical
+          # events in the current log window, so a single one is
+          # genuinely interesting.
+          - alert: UDMProCriticalEvent
+            expr: 'sum(count_over_time({source="udmpro"} |= "UNIFIcategory=Critical "[5m])) > 0'
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "UDM Pro emitted a Critical-category CEF event"
+              description: |
+                A `UNIFIcategory=Critical` CEF event landed in the UDM Pro
+                stream. Inspect via:
+                  {source="udmpro"} |= "UNIFIcategory=Critical"
+                in Grafana → Explore → Loki for the full event payload.
+
+          # IDS/IPS rate spike. Baseline: ~50 Security events/day = ~0.3
+          # per 10m. Threshold > 5 in 10m catches port-scan bursts,
+          # botnet probing, or coordinated attack patterns without
+          # firing on routine background scanning.
+          - alert: UDMProThreatRateSpike
+            expr: 'sum(count_over_time({source="udmpro"} |= "UNIFIcategory=Security "[10m])) > 5'
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "UDM Pro IDS/IPS detection rate elevated (>5 in 10m)"
+              description: |
+                More than 5 Security-category CEF events in 10 minutes,
+                well above the ~0.3/10m baseline. Likely a port scan
+                burst or sustained attack pattern. Inspect:
+                  {source="udmpro"} |= "UNIFIcategory=Security" |~ "msg="
+
+          # Managed UniFi infrastructure went offline. Covers switches
+          # and APs (and UDM Pro itself, though typically that breaks
+          # the stream first → UDMProSyslogSilent fires instead). The
+          # 2026-05-26 historical example: "US 8 60W-02FE went offline".
+          # Verified to be the correct category name "UniFi Devices"
+          # (not "Devices") via full-history grep.
+          - alert: UDMProManagedDeviceOffline
+            expr: 'sum(count_over_time({source="udmpro"} |= "UNIFIcategory=UniFi Devices" |= "went offline"[5m])) > 0'
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "A managed UniFi device went offline (switch/AP/UDM)"
+              description: |
+                A device in the UDM Pro's managed-infra inventory reported
+                offline. Get the specific device name from:
+                  {source="udmpro"} |= "UNIFIcategory=UniFi Devices" |= "went offline"
+                Then check the device's uplink + power + the parent
+                switch's port (the event payload includes
+                UNIFIconnectedToDeviceName / UNIFIconnectedToDevicePort).
+
+          # Long-running wired client disconnected. Catches Protect-
+          # camera-on-WiFi (Temp-G4-1 disconnected 2026-05-28 after 1d
+          # 16h connected), wired servers (jMac, tower), and anything
+          # else that was stably connected for >1 day suddenly going
+          # away. Filters out routine phone/laptop roam-disconnects
+          # which last minutes-to-hours.
+          - alert: UDMProLongRunningClientOffline
+            expr: 'sum(count_over_time({source="udmpro"} |~ "(Wired|WiFi) Client Disconnected" |~ "Time Connected: [0-9]+d"[10m])) > 0'
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "A long-running (>1d connected) client disconnected from the UDM stream"
+              description: |
+                A wired or WiFi client that had been stably connected for
+                ≥1 day just disconnected. Could be intentional (unplug,
+                power off) or a real failure (camera died, server
+                rebooted unexpectedly). Inspect:
+                  {source="udmpro"} |~ "(Wired|WiFi) Client Disconnected" |~ "Time Connected: [0-9]+d"
+                The event payload includes UNIFIclientHostname,
+                UNIFIclientMac, UNIFIlastConnectedToDeviceName and Port.
+
+          # WAN connection lost. The "Internet and WAN" category covers
+          # ISP connectivity transitions. Severity critical because the
+          # entire LAN's outbound is affected. Includes "down",
+          # "disconnected", and "interrupted" word patterns; tune after
+          # observing real WAN-flap events during the soak window.
+          - alert: UDMProWANDown
+            expr: 'sum(count_over_time({source="udmpro"} |= "UNIFIcategory=Internet and WAN" |~ "(?i)(down|disconnected|interrupted|offline|lost)"[5m])) > 0'
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "UDM Pro reports WAN down/disconnected"
+              description: |
+                An `Internet and WAN` category CEF event matched a
+                connection-loss pattern. The entire LAN's outbound
+                connectivity is likely affected. Inspect:
+                  {source="udmpro"} |= "UNIFIcategory=Internet and WAN"
+                Check WAN interface on the UDM:
+                  ssh udm 'ip a show eth8 ; ping -c2 1.1.1.1'
