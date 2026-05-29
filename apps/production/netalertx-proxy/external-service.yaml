@@ -1,0 +1,31 @@
+# NetAlertX runs as a Docker container ON the deby host (network_mode: host,
+# :20211), NOT in the cluster. This selector-less Service + manual Endpoints
+# lets Traefik route to it like any in-cluster backend. deby's LAN IP is
+# 192.168.68.71 (the same IP the Traefik LB advertises), reachable from the
+# cluster. See ~/thishost/docs/dockers/netalertx.md and deby#22 / deby#24.
+apiVersion: v1
+kind: Service
+metadata:
+  name: netalertx-external
+  namespace: netalertx-proxy
+  annotations:
+    traefik.ingress.kubernetes.io/service.serversscheme: "http"
+spec:
+  ports:
+    - name: http
+      port: 20211
+      targetPort: 20211
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: netalertx-external
+  namespace: netalertx-proxy
+subsets:
+  - addresses:
+      - ip: 192.168.68.71
+    ports:
+      - name: http
+        port: 20211
+        protocol: TCP

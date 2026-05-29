@@ -26,6 +26,7 @@ resources:
   # Protected Applications
   - ./teslamate
   - ./home-assistant-proxy
+  - ./netalertx-proxy  # Traefik+Authentik front for NetAlertX on deby (deby#24); internal-only
   - ./jimsmcp        # MCP server for custom infrastructure features
   - ./jimstest       # ngdpbase dev/test instance on jminm4
   - ./geohazardwatch # ngdpbase + ve-geology addon at geohazardwatch.com
