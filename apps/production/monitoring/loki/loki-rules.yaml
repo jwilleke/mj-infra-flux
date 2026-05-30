@@ -236,3 +236,94 @@ data:
                   {source="udmpro"} |= "UNIFIcategory=Internet and WAN"
                 Check WAN interface on the UDM:
                   ssh udm 'ip a show eth8 ; ping -c2 1.1.1.1'
+
+      # Phase 3 broadened to the Phase-4 direct device streams (deby#18 →
+      # source=tank / source=protect, live 2026-05-30). NOTE: tank (UNAS
+      # Pro 8) and protect (Protect/NVR) are EVENT-ONLY emitters — they
+      # ship CEF only on admin actions / device events, with no continuous
+      # heartbeat. So a dead-man's switch like UDMProSyslogSilent is
+      # deliberately NOT replicated here (it would fire on normal quiet).
+      # These devices' events are "UniFi OS" CEF (CEF:0|Ubiquiti|UniFi OS|
+      # <ver>|<sigid>|<name>|<sev>|...) and do NOT carry UNIFIcategory=,
+      # so matching is by event name / keyword, not category.
+      #
+      # As of drafting, the only observed events are routine admin/test
+      # (Test Syslog, Admin Accessed UniFi OS, Admin Made Config Changes).
+      # The operationally-interesting events (UNAS disk/RAID/SMART/capacity;
+      # NVR storage/recording-stream/AI) have NOT yet been seen, so their
+      # exact text is unknown. The two active rules below are therefore
+      # DISCOVERY TRIPWIRES: surface any NON-routine event so the first
+      # real disk/storage event lands in /alerting/history for triage —
+      # then replace with the targeted rules sketched (commented) below.
+      - name: deby_unifi_device_syslog
+        interval: 1m
+        rules:
+
+          # UNAS Pro 8 (tank): any event that is not the known-routine
+          # admin/test traffic. Catches the first disk/RAID/capacity event
+          # whose exact wording we can't yet predict. Replace with
+          # TankStorageDegraded / TankCapacityWarning once observed.
+          - alert: TankNonRoutineEvent
+            expr: 'sum(count_over_time({source="tank"} != "Test Syslog" !~ "Admin (Accessed UniFi OS|Made Config Changes)"[10m])) > 0'
+            for: 1m
+            labels:
+              severity: warning
+              device: unas
+            annotations:
+              summary: "UNAS Pro 8 (tank) emitted a non-routine syslog event"
+              description: |
+                tank shipped a CEF event outside the known-routine admin/test
+                traffic. UNAS-internal disk / RAID / SMART / capacity events
+                arrive ONLY on this direct stream (not via the UDM CEF
+                pass-through). Inspect and then add a targeted rule:
+                  {source="tank"} != "Test Syslog" !~ "Admin (Accessed|Made Config)"
+                in Grafana → Explore → Loki.
+
+          # UniFi Protect / NVR (protect): same discovery tripwire.
+          - alert: ProtectNonRoutineEvent
+            expr: 'sum(count_over_time({source="protect"} != "Test Syslog" !~ "Admin (Accessed UniFi OS|Made Config Changes)"[10m])) > 0'
+            for: 1m
+            labels:
+              severity: warning
+              device: nvr
+            annotations:
+              summary: "UniFi Protect / NVR (protect) emitted a non-routine syslog event"
+              description: |
+                protect shipped a CEF event outside the known-routine
+                admin/test traffic. NVR storage / per-camera recording-stream
+                health / AI-detection events arrive ONLY on this direct
+                stream. Inspect and then add a targeted rule:
+                  {source="protect"} != "Test Syslog" !~ "Admin (Accessed|Made Config)"
+                in Grafana → Explore → Loki.
+
+          # --- TARGETED DRAFTS (commented; UNVALIDATED keyword guesses) ----
+          # Enable each once its real event text has been observed via the
+          # tripwires above. The keyword alternations are best-guesses for
+          # UniFi-OS device events and WILL need tuning against real payloads.
+          #
+          # - alert: TankStorageDegraded
+          #   expr: 'sum(count_over_time({source="tank"} |~ "(?i)(raid|volume|disk|drive|smart).*(degrad|fail|offline|error|removed|unhealthy)"[10m])) > 0'
+          #   for: 1m
+          #   labels:
+          #     severity: critical
+          #     device: unas
+          #   annotations:
+          #     summary: "UNAS (tank) reported a storage/RAID/disk fault"
+          #
+          # - alert: TankCapacityWarning
+          #   expr: 'sum(count_over_time({source="tank"} |~ "(?i)(capacity|disk space|volume full|threshold)"[10m])) > 0'
+          #   for: 1m
+          #   labels:
+          #     severity: warning
+          #     device: unas
+          #   annotations:
+          #     summary: "UNAS (tank) reported a capacity / space warning"
+          #
+          # - alert: ProtectStorageOrStream
+          #   expr: 'sum(count_over_time({source="protect"} |~ "(?i)(storage|disk|recording|stream|camera).*(full|fail|lost|error|offline|stopped|disconnect)"[10m])) > 0'
+          #   for: 1m
+          #   labels:
+          #     severity: warning
+          #     device: nvr
+          #   annotations:
+          #     summary: "Protect/NVR reported a storage or recording-stream issue"
