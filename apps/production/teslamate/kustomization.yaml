@@ -8,5 +8,6 @@ resources:
   - teslamate-secret.yaml
   - teslamate-deployment.yaml
   - teslamate-service.yaml
+  - teslamate-authentik-middleware.yaml
   - teslamate-ingress.yaml
   - teslamate-certificate.yaml

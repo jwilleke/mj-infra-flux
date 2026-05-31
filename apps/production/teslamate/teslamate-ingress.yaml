@@ -7,8 +7,10 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-production
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
-    # TODO: Enable Authentik ForwardAuth after middleware is configured
-    # traefik.ingress.kubernetes.io/router.middlewares: authentik-authentik-forwardauth@kubernetescrd
+    # INTERNAL-SSO (docs/access/standards.md): same-namespace authentik forward-auth.
+    # NOTE: must be teslamate-* (this route's namespace) — a cross-namespace ref
+    # (e.g. authentik-*) is silently dropped by Traefik and serves unauthenticated.
+    traefik.ingress.kubernetes.io/router.middlewares: teslamate-authentik-forwardauth@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:
