@@ -2,6 +2,7 @@ namespace: monitoring
 
 resources:
   - ./certificate.yaml
+  - ./grafana-oauth.sops.yaml
   - ./grafana-ingress.yaml
   - ./grafana-service.yaml
   - ./grafana-statefulset.yaml

@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: grafana-oauth
+    namespace: monitoring
+type: Opaque
+stringData:
+    client-secret: ENC[AES256_GCM,data:itSc5eCm+AT6ZnSa2Mz4xsSurfmoohczaXpaRmMSlb+yW7DbvPAx7H/iik7lcQO5n/S0dtkZMTpfbu8YvGLfvE0pfxE0O/6H+iVv9El34CcMjS4JWPHr5KieEkJHZIU8lBxOBgjlKlylLMpyO6qqYvQD+ApXNuD969LhbChMnnULd45HzUk5ph2CMwtvNAMkf/pr74c3dVeyXpaanrKu5QLHkbZwFlfIfWN6kGRvrOrkWtkj8AfCN9YZe+kcqjOaYcxFyxasP8oT9HsjUDXHRpu2jx8p5j2nOwBr8CPDQj029S9dZNgpIcAKFy6tQUX05JtgB1Q+XKi6TUvIQIscMEaXUarLLyEddEqCrsuG3BZgi5SYCWuJ0/3M4H8IT7XjQuo=,iv:MsFaqM0gtEPwqp8YamvhyCS4De29BgCq1HhiqodjaG8=,tag:lL+oPVlU6HnRY3rKcnYtoQ==,type:str]
+sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age:
+        - recipient: age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBicFNoZ05FZEprbmxYKzU4
+            NTFUSFozR1QvdVgvcThrcmVNWEpZYkN6LzNjCkhkbzdNY2RlazJ5NmdUUTE5RFls
+            YW1xMm5mSDRpYU93RHp2RHZEZjRKWlEKLS0tIGNuOVBscjVPMjlXckc2ZDZJREV1
+            Y1hWREwrUVpHRkovMW5IWU9jeGg0eGMK6a6FZwmzf3VgIt1VEuSE+AMtTdspqGFg
+            qpXIQVTbizrzqrl+eu/AzNtMBcKmamTpmT/sUOvjfZ4n0+kfMTRN+g==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-05-31T11:07:20Z"
+    mac: ENC[AES256_GCM,data:MsjqzrqnNWdcnzm2nihBkOgfSGn4EQqWIZGymZ4Ae3WhHxDCAEFFDCkA2whazOeeBtUDzbVzomLdE6H8T0G9ZE9S85UyVHgb/fynf3Eu3VTaf8s031ycWvKg+LuqhumBjn0UzB1GE1azCGJkdcirECcXuCZZBcJhqqzc5t1yuRQ=,iv:xSHeMLyVlqFjGBQ/ZVu5aRWCAQZtusNCIuz0iKkXoPY=,tag:klLYzd/Y426Ejw6sGy5c4A==,type:str]
+    pgp: []
+    encrypted_regex: ^(data|stringData)$
+    version: 3.9.3
