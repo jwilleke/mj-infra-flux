@@ -1,7 +1,6 @@
 resources:
   - ./otel-collector-deployment.yaml
   - ./otel-collector-service.yaml
-  - ./otel-collector-ingress.yaml
 
 configMapGenerator:
   - name: otel-collector-config
