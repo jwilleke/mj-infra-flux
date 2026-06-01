@@ -268,7 +268,7 @@ data:
 
           # UniFi Protect / NVR (protect): same discovery tripwire.
           - alert: ProtectNonRoutineEvent
-            expr: 'sum(count_over_time({source="protect"} != "Test Syslog" !~ "Admin (Accessed UniFi OS|Made Config Changes)"[10m])) > 0'
+            expr: 'sum(count_over_time({source="protect"} != "Test Syslog" !~ "Admin (Accessed UniFi OS|Made Config Changes)" !~ "UNIFIcategory=detection"[10m])) > 0'
             for: 1m
             labels:
               severity: warning
