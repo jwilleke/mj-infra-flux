@@ -93,16 +93,19 @@ data:
           # the `{source="udmpro"}` label set by fluent-bit's
           # record_modifier filter in fluent-bit.conf.
           - alert: UDMProSyslogSilent
-            expr: 'absent_over_time({source="udmpro"}[10m]) == 1'
+            expr: 'absent_over_time({source="udmpro"}[20m]) == 1'
             for: 5m
             labels:
               severity: critical
             annotations:
-              summary: "No UDM Pro syslog received for >10 min"
+              summary: "No UDM Pro syslog received for >20 min"
               description: |
-                The UDM Pro CEF stream has not reached Loki in 10 min.
-                UDM Pro reboots typically take 2-3 min; sustained silence
-                past that means a pipeline failure. Check on the host:
+                The UDM Pro CEF stream has not reached Loki in 20 min (fires
+                after 25 min total with the 5m for: window). The overnight
+                stream runs at ~0.1 events/min with natural gaps up to ~21 min;
+                widened from 10m to avoid false fires on normal quiet periods.
+                A genuine pipeline failure would sustain silence well past 25 min.
+                Check on the host:
                   systemctl status rsyslog fluent-bit
                   sudo tail /var/log/remote/udmpro/udmpro.log
                   ss -lnt | grep -E ':5140|:5141'
