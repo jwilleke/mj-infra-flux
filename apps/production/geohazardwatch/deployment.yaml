@@ -29,6 +29,20 @@ spec:
         options:
           - name: ndots
             value: "1"
+      initContainers:
+        - name: wait-for-data
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until [ -d /app/data ] && touch /app/data/.init-check && rm /app/data/.init-check; do
+                echo "waiting for /app/data (NFS mount)..."; sleep 2
+              done
+              echo "/app/data is writable — proceeding"
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
       containers:
         - name: geohazardwatch
           image: ghcr.io/jwilleke/geohazardwatch:1.2.33 # {"$imagepolicy": "flux-system:geohazardwatch"}
@@ -76,7 +90,7 @@ spec:
             httpGet:
               path: /
               port: 3000
-            initialDelaySeconds: 20
+            initialDelaySeconds: 45
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
