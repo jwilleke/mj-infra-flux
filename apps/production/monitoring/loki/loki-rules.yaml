@@ -149,19 +149,16 @@ data:
           # Verified to be the correct category name "UniFi Devices"
           # (not "Devices") via full-history grep.
           - alert: UDMProManagedDeviceOffline
-            expr: 'sum(count_over_time({source="udmpro"} |= "UNIFIcategory=UniFi Devices" |= "went offline"[5m])) > 0'
+            expr: 'sum by (device) (count_over_time({source="udmpro"} |= "UNIFIcategory=UniFi Devices" |= "went offline" | regexp "msg=(?P<device>.+?) went offline"[5m])) > 0'
             for: 1m
             labels:
               severity: warning
             annotations:
-              summary: "A managed UniFi device went offline (switch/AP/UDM)"
+              summary: "Managed UniFi device offline: {{ $labels.device }}"
               description: |
-                A device in the UDM Pro's managed-infra inventory reported
-                offline. Get the specific device name from:
+                {{ $labels.device }} went offline. Check uplink + power + parent
+                switch port (UNIFIconnectedToDeviceName / UNIFIconnectedToDevicePort):
                   {source="udmpro"} |= "UNIFIcategory=UniFi Devices" |= "went offline"
-                Then check the device's uplink + power + the parent
-                switch's port (the event payload includes
-                UNIFIconnectedToDeviceName / UNIFIconnectedToDevicePort).
 
           # Long-running wired client disconnected. Catches Protect-
           # camera-on-WiFi (Temp-G4-1 disconnected 2026-05-28 after 1d
@@ -170,20 +167,17 @@ data:
           # away. Filters out routine phone/laptop roam-disconnects
           # which last minutes-to-hours.
           - alert: UDMProLongRunningClientOffline
-            expr: 'sum(count_over_time({source="udmpro"} |~ "(Wired|WiFi) Client Disconnected" |~ "Time Connected: [0-9]+d"[10m])) > 0'
+            expr: 'sum by (client) (count_over_time({source="udmpro"} |~ "(Wired|WiFi) Client Disconnected" |~ "Time Connected: [0-9]+d" | regexp "msg=(?P<client>.+?) disconnected from"[10m])) > 0'
             for: 1m
             labels:
               severity: warning
             annotations:
-              summary: "A long-running (>1d connected) client disconnected from the UDM stream"
+              summary: "Long-running client offline: {{ $labels.client }} (connected >1d)"
               description: |
-                A wired or WiFi client that had been stably connected for
-                ≥1 day just disconnected. Could be intentional (unplug,
-                power off) or a real failure (camera died, server
-                rebooted unexpectedly). Inspect:
+                {{ $labels.client }} had been stably connected for ≥1 day and just
+                disconnected. Could be intentional (unplug, power off) or a real
+                failure (camera died, server rebooted). Inspect:
                   {source="udmpro"} |~ "(Wired|WiFi) Client Disconnected" |~ "Time Connected: [0-9]+d"
-                The event payload includes UNIFIclientHostname,
-                UNIFIclientMac, UNIFIlastConnectedToDeviceName and Port.
 
           # Camera-specific disconnect. Protect cameras are expected to
           # stay connected 24/7; ANY disconnect is interesting, not just
@@ -198,24 +192,17 @@ data:
           # `device: camera` label so the route can subgroup if needed
           # via mj-infra-flux#86's unified delivery design.
           - alert: UDMProCameraDisconnected
-            expr: 'sum(count_over_time({source="udmpro"} |~ "(WiFi|Wired) Client Disconnected" |~ "(?i)UNIFIclientAlias=(Temp-G[3-5]|GRM-(EAST|WEST)|Cam |Garage |Back |Drive |Office Camera|UP AI Port|G4 Bullet|G3 |G4 |G5 )"[10m])) > 0'
+            expr: 'sum by (client) (count_over_time({source="udmpro"} |~ "(WiFi|Wired) Client Disconnected" |~ "(?i)UNIFIclientAlias=(Temp-G[3-5]|GRM-(EAST|WEST)|Cam |Garage |Back |Drive |Office Camera|UP AI Port|G4 Bullet|G3 |G4 |G5 )" | regexp "msg=(?P<client>.+?) disconnected from"[10m])) > 0'
             for: 1m
             labels:
               severity: warning
               device: camera
             annotations:
-              summary: "A Protect camera disconnected from the UniFi network"
+              summary: "Protect camera disconnected: {{ $labels.client }}"
               description: |
-                One or more cameras in the operator's inventory has
-                disconnected from WiFi/wired in the last 10 min. Cameras
-                are expected to stay connected 24/7; ANY disconnect is
-                worth investigating (vs UDMProLongRunningClientOffline
-                which only fires on >1d-connected clients). Identify
-                which camera via:
+                {{ $labels.client }} disconnected. Cameras are expected to stay
+                connected 24/7. Check PoE port, NVR, and last connected AP:
                   {source="udmpro"} |~ "(WiFi|Wired) Client Disconnected" |~ "(?i)UNIFIclientAlias=(Temp-G[3-5]|GRM-|Cam |Garage|Back|Drive|Office Camera|UP AI Port|G4 Bullet)"
-                in Grafana → Explore → Loki. The event payload includes
-                UNIFIclientAlias, UNIFIclientMac, UNIFIduration, and
-                UNIFIlastConnectedToDeviceName/Port.
 
           # WAN connection lost. The "Internet and WAN" category covers
           # ISP connectivity transitions. Severity critical because the
