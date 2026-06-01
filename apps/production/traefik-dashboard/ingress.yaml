@@ -1,0 +1,33 @@
+# Replaces the manually-applied traefik-ingress in kube-system (created 2025-02-02).
+# Gates the Traefik dashboard at traefik.nerdsbythehour.com with authentik
+# forward-auth. INTERNAL-SSO tier — LAN-reachable, authentik-authenticated.
+# See docs/access/access.md and mj-infra-flux#89.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: traefik-ingress
+  namespace: kube-system
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # NOTE: must be kube-system-* (this route's namespace) — a cross-namespace
+    # ref is silently dropped by Traefik and serves unauthenticated.
+    traefik.ingress.kubernetes.io/router.middlewares: kube-system-authentik-forwardauth@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - traefik.nerdsbythehour.com
+      secretName: traefik-nerdsbythehour-com-tls
+  rules:
+    - host: traefik.nerdsbythehour.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: traefik-dashboard
+                port:
+                  number: 8000

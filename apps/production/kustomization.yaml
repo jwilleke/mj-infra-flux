@@ -24,6 +24,7 @@ resources:
   - ./landingpage
 
   # Protected Applications
+  - ./traefik-dashboard  # Traefik dashboard at traefik.nerdsbythehour.com; authentik forward-auth (mj-infra-flux#89)
   - ./teslamate
   - ./home-assistant-proxy
   - ./netalertx-proxy  # Traefik+Authentik front for NetAlertX on deby (deby#24); internal-only
