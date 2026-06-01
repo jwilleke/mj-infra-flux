@@ -34,7 +34,6 @@ Complete Kubernetes (k3s) infrastructure running on `192.168.68.71` (deby) with 
 
 - Node.js with TypeScript (for custom applications)
 - React (for web frontends like landing page)
-- JSPWiki (for jimswiki - 38,004 pages)
 - Various Docker containers managed by Kubernetes
 - Host ports should be from 9200-9220
 - All files should be owned by APPS:APPS (3003:3003)
@@ -58,7 +57,6 @@ Complete Kubernetes (k3s) infrastructure running on `192.168.68.71` (deby) with 
 
 Protected services accessible after Authentik login at `https://auth.nerdsbythehour.com/if/user/#/library`:
 - **Home Assistant** - `https://ha.nerdsbythehour.com` (private DNS only)
-- **JimsWiki** - `https://nerdsbythehour.com/jimswiki` (38,004 pages)
 - **TeslaMate** - `https://teslamate.nerdsbythehour.com` (vehicle tracking)
 - **Grafana** - `https://grafana.nerdsbythehour.com` (dashboards)
 - **Authentik** - `https://auth.nerdsbythehour.com` (SSO/IdP, user profile)
@@ -93,7 +91,6 @@ Protected services accessible after Authentik login at `https://auth.nerdsbytheh
 | **OpenSpeedTest** | /speed | 80 | Public | — |
 | **whoami** | deby.nerdsbythehour.com | 80 | Public | — |
 | **CDN** | cdn.nerdsbythehour.com | 80 | anyone | No auth needed |
-| **JimsWiki** | /jimswiki | 8080 | mj | 8 |
 | **TeslaMate** | teslamate.nerdsbythehour.com | 4000 | mj | 9 |
 | **Grafana** | grafana.nerdsbythehour.com | 80 | mj | 10 |
 | **Home Assistant** | ha.nerdsbythehour.com | 8123 | mj | Existing |
@@ -108,7 +105,6 @@ Protected services accessible after Authentik login at `https://auth.nerdsbytheh
 | **OpenSpeedTest** | guest-services | Speed test | /speed | Public |
 | **whoami** | guest-services | Diagnostics | deby.nerdsbythehour.com | Public |
 | **TeslaMate** | teslamate | Vehicle tracking | teslamate.nerdsbythehour.com | To enable |
-| **JimsWiki** | jimswiki | Wiki (38K pages) | /jimswiki | To enable |
 | **Home Assistant** | home-assistant-proxy | Smart home | ha.nerdsbythehour.com | To enable |
 | **FileBrowser** | filebrowser | File manager | TBD | Protected |
 
@@ -125,15 +121,10 @@ Following the standard: All external data under `/home/jim/docs/data/systems/mj-
 │   ├── mosquitto/          # MQTT config & data
 │   ├── postgresql/         # Database backups (if needed)
 │   ├── teslamate/          # TeslaMate config (if needed)
-│   └── jimswiki/           # JSPWiki configuration
-│       ├── config/         # ✓ jspwiki-custom.properties (EDITABLE)
-│       ├── logs/           # (moved to local disk)
-│       └── work/           # (moved to local disk)
 ├── shared-resources/       # CDN static assets
 │   ├── icons/              # Application icons
 │   └── icons-logos/        # Application logos and branding
 └── wikis/
-    └── jimswiki/           # 38,004 wiki pages (3.4GB) - CRITICAL PATH
 ```
 
 ### Local SSD (Fast, Ephemeral/Cache)
@@ -142,8 +133,6 @@ Following the standard: All external data under `/home/jim/docs/data/systems/mj-
 /mnt/local-k3s-data/
 ├── postgresql/             # PostgreSQL data (8Gi)
 ├── grafana/                # Grafana dashboards & data
-├── jimswiki-work/          # JSPWiki cache (~921MB, regenerated)
-└── jimswiki-logs/          # JSPWiki logs (ephemeral)
 ```
 
 ## Authentication Flow
@@ -161,7 +150,6 @@ Redirect to Authentik
 └── /members → https://auth.nerdsbythehour.com/if/user/#/library
 
 Authentik Protected (ForwardAuth - TO BE ENABLED)
-├── jimswiki
 ├── teslamate
 ├── grafana
 └── ha.nerdsbythehour.com
@@ -174,12 +162,6 @@ Each protected service will have:
 2. **Authentik Provider** - ForwardAuth provider with auth URL
 3. **Traefik Middleware** - ForwardAuth middleware CRD
 4. **Ingress Annotation** - Links ingress to middleware
-
-**Example for jimswiki:**
-```yaml
-# In ingress
-traefik.ingress.kubernetes.io/router.middlewares: authentik-forwardauth-jimswiki@kubernetescrd
-```
 
 ## Network Architecture
 
@@ -214,7 +196,6 @@ k3s Traefik Ingress (192.168.68.71)
 │   └── /members → Authentik User Library
 │
 ├── Authentik-Protected Services
-│   ├── jimswiki (38K pages)
 │   ├── TeslaMate
 │   ├── Grafana
 │   └── Home Assistant (proxy to 192.168.68.20)
@@ -279,10 +260,6 @@ Configure in:
 - Grafana
 - TeslaMate (with historical data)
 
-### ✅ Phase 3: jimswiki
-- 38,004 wiki pages migrated
-- All data paths preserved
-
 ### ✅ Phase 4: Home Assistant Proxy
 - External service proxy configured
 - Ready for Authentik integration
@@ -293,7 +270,6 @@ Configure in:
 
 Create ForwardAuth middleware and enable on:
 - [ ] Landing page `/members`
-- [ ] jimswiki
 - [ ] TeslaMate
 - [ ] Grafana
 - [ ] Home Assistant
@@ -320,13 +296,11 @@ After verification period:
 ### Critical Data Backups
 
 **Must backup:**
-1. Wiki pages: `/home/jim/docs/data/systems/wikis/jimswiki/` (38K pages)
-2. Config: `/home/jim/docs/data/systems/mj-infra-flux/`
+1. Config: `/home/jim/docs/data/systems/mj-infra-flux/`
 3. PostgreSQL: Database dumps from `/mnt/local-k3s-data/postgresql/`
 4. Kubernetes secrets: Export and store securely
 
 **Can regenerate:**
-- Work caches (`/mnt/local-k3s-data/jimswiki-work/`)
 - Logs
 - Lucene indices
 - Container images (rebuild from Dockerfile)
@@ -348,7 +322,6 @@ After verification period:
 | whoami | <1s | 10m CPU, 32Mi RAM |
 | Shared Resources CDN | <2s | 50m CPU, 64Mi RAM |
 | TeslaMate | ~10s | 250m CPU, 512Mi RAM |
-| jimswiki | ~30s | 500m CPU, 1Gi RAM (rebuilds cache) |
 | Grafana | ~15s | 200m CPU, 512Mi RAM |
 | PostgreSQL | ~10s | 500m CPU, 1Gi RAM |
 | Authentik | ~20s | 1000m CPU, 2Gi RAM |
