@@ -27,6 +27,9 @@ spec:
           volumeMounts:
             - name: fasten-data
               mountPath: /opt/fasten/db
+            - name: fasten-config
+              mountPath: /opt/fasten/config
+              readOnly: true
           resources:
             requests:
               cpu: 100m
@@ -53,3 +56,6 @@ spec:
         - name: fasten-data
           persistentVolumeClaim:
             claimName: fasten-data
+        - name: fasten-config
+          configMap:
+            name: fasten-config

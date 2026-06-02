@@ -1,0 +1,14 @@
+web:
+  listen_type: http
+  listen_addr: "0.0.0.0"
+  listen_port: 8080
+  jwt_expiry_hours: 24
+
+database:
+  location: /opt/fasten/db/fasten.db
+
+cache:
+  location: /opt/fasten/db/fasten.cache.db
+
+log:
+  level: INFO
