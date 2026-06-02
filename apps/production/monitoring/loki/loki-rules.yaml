@@ -163,14 +163,16 @@ data:
                 switch port (UNIFIconnectedToDeviceName / UNIFIconnectedToDevicePort):
                   {source="udmpro"} |= "UNIFIcategory=UniFi Devices" |= "went offline"
 
-          # Long-running wired client disconnected. Catches Protect-
-          # camera-on-WiFi (Temp-G4-1 disconnected 2026-05-28 after 1d
-          # 16h connected), wired servers (jMac, tower), and anything
-          # else that was stably connected for >1 day suddenly going
-          # away. Filters out routine phone/laptop roam-disconnects
-          # which last minutes-to-hours.
+          # Long-running wired client disconnected — inclusion list of
+          # operationally-critical hosts only. Soak-window calibration
+          # 2026-05-29/2026-06-02: 7-day population = jMac, espressif IoT,
+          # Google Home minis, Temp-G4-1 (covered by UDMProCameraDisconnected).
+          # Zero critical infrastructure appeared → converted to inclusion list.
+          # Add hosts here as critical infrastructure grows. Currently empty
+          # (no wired-critical hosts roam/disconnect under normal conditions);
+          # kept live so any future match surfaces immediately.
           - alert: UDMProLongRunningClientOffline
-            expr: 'sum by (client) (count_over_time({source="udmpro"} |~ "(Wired|WiFi) Client Disconnected" |~ "Time Connected: [0-9]+d" | regexp "msg=(?P<client>.+?) disconnected from"[10m])) > 0'
+            expr: 'sum by (client) (count_over_time({source="udmpro"} |~ "(Wired|WiFi) Client Disconnected" |~ "Time Connected: [0-9]+d" |~ "UNIFIclientAlias=(tower|deby)" | regexp "msg=(?P<client>.+?) disconnected from"[10m])) > 0'
             for: 1m
             labels:
               severity: warning
@@ -270,8 +272,12 @@ data:
                 in Grafana → Explore → Loki.
 
           # UniFi Protect / NVR (protect): same discovery tripwire.
+          # Excluded (routine): detection events, all adminActivity category
+          # (access/timeline-view), cameraConnected, applicationUpdate.
+          # Soak finding 2026-06-02: "Accessed UniFi OS" is wrong pattern;
+          # Protect uses "Accessed UniFi Protect" — fixed to category exclusion.
           - alert: ProtectNonRoutineEvent
-            expr: 'sum(count_over_time({source="protect"} != "Test Syslog" !~ "Admin (Accessed UniFi OS|Made Config Changes)" !~ "UNIFIcategory=detection"[10m])) > 0'
+            expr: 'sum(count_over_time({source="protect"} != "Test Syslog" !~ "UNIFIcategory=(detection|adminActivity)" !~ "(cameraConnected|applicationUpdate|Application Updated)"[10m])) > 0'
             for: 1m
             labels:
               severity: warning
