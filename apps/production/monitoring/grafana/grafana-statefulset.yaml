@@ -63,6 +63,16 @@ spec:
             - name: GF_AUTH_GENERIC_OAUTH_ALLOW_ASSIGN_GRAFANA_ADMIN
               value: "true"
 
+            # State-history backend: Loki (mj-infra-flux#90)
+            - name: GF_UNIFIED_ALERTING_STATE_HISTORY_ENABLED
+              value: "true"
+            - name: GF_UNIFIED_ALERTING_STATE_HISTORY_BACKEND
+              value: "loki"
+            - name: GF_UNIFIED_ALERTING_STATE_HISTORY_LOKI_REMOTE_URL
+              value: "http://loki.monitoring.svc.cluster.local:3100"
+            - name: GF_UNIFIED_ALERTING_STATE_HISTORY_LOKI_REMOTE_READ_URL
+              value: "http://loki.monitoring.svc.cluster.local:3100"
+
           readinessProbe:
             failureThreshold: 3
             httpGet:
