@@ -26,7 +26,7 @@ spec:
       containers:
         - name: grafana
           # for latest tag: https://hub.docker.com/r/grafana/grafana/tags
-          image: grafana/grafana:10.1.6
+          image: grafana/grafana:11.6.14
           
           ports:
             - containerPort: 3000
