@@ -1,6 +1,7 @@
 resources:
   - ./authorize-prometheus-to-k8s.yaml
-  - ./netalertx-token.sops.yaml
+  # netalertx-api-token Secret applied out-of-band via kubectl (not in git)
+  # kubectl create secret generic netalertx-api-token -n monitoring --from-literal=token=<API_TOKEN>
   - ./prometheus-statefulset.yaml
   - ./prometheus-service.yaml
   - ./prometheus-pdb.yaml
