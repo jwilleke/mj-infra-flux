@@ -67,6 +67,12 @@ spec:
             - name: prometheus-storage-volume
               mountPath: /prometheus
 
+            # NetAlertX Bearer token (deby#27) — SOPS-encrypted secret
+            - name: netalertx-token-volume
+              mountPath: /etc/prometheus/netalertx-token
+              subPath: token
+              readOnly: true
+
       securityContext:
         # this user is on the node's os as the file system owner
         # https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
@@ -80,6 +86,10 @@ spec:
           configMap:
             defaultMode: 420
             name: prometheus-config
+
+        - name: netalertx-token-volume
+          secret:
+            secretName: netalertx-api-token
 
   volumeClaimTemplates:
     - metadata:

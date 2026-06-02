@@ -1,5 +1,6 @@
 resources:
   - ./authorize-prometheus-to-k8s.yaml
+  - ./netalertx-token.sops.yaml
   - ./prometheus-statefulset.yaml
   - ./prometheus-service.yaml
   - ./prometheus-pdb.yaml
@@ -29,6 +30,9 @@ configMapGenerator:
       - config/alerting-rules.storage-backup.yaml
       # Loki-independent Docker container liveness alerts (mj-infra-flux#76)
       - config/alerting-rules.docker.yaml
+      # NetAlertX /metrics scrape + alert rules (deby#27)
+      - config/scrape-configs.netalertx.yaml
+      - config/alerting-rules.netalertx.yaml
       # coinpoet and tayle configs removed
 
 labels:

@@ -1,0 +1,19 @@
+scrape_configs:
+  # NetAlertX LAN device presence monitor (deby#27).
+  # Endpoint: http://192.168.68.71:20212/metrics (Bearer auth).
+  # Token sourced from netalertx-api-token secret, mounted at
+  # /etc/prometheus/netalertx-token (see prometheus-statefulset.yaml).
+  - job_name: "netalertx"
+    static_configs:
+      - targets: ["192.168.68.71:20212"]
+    metrics_path: /metrics
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/netalertx-token
+    scrape_interval: 60s
+    scrape_timeout: 15s
+    relabel_configs:
+      - target_label: host
+        replacement: deby
+      - target_label: source
+        replacement: netalertx

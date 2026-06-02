@@ -1,0 +1,35 @@
+groups:
+  - name: netalertx
+    interval: 1m
+    rules:
+      # Unknown device joined the LAN and is not in the known-device registry.
+      # Clears when the device is acknowledged / added in the NetAlertX UI.
+      - alert: NewDeviceDetected
+        expr: netalertx_new_devices > 0
+        for: 2m
+        labels:
+          severity: warning
+          host: deby
+          source: netalertx
+        annotations:
+          summary: "NetAlertX: {{ $value }} new/unknown device(s) on LAN"
+          description: |
+            {{ $value }} device(s) on the LAN are not in the NetAlertX known-device
+            registry. Inspect and acknowledge at http://netalertx.nerdsbythehour.com
+            (or http://192.168.68.71:20211). Query per-device:
+              netalertx_device_status{device_status="new"}
+
+      # NetAlertX container or /metrics endpoint unreachable — scrape failing.
+      - alert: NetAlertXScrapeDown
+        expr: up{job="netalertx"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          host: deby
+          source: netalertx
+        annotations:
+          summary: "NetAlertX metrics scrape is down"
+          description: |
+            Prometheus cannot reach NetAlertX /metrics at 192.168.68.71:20212.
+            NetAlertX may be stopped or the Docker container unhealthy.
+            Check: docker ps | grep netalertx; docker logs netalertx
