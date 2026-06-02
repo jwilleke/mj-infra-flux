@@ -63,11 +63,11 @@ spec:
             - name: GF_AUTH_GENERIC_OAUTH_ALLOW_ASSIGN_GRAFANA_ADMIN
               value: "true"
 
-            # State-history backend: Loki (mj-infra-flux#90)
-            # alertingApiServer (Grafana 11 default=true) forces annotation backend — disable it
-            # so the Loki state-history path is respected.
-            - name: GF_FEATURE_TOGGLES_ALERTINGAPISERVER
-              value: "false"
+            # State-history backend: Loki intent (mj-infra-flux#90)
+            # NOTE: alertingApiServer=true (Grafana 11 default) forces annotation backend
+            # regardless of GF_UNIFIED_ALERTING_STATE_HISTORY_BACKEND. Per-key feature toggle
+            # env vars are not supported; a grafana.ini ConfigMap would be needed to override.
+            # Left here to document intent; actual backend is annotations until resolved.
             - name: GF_UNIFIED_ALERTING_STATE_HISTORY_ENABLED
               value: "true"
             - name: GF_UNIFIED_ALERTING_STATE_HISTORY_BACKEND
