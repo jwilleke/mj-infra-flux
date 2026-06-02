@@ -64,6 +64,10 @@ spec:
               value: "true"
 
             # State-history backend: Loki (mj-infra-flux#90)
+            # alertingApiServer (Grafana 11 default=true) forces annotation backend — disable it
+            # so the Loki state-history path is respected.
+            - name: GF_FEATURE_TOGGLES_ENABLE
+              value: "alertingApiServer false"
             - name: GF_UNIFIED_ALERTING_STATE_HISTORY_ENABLED
               value: "true"
             - name: GF_UNIFIED_ALERTING_STATE_HISTORY_BACKEND
