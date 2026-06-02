@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fasten
+  namespace: fasten
+  labels:
+    app: fasten
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fasten
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: fasten
+    spec:
+      containers:
+        - name: fasten
+          # https://github.com/fastenhealth/fasten-onprem — personal health record aggregator
+          image: ghcr.io/fastenhealth/fasten-onprem:main
+          ports:
+            - containerPort: 8080
+              name: http
+          volumeMounts:
+            - name: fasten-data
+              mountPath: /opt/fasten/db
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /api/v1/metadata/heartbeat
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/v1/metadata/heartbeat
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+      volumes:
+        - name: fasten-data
+          persistentVolumeClaim:
+            claimName: fasten-data

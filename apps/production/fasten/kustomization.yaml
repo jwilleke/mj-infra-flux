@@ -1,0 +1,12 @@
+resources:
+  - ./namespace.yaml
+  - ./pvc.yaml
+  - ./deployment.yaml
+  - ./service.yaml
+  - ./authentik-middleware.yaml
+  - ./ingress.yaml
+  - ./backup-cronjob.yaml
+
+labels:
+  - pairs:
+      app.jimwilleke.com/name: fasten

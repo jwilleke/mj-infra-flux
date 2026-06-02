@@ -24,6 +24,7 @@ resources:
   - ./landingpage
 
   # Protected Applications
+  - ./fasten             # Personal health record aggregator; authentik forward-auth, internal-only (mj-infra-flux#99)
   - ./traefik-dashboard  # Traefik dashboard at traefik.nerdsbythehour.com; authentik forward-auth (mj-infra-flux#89)
   - ./teslamate
   - ./home-assistant-proxy
