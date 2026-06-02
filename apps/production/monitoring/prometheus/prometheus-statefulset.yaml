@@ -67,9 +67,10 @@ spec:
             - name: prometheus-storage-volume
               mountPath: /prometheus
 
-            # NetAlertX Bearer token (deby#27) — SOPS-encrypted secret
+            # NetAlertX Bearer token (deby#27) — out-of-band secret
+            # Cannot mount inside /etc/prometheus (ConfigMap mountpoint).
             - name: netalertx-token-volume
-              mountPath: /etc/prometheus/netalertx-token
+              mountPath: /etc/prometheus-secrets/netalertx-token
               subPath: token
               readOnly: true
 

@@ -9,7 +9,7 @@ scrape_configs:
     metrics_path: /metrics
     authorization:
       type: Bearer
-      credentials_file: /etc/prometheus/netalertx-token
+      credentials_file: /etc/prometheus-secrets/netalertx-token
     scrape_interval: 60s
     scrape_timeout: 15s
     relabel_configs:
