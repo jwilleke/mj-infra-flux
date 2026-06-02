@@ -39,7 +39,7 @@ spec:
               memory: 1Gi
           livenessProbe:
             httpGet:
-              path: /api/v1/metadata/heartbeat
+              path: /healthz
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 30
@@ -47,7 +47,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /api/v1/metadata/heartbeat
+              path: /healthz
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 10
