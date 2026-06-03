@@ -8,8 +8,51 @@ spec:
   interval: 5m
   # GHCR package must be PUBLIC for anonymous scanning.
   # To make it public: GitHub → jwilleke/fasten-onprem → Packages → fasten-onprem → Package settings → Change visibility → Public
-  # Deployment is updated via scripts/fasten-pin.sh (digest-based pinning).
-  # No ImagePolicy/ImageUpdateAutomation: fasten-onprem publishes :main only (no semver tags),
-  # so alphabetical/numerical ordering is unreliable. Use the pin script instead.
-  # When fasten-onprem adds semver git tags, add an ImagePolicy + ImageUpdateAutomation
-  # here following the geohazardwatch pattern.
+  # Tags: :main (mutable, always latest) and :main-<run_number> (immutable, numerically sorted).
+  # docker-jwilleke.yaml uses type=raw,value=main-${{ github.run_number }} so Flux
+  # can apply numerical ordering to pick the latest build.
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: fasten
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: fasten
+  filterTags:
+    # Matches main-<N> tags emitted by docker-jwilleke.yaml; extracts the
+    # build number for numerical ordering.
+    pattern: '^main-(\d+)$'
+    extract: '$1'
+  policy:
+    numerical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: fasten
+  namespace: flux-system
+spec:
+  interval: 5m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump fasten to {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans deployment.yaml in the fasten app dir for the
+    # `# {"$imagepolicy": "flux-system:fasten"}` setter marker.
+    path: ./apps/production/fasten
+    strategy: Setters
