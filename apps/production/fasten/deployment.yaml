@@ -19,8 +19,9 @@ spec:
     spec:
       containers:
         - name: fasten
-          # https://github.com/jwilleke/fasten-onprem — fork of fastenhealth/fasten-onprem with non-US-Core FHIR compatibility fixes
-          image: ghcr.io/jwilleke/fasten-onprem:main
+          # Temporarily reverted to upstream while jwilleke fork build completes.
+          # Switch back to ghcr.io/jwilleke/fasten-onprem:main once image is available.
+          image: ghcr.io/fastenhealth/fasten-onprem:main
           ports:
             - containerPort: 8080
               name: http
