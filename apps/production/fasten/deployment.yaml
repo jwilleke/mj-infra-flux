@@ -19,8 +19,8 @@ spec:
     spec:
       containers:
         - name: fasten
-          # Temporarily reverted to upstream while jwilleke fork build completes.
-          # Switch back to ghcr.io/jwilleke/fasten-onprem:main once image is available.
+          # Pinned by scripts/fasten-pin.sh — run after each fasten-onprem CI build.
+          # CI: https://github.com/jwilleke/fasten-onprem/actions/workflows/docker-jwilleke.yaml
           image: ghcr.io/jwilleke/fasten-onprem:main
           ports:
             - containerPort: 8080

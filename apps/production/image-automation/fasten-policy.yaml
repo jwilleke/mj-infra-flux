@@ -1,0 +1,15 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: fasten
+  namespace: flux-system
+spec:
+  image: ghcr.io/jwilleke/fasten-onprem
+  interval: 5m
+  # GHCR package must be PUBLIC for anonymous scanning.
+  # To make it public: GitHub → jwilleke/fasten-onprem → Packages → fasten-onprem → Package settings → Change visibility → Public
+  # Deployment is updated via scripts/fasten-pin.sh (digest-based pinning).
+  # No ImagePolicy/ImageUpdateAutomation: fasten-onprem publishes :main only (no semver tags),
+  # so alphabetical/numerical ordering is unreliable. Use the pin script instead.
+  # When fasten-onprem adds semver git tags, add an ImagePolicy + ImageUpdateAutomation
+  # here following the geohazardwatch pattern.
