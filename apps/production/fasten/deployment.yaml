@@ -21,7 +21,7 @@ spec:
         - name: fasten
           # Temporarily reverted to upstream while jwilleke fork build completes.
           # Switch back to ghcr.io/jwilleke/fasten-onprem:main once image is available.
-          image: ghcr.io/fastenhealth/fasten-onprem:main
+          image: ghcr.io/jwilleke/fasten-onprem:main
           ports:
             - containerPort: 8080
               name: http
