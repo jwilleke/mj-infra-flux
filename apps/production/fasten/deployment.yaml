@@ -19,8 +19,8 @@ spec:
     spec:
       containers:
         - name: fasten
-          # https://github.com/fastenhealth/fasten-onprem — personal health record aggregator
-          image: ghcr.io/fastenhealth/fasten-onprem:main
+          # https://github.com/jwilleke/fasten-onprem — fork of fastenhealth/fasten-onprem with non-US-Core FHIR compatibility fixes
+          image: ghcr.io/jwilleke/fasten-onprem:main
           ports:
             - containerPort: 8080
               name: http
