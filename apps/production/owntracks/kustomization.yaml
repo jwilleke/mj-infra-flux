@@ -9,6 +9,7 @@ resources:
   - recorder-pvc.yaml
   - recorder-configmap.yaml
   - recorder-lua-hook-configmap.yaml
+  - visual-configmap.yaml
   - recorder-deployment.yaml
   - recorder-service.yaml
   - recorder-basic-auth.sops.yaml
