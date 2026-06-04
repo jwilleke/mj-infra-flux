@@ -152,16 +152,34 @@ data:
           # Verified to be the correct category name "UniFi Devices"
           # (not "Devices") via full-history grep.
           - alert: UDMProManagedDeviceOffline
-            expr: 'sum by (device) (count_over_time({source="udmpro"} |= "UNIFIcategory=UniFi Devices" |= "went offline" | regexp "msg=(?P<device>.+?) went offline"[5m])) > 0'
-            for: 1m
+            # Fires when a managed device (switch/AP) goes offline and has NOT
+            # reconnected within the 15m window, sustained for 5m.
+            # Reconnect phrase confirmed 2026-06-04 from real event:
+            #   "msg=US 8 60W-02FE has reconnected."
+            # `unless` keeps devices from A (went offline) for which B
+            # (has reconnected) has no matching label — i.e. still down.
+            expr: |
+              sum by (device) (
+                count_over_time({source="udmpro"} |= "UNIFIcategory=UniFi Devices" |= "went offline"
+                  | regexp "msg=(?P<device>.+?) went offline"
+                  [15m])
+              ) > 0
+              unless
+              sum by (device) (
+                count_over_time({source="udmpro"} |= "UNIFIcategory=UniFi Devices" |= "has reconnected"
+                  | regexp "msg=(?P<device>.+?) has reconnected"
+                  [15m])
+              ) > 0
+            for: 5m
             labels:
               severity: warning
             annotations:
               summary: "Managed UniFi device offline: {{ $labels.device }}"
               description: |
-                {{ $labels.device }} went offline. Check uplink + power + parent
-                switch port (UNIFIconnectedToDeviceName / UNIFIconnectedToDevicePort):
-                  {source="udmpro"} |= "UNIFIcategory=UniFi Devices" |= "went offline"
+                {{ $labels.device }} went offline and has not reconnected within 15m.
+                Check uplink + power + parent switch port
+                (UNIFIconnectedToDeviceName / UNIFIconnectedToDevicePort):
+                  {source="udmpro"} |= "UNIFIcategory=UniFi Devices" |= "{{ $labels.device }}"
 
           # Long-running wired client disconnected — inclusion list of
           # operationally-critical hosts only. Soak-window calibration
