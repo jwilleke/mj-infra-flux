@@ -124,9 +124,9 @@ data:
       layers.length = 0;
       document.getElementById('tbody').innerHTML = '';
 
-      const from = Math.floor(new Date(dt + 'T00:00:00').getTime() / 1000);
-      const to   = Math.floor(new Date(dt + 'T23:59:59').getTime() / 1000);
-      const url  = `/api/0/locations?user=${encodeURIComponent(user)}&device=${encodeURIComponent(device)}&from=${from}&to=${to}&limit=9999`;
+      // Recorder requires date-string format (epoch → 416). Equal from=to returns 0;
+      // append T00:00:00/T23:59:59 to query the full UTC day.
+      const url = `/api/0/locations?user=${encodeURIComponent(user)}&device=${encodeURIComponent(device)}&from=${dt}T00:00:00&to=${dt}T23:59:59&limit=9999`;
 
       let data;
       try {
