@@ -61,8 +61,14 @@ async function main() {
     const existing = await api('/core/applications/fasten/');
     if (existing?.slug === 'fasten') {
       const providerPk = existing.provider;
-      await api(`/providers/proxy/${providerPk}/`, 'PATCH', {
+      const currentProvider = await api(`/providers/proxy/${providerPk}/`);
+      await api(`/providers/proxy/${providerPk}/`, 'PUT', {
+        ...currentProvider,
         external_host: 'https://yourphr.nerdsbythehour.com',
+        redirect_uris: currentProvider.redirect_uris.map((r) => ({
+          ...r,
+          url: r.url.replace('fasten.nerdsbythehour.com', 'yourphr.nerdsbythehour.com'),
+        })),
       });
       await api('/core/applications/fasten/', 'PATCH', {
         meta_launch_url: 'https://yourphr.nerdsbythehour.com',
