@@ -23,13 +23,13 @@ DRY_RUN=false
 # Returns the sha256 digest (e.g. sha256:abc123...)
 DIGEST=$(gh api \
   -H "Accept: application/vnd.github+json" \
-  "/users/jwilleke/packages/container/fasten-onprem/versions" \
+  "/users/jwilleke/packages/container/yourphr/versions" \
   --jq '[.[] | select(.metadata.container.tags | index("main"))] | first | .name' \
   2>/dev/null || true)
 
 if [[ -z "$DIGEST" || "$DIGEST" == "null" ]]; then
   echo "ERROR: could not resolve digest for ${IMAGE}:main" >&2
-  echo "  - Confirm the GHCR package exists: https://github.com/jwilleke/yourphr/pkgs/container/fasten-onprem" >&2
+  echo "  - Confirm the GHCR package exists: https://github.com/jwilleke/yourphr/pkgs/container/yourphr" >&2
   echo "  - Confirm the CI build passed: https://github.com/jwilleke/yourphr/actions/workflows/docker-jwilleke.yaml" >&2
   echo "  - Confirm the package visibility is Public (anonymous scan requires it)" >&2
   exit 1
