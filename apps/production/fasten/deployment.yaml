@@ -19,10 +19,10 @@ spec:
     spec:
       containers:
         - name: fasten
-          # CI: https://github.com/jwilleke/fasten-onprem/actions/workflows/docker-jwilleke.yaml
+          # CI: https://github.com/jwilleke/yourphr/actions/workflows/docker-jwilleke.yaml
           # Flux image-automation picks the latest main-<N> tag (numerical order).
           # Run scripts/fasten-pin.sh only if you need to manually override.
-          image: ghcr.io/jwilleke/fasten-onprem:main-24 # {"$imagepolicy": "flux-system:fasten"}
+          image: ghcr.io/jwilleke/yourphr:main # {"$imagepolicy": "flux-system:fasten"}
           ports:
             - containerPort: 8080
               name: http

@@ -8,13 +8,13 @@
 # Prerequisites: gh CLI authenticated, git configured, run from repo root.
 #
 # When to run:
-#   After merging a change to jwilleke/fasten-onprem main and confirming
-#   the CI Docker build passed (ghcr.io/jwilleke/fasten-onprem:main updated).
-#   Check CI: https://github.com/jwilleke/fasten-onprem/actions/workflows/docker-jwilleke.yaml
+#   After merging a change to jwilleke/yourphr main and confirming
+#   the CI Docker build passed (ghcr.io/jwilleke/yourphr:main updated).
+#   Check CI: https://github.com/jwilleke/yourphr/actions/workflows/docker-jwilleke.yaml
 set -euo pipefail
 
 DEPLOY="apps/production/fasten/deployment.yaml"
-IMAGE="ghcr.io/jwilleke/fasten-onprem"
+IMAGE="ghcr.io/jwilleke/yourphr"
 DRY_RUN=false
 
 [[ "${1:-}" == "--dry-run" ]] && DRY_RUN=true
@@ -29,8 +29,8 @@ DIGEST=$(gh api \
 
 if [[ -z "$DIGEST" || "$DIGEST" == "null" ]]; then
   echo "ERROR: could not resolve digest for ${IMAGE}:main" >&2
-  echo "  - Confirm the GHCR package exists: https://github.com/jwilleke/fasten-onprem/pkgs/container/fasten-onprem" >&2
-  echo "  - Confirm the CI build passed: https://github.com/jwilleke/fasten-onprem/actions/workflows/docker-jwilleke.yaml" >&2
+  echo "  - Confirm the GHCR package exists: https://github.com/jwilleke/yourphr/pkgs/container/fasten-onprem" >&2
+  echo "  - Confirm the CI build passed: https://github.com/jwilleke/yourphr/actions/workflows/docker-jwilleke.yaml" >&2
   echo "  - Confirm the package visibility is Public (anonymous scan requires it)" >&2
   exit 1
 fi

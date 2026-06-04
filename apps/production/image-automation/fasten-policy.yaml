@@ -4,10 +4,10 @@ metadata:
   name: fasten
   namespace: flux-system
 spec:
-  image: ghcr.io/jwilleke/fasten-onprem
+  image: ghcr.io/jwilleke/yourphr
   interval: 5m
   # GHCR package must be PUBLIC for anonymous scanning.
-  # To make it public: GitHub → jwilleke/fasten-onprem → Packages → fasten-onprem → Package settings → Change visibility → Public
+  # To make it public: GitHub → jwilleke/yourphr → Packages → yourphr → Package settings → Change visibility → Public
   # Tags: :main (mutable, always latest) and :main-<run_number> (immutable, numerically sorted).
   # docker-jwilleke.yaml uses type=raw,value=main-${{ github.run_number }} so Flux
   # can apply numerical ordering to pick the latest build.
