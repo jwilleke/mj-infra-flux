@@ -5,7 +5,7 @@
  * the SOPS env and drives the /api/v3 REST API directly.
  * Idempotent: exits cleanly if the `fasten` application already exists.
  *
- * fasten.nerdsbythehour.com — internal-only health record aggregator.
+ * yourphr.nerdsbythehour.com — internal-only health record aggregator.
  * forward_single mode (single app, not domain-level).
  */
 import { execSync } from 'node:child_process';
@@ -60,8 +60,16 @@ async function main() {
   try {
     const existing = await api('/core/applications/fasten/');
     if (existing?.slug === 'fasten') {
-      console.log('ℹ️  Application "fasten" already exists — nothing to do.');
-      console.log(`   provider pk: ${existing.provider}`);
+      const providerPk = existing.provider;
+      await api(`/providers/proxy/${providerPk}/`, 'PATCH', {
+        external_host: 'https://yourphr.nerdsbythehour.com',
+      });
+      await api('/core/applications/fasten/', 'PATCH', {
+        meta_launch_url: 'https://yourphr.nerdsbythehour.com',
+      });
+      console.log(`✅ Updated existing Fasten provider (pk: ${providerPk}) + application URLs.`);
+      console.log(`   app:      ${cfg.baseUrl}/if/admin/#/core/applications/fasten`);
+      console.log(`   provider: ${cfg.baseUrl}/if/admin/#/core/providers/${providerPk}`);
       return;
     }
   } catch (e) {
@@ -80,7 +88,7 @@ async function main() {
     name: 'Fasten Provider',
     authorization_flow: authFlow,
     invalidation_flow: invFlow,
-    external_host: 'https://fasten.nerdsbythehour.com',
+    external_host: 'https://yourphr.nerdsbythehour.com',
     mode: 'forward_single',
     access_token_validity: 'hours=24',
   });
@@ -91,7 +99,7 @@ async function main() {
     name: 'Fasten',
     slug: 'fasten',
     provider: provider.pk,
-    meta_launch_url: 'https://fasten.nerdsbythehour.com',
+    meta_launch_url: 'https://yourphr.nerdsbythehour.com',
     group: '',
   });
   console.log(`✅ application slug: ${app.slug}`);

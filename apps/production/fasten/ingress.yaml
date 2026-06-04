@@ -1,4 +1,4 @@
-# fasten.nerdsbythehour.com — internal only (no public Cloudflare DNS record).
+# yourphr.nerdsbythehour.com — internal only (no public Cloudflare DNS record).
 # LAN-reachable, authentik-authenticated (forward-auth tier).
 # See docs/access/access.md and mj-infra-flux#99.
 apiVersion: networking.k8s.io/v1
@@ -15,10 +15,10 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - fasten.nerdsbythehour.com
-      secretName: fasten-nerdsbythehour-com-tls
+        - yourphr.nerdsbythehour.com
+      secretName: yourphr-nerdsbythehour-com-tls
   rules:
-    - host: fasten.nerdsbythehour.com
+    - host: yourphr.nerdsbythehour.com
       http:
         paths:
           - path: /
