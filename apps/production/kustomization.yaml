@@ -25,12 +25,7 @@ resources:
 
   # Protected Applications
   - ./yourphr            # Personal health record aggregator; authentik forward-auth, internal-only (mj-infra-flux#103)
-  # SMART OAuth relay for ./yourphr (EPIC #20, yourphr#50). Public via the Cloudflare Tunnel
-  # (like geohazardwatch), NOT Traefik. Staged — enable only after: (1) image
-  # ghcr.io/jwilleke/yourphr-relay:main exists (yourphr#71 ✅), (2) relay-secret.sops.yaml created
-  # (mj-infra-flux#105), (3) Cloudflare Public Hostname relay.nerdsbythehour.com → the relay Service.
-  # See ./yourphr-relay/README.md.
-  # - ./yourphr-relay    # Deployment+Service only; exposed via cloudflared tunnel (yourphr#50)
+  - ./yourphr-relay      # SMART OAuth relay; public via Cloudflare Tunnel (yourphr#50, mj-infra-flux#104+#105)
   - ./traefik-dashboard  # Traefik dashboard at traefik.nerdsbythehour.com; authentik forward-auth (mj-infra-flux#89)
   - ./teslamate
   - ./home-assistant-proxy
