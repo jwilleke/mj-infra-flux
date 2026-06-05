@@ -22,7 +22,7 @@ spec:
           # CI: https://github.com/jwilleke/yourphr/actions/workflows/docker-jwilleke.yaml
           # Flux image-automation picks the latest main-<N> tag (numerical order).
           # Run scripts/yourphr-pin.sh only if you need to manually override.
-          image: ghcr.io/jwilleke/yourphr:main-77 # {"$imagepolicy": "flux-system:yourphr"}
+          image: ghcr.io/jwilleke/yourphr:main-78 # {"$imagepolicy": "flux-system:yourphr"}
           ports:
             - containerPort: 8080
               name: http
