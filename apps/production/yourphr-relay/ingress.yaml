@@ -1,0 +1,32 @@
+# relay.nerdsbythehour.com — the one PUBLIC, UNAUTHENTICATED piece of YourPHR.
+# Unlike yourphr.nerdsbythehour.com (internal-only, behind Authentik), this ingress
+# is deliberately NOT behind the authentik forward-auth middleware: the provider
+# must reach /callback unauthenticated, and /pending is gated by a shared secret.
+# Requires a PUBLIC DNS record for relay.nerdsbythehour.com (yourphr#50 / EPIC #20).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: yourphr-relay-ingress
+  namespace: yourphr
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # NOTE: intentionally no router.middlewares — this endpoint must be public.
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - relay.nerdsbythehour.com
+      secretName: relay-nerdsbythehour-com-tls
+  rules:
+    - host: relay.nerdsbythehour.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: yourphr-relay
+                port:
+                  number: 8080

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yourphr-relay
+  namespace: yourphr
+  labels:
+    app: yourphr-relay
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yourphr-relay
+  template:
+    metadata:
+      labels:
+        app: yourphr-relay
+    spec:
+      containers:
+        - name: relay
+          # SMART on FHIR store-and-poll relay (EPIC #20, yourphr#50).
+          # Image built by https://github.com/jwilleke/yourphr/actions/workflows/docker-relay.yaml (yourphr#71).
+          # Pinned to :main; imagePullPolicy Always picks up the latest main build on restart.
+          image: ghcr.io/jwilleke/yourphr-relay:main
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            # YOURPHR_RELAY_SECRET — gates /pending. See relay-secret.sops.yaml.example.
+            - secretRef:
+                name: yourphr-relay
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            timeoutSeconds: 5

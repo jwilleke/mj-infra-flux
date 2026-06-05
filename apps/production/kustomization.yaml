@@ -25,6 +25,10 @@ resources:
 
   # Protected Applications
   - ./yourphr            # Personal health record aggregator; authentik forward-auth, internal-only (mj-infra-flux#103)
+  # Public SMART OAuth relay for ./yourphr (EPIC #20, yourphr#50). Staged — enable only after:
+  # (1) image ghcr.io/jwilleke/yourphr-relay:main exists (yourphr#71), (2) relay-secret.sops.yaml
+  # created, (3) public DNS for relay.nerdsbythehour.com. See ./yourphr-relay/README.md.
+  # - ./yourphr-relay    # Public, no Authentik; serves relay.nerdsbythehour.com (yourphr#50)
   - ./traefik-dashboard  # Traefik dashboard at traefik.nerdsbythehour.com; authentik forward-auth (mj-infra-flux#89)
   - ./teslamate
   - ./home-assistant-proxy
