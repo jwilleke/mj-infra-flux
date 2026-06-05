@@ -26,6 +26,17 @@ spec:
           ports:
             - containerPort: 8080
               name: http
+          env:
+            # Shared secret for polling the SMART OAuth relay's /pending (yourphr#50/#51).
+            # Same value as the relay's own secret (../yourphr-relay/relay-secret.sops.yaml).
+            # optional: the app starts without it; the relay-connect path just returns
+            # "relay not configured" until it's present.
+            - name: YOURPHR_RELAY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: yourphr-relay
+                  key: YOURPHR_RELAY_SECRET
+                  optional: true
           volumeMounts:
             - name: yourphr-data
               mountPath: /opt/fasten/db
