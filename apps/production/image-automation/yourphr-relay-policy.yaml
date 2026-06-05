@@ -1,0 +1,55 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: yourphr-relay
+  namespace: flux-system
+spec:
+  image: ghcr.io/jwilleke/yourphr-relay
+  interval: 5m
+  # GHCR package must be PUBLIC for anonymous scanning (same as ghcr.io/jwilleke/yourphr).
+  # Tags: :main (mutable) and :main-<run_number> (immutable, numerically sorted) from
+  # docker-relay.yaml (yourphr#71).
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: yourphr-relay
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: yourphr-relay
+  filterTags:
+    # Matches main-<N> tags emitted by docker-relay.yaml; extract the build number for ordering.
+    pattern: '^main-(\d+)$'
+    extract: '$1'
+  policy:
+    numerical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: yourphr-relay
+  namespace: flux-system
+spec:
+  interval: 5m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump yourphr-relay to {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans deployment.yaml in the relay dir for the
+    # `# {"$imagepolicy": "flux-system:yourphr-relay"}` setter marker.
+    path: ./apps/production/yourphr-relay
+    strategy: Setters

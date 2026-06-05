@@ -19,9 +19,9 @@ spec:
         - name: relay
           # SMART on FHIR store-and-poll relay (EPIC #20, yourphr#50).
           # Image built by https://github.com/jwilleke/yourphr/actions/workflows/docker-relay.yaml (yourphr#71).
-          # Pinned to :main; imagePullPolicy Always picks up the latest main build on restart.
-          image: ghcr.io/jwilleke/yourphr-relay:main
-          imagePullPolicy: Always
+          # Flux image-automation bumps this to the latest main-<N> tag (see
+          # ../image-automation/yourphr-relay-policy.yaml); immutable tags, so no imagePullPolicy needed.
+          image: ghcr.io/jwilleke/yourphr-relay:main-2 # {"$imagepolicy": "flux-system:yourphr-relay"}
           ports:
             - containerPort: 8080
               name: http

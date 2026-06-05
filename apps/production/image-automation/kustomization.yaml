@@ -5,6 +5,7 @@ kind: Kustomization
 # and declares its namespace explicitly.
 resources:
   - yourphr-policy.yaml
+  - yourphr-relay-policy.yaml
   - geohazardwatch-policy.yaml
   - owntracks-policy.yaml
   # geohazardwatch-ghcr.sops.yaml removed 2026-05-16 — ghcr package made
