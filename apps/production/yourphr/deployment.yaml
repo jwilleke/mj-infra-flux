@@ -27,6 +27,13 @@ spec:
             - containerPort: 8080
               name: http
           env:
+            # Poll the relay over the in-cluster Service, NOT its public Cloudflare URL.
+            # The backend runs inside the cluster; hitting https://relay.nerdsbythehour.com
+            # from here hairpins out to Cloudflare and back through the tunnel and times out
+            # (observed: "Get https://relay.nerdsbythehour.com/pending …: context deadline
+            # exceeded"). The in-cluster Service reaches the same relay pod directly. (yourphr#51)
+            - name: YOURPHR_RELAY_URL
+              value: "http://yourphr-relay.yourphr.svc.cluster.local:8080"
             # Shared secret for polling the SMART OAuth relay's /pending (yourphr#50/#51).
             # Same value as the relay's own secret (../yourphr-relay/relay-secret.sops.yaml).
             # optional: the app starts without it; the relay-connect path just returns
