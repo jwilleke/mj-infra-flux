@@ -34,6 +34,9 @@ configMapGenerator:
       # NetAlertX /metrics scrape + alert rules (deby#27)
       - config/scrape-configs.netalertx.yaml
       - config/alerting-rules.netalertx.yaml
+      # YourPHR SMART relay /metrics scrape + alert rules (yourphr#50)
+      - config/scrape-configs.yourphr-relay.yaml
+      - config/alerting-rules.yourphr-relay.yaml
       # coinpoet and tayle configs removed
 
 labels:

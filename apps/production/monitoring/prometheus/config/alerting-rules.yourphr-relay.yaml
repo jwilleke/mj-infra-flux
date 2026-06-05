@@ -1,0 +1,47 @@
+groups:
+  - name: yourphr-relay
+    interval: 30s
+    rules:
+      # A SMART authorization code arrived at the relay /callback ("a secret arrived").
+      # This is an informational event notification, not a fault: it fires when the
+      # callbacks counter increases, then resolves. Use it to confirm a provider login
+      # round-trip happened. The code itself is never exposed — only the count.
+      - alert: YourPHRRelayCodeReceived
+        expr: increase(yourphr_relay_callbacks_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: info
+          source: yourphr-relay
+        annotations:
+          summary: "YourPHR relay received {{ $value | printf \"%.0f\" }} authorization code(s)"
+          description: |
+            The SMART OAuth relay stored {{ $value | printf "%.0f" }} authorization code(s) at
+            /callback in the last 5m — a provider login round-trip reached the relay. Informational.
+
+      # Someone is polling /pending with a missing/wrong shared secret — possible probing.
+      - alert: YourPHRRelayUnauthorizedPolls
+        expr: increase(yourphr_relay_pending_total{result="unauthorized"}[5m]) > 5
+        for: 0m
+        labels:
+          severity: warning
+          source: yourphr-relay
+        annotations:
+          summary: "YourPHR relay: {{ $value | printf \"%.0f\" }} unauthorized /pending polls in 5m"
+          description: |
+            More than 5 /pending requests with a missing/invalid X-Yourphr-Token in 5m.
+            Likely a misconfigured client or someone probing the relay.
+
+      # Relay metrics endpoint unreachable — the relay may be down or not serving :9090.
+      - alert: YourPHRRelayScrapeDown
+        expr: up{job="yourphr-relay"} == 0
+        for: 10m
+        labels:
+          severity: warning
+          source: yourphr-relay
+        annotations:
+          summary: "YourPHR relay metrics scrape is down"
+          description: |
+            Prometheus cannot reach the relay /metrics at
+            yourphr-relay.yourphr.svc.cluster.local:9090. The relay pod may be down, or
+            running an image without the metrics server (requires yourphr#77).
+            Check: kubectl -n yourphr get pods -l app=yourphr-relay
