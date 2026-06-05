@@ -25,6 +25,8 @@ spec:
           ports:
             - containerPort: 8080
               name: http
+            - containerPort: 9090
+              name: metrics # in-cluster Prometheus scrape only; NOT routed via the public tunnel
           envFrom:
             # YOURPHR_RELAY_SECRET — gates /pending. See relay-secret.sops.yaml.example.
             - secretRef:

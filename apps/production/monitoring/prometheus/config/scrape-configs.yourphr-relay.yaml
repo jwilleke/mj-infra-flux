@@ -1,0 +1,13 @@
+scrape_configs:
+  # YourPHR SMART OAuth relay metrics (yourphr#50). The relay serves Prometheus text
+  # on its in-cluster-only metrics port 9090 (NOT the public :8080 tunnel path).
+  # Endpoint: http://yourphr-relay.yourphr.svc.cluster.local:9090/metrics
+  - job_name: "yourphr-relay"
+    static_configs:
+      - targets: ["yourphr-relay.yourphr.svc.cluster.local:9090"]
+    metrics_path: /metrics
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - target_label: source
+        replacement: yourphr-relay
