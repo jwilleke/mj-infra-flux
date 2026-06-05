@@ -49,22 +49,20 @@ No DNS record needs to be created by hand, and no firewall port is opened.
 > Note: `nerdsbythehour.com` must be in the same Cloudflare account as the tunnel (it is — the zone
 > is already used for cert-manager DNS-01). A single tunnel can serve hostnames across zones.
 
-## Activation checklist
+## Status — live ✅
 
-This directory is staged but **not yet wired into Flux** (`- ./yourphr-relay` is commented in
-`apps/production/kustomization.yaml`). To enable:
+All activation steps completed 2026-06-05 (mj-infra-flux#104 + #105):
 
-1. **Image** — `ghcr.io/jwilleke/yourphr-relay:main` exists (built by yourphr#71). ✅
-2. **Secret** — create `relay-secret.sops.yaml` from `relay-secret.sops.yaml.example` (see that file
-   for the `sops` command) and uncomment it in `kustomization.yaml`. See mj-infra-flux#105.
-3. **Tunnel hostname** — add the Cloudflare Public Hostname above.
-4. **Enable** — uncomment `- ./yourphr-relay` in `apps/production/kustomization.yaml`, commit, push.
+1. **Image** — `ghcr.io/jwilleke/yourphr-relay:main` ✅
+2. **Secret** — `relay-secret.sops.yaml` committed + decrypted by Flux ✅
+3. **Tunnel hostname** — `relay.nerdsbythehour.com` Public Hostname added in Cloudflare dashboard ✅
+4. **Enabled** — `./yourphr-relay` wired into `apps/production/kustomization.yaml` ✅
 
-Then `flux reconcile kustomization apps --with-source` and verify:
+Verify:
 
 ```bash
 kubectl -n yourphr get pods -l app=yourphr-relay
-curl https://relay.nerdsbythehour.com/healthz   # 200 once the tunnel hostname is live
+curl https://relay.nerdsbythehour.com/healthz   # 200 OK
 ```
 
 ## Future
