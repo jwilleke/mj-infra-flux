@@ -4,13 +4,13 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: fasten-ingress
-  namespace: fasten
+  name: yourphr-ingress
+  namespace: yourphr
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-production
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/router.middlewares: fasten-authentik-forwardauth@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: yourphr-authentik-forwardauth@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:
@@ -25,6 +25,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: fasten
+                name: yourphr
                 port:
                   number: 8080

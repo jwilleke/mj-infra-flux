@@ -1,35 +1,35 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fasten
-  namespace: fasten
+  name: yourphr
+  namespace: yourphr
   labels:
-    app: fasten
+    app: yourphr
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: fasten
+      app: yourphr
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: fasten
+        app: yourphr
     spec:
       containers:
-        - name: fasten
+        - name: yourphr
           # CI: https://github.com/jwilleke/yourphr/actions/workflows/docker-jwilleke.yaml
           # Flux image-automation picks the latest main-<N> tag (numerical order).
-          # Run scripts/fasten-pin.sh only if you need to manually override.
-          image: ghcr.io/jwilleke/yourphr:main-66 # {"$imagepolicy": "flux-system:fasten"}
+          # Run scripts/yourphr-pin.sh only if you need to manually override.
+          image: ghcr.io/jwilleke/yourphr:main-66 # {"$imagepolicy": "flux-system:yourphr"}
           ports:
             - containerPort: 8080
               name: http
           volumeMounts:
-            - name: fasten-data
+            - name: yourphr-data
               mountPath: /opt/fasten/db
-            - name: fasten-config
+            - name: yourphr-config
               mountPath: /opt/fasten/config
               readOnly: true
           resources:
@@ -55,9 +55,9 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
       volumes:
-        - name: fasten-data
+        - name: yourphr-data
           persistentVolumeClaim:
-            claimName: fasten-data
-        - name: fasten-config
+            claimName: yourphr-data
+        - name: yourphr-config
           configMap:
-            name: fasten-config
+            name: yourphr-config

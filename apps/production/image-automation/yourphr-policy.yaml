@@ -1,7 +1,7 @@
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
-  name: fasten
+  name: yourphr
   namespace: flux-system
 spec:
   image: ghcr.io/jwilleke/yourphr
@@ -15,11 +15,11 @@ spec:
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
-  name: fasten
+  name: yourphr
   namespace: flux-system
 spec:
   imageRepositoryRef:
-    name: fasten
+    name: yourphr
   filterTags:
     # Matches main-<N> tags emitted by docker-jwilleke.yaml; extracts the
     # build number for numerical ordering.
@@ -32,7 +32,7 @@ spec:
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageUpdateAutomation
 metadata:
-  name: fasten
+  name: yourphr
   namespace: flux-system
 spec:
   interval: 5m
@@ -48,11 +48,11 @@ spec:
         email: fluxcdbot@users.noreply.github.com
         name: fluxcdbot
       messageTemplate: |
-        chore(image-automation): bump fasten to {{range .Changed.Changes}}{{.NewValue}} {{end}}
+        chore(image-automation): bump yourphr to {{range .Changed.Changes}}{{.NewValue}} {{end}}
     push:
       branch: master
   update:
-    # Scans deployment.yaml in the fasten app dir for the
-    # `# {"$imagepolicy": "flux-system:fasten"}` setter marker.
-    path: ./apps/production/fasten
+    # Scans deployment.yaml in the yourphr app dir for the
+    # `# {"$imagepolicy": "flux-system:yourphr"}` setter marker.
+    path: ./apps/production/yourphr
     strategy: Setters

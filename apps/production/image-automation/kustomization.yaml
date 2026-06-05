@@ -4,7 +4,7 @@ kind: Kustomization
 # (where image-reflector-controller / image-automation-controller look)
 # and declares its namespace explicitly.
 resources:
-  - fasten-policy.yaml
+  - yourphr-policy.yaml
   - geohazardwatch-policy.yaml
   - owntracks-policy.yaml
   # geohazardwatch-ghcr.sops.yaml removed 2026-05-16 — ghcr package made

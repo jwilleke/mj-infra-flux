@@ -1,12 +1,12 @@
-# Hourly SQLite backup of the fasten health-records database to NAS.
+# Hourly SQLite backup of the yourphr health-records database to NAS.
 # Uses sqlite3 .backup (hot backup — consistent regardless of open transactions).
-# NAS path: 192.168.68.41:/var/nfs/shared/jims → /mnt/tank/jims/data/fasten-backup/
-# Retains 7 daily backups by filename (YYYYMMDD); keeps the latest as fasten-latest.db.
+# NAS path: 192.168.68.41:/var/nfs/shared/jims → /mnt/tank/jims/data/yourphr-backup/
+# Retains 7 daily backups by filename (YYYYMMDD); keeps the latest as yourphr-latest.db.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: fasten-backup
-  namespace: fasten
+  name: yourphr-backup
+  namespace: yourphr
 spec:
   schedule: "0 * * * *"
   concurrencyPolicy: Forbid
@@ -25,18 +25,20 @@ spec:
                 - -c
                 - |
                   set -e
-                  apk add --no-cache sqlite > /dev/null 2>&1
+                  for _i in 1 2 3; do
+                    apk add --no-cache sqlite >/dev/null 2>&1 && break || sleep 10
+                  done
                   DB=/data/fasten.db
                   DEST=/nas-backup
                   DATE=$(date +%Y%m%d)
-                  echo "Backing up $DB → $DEST/fasten-$DATE.db"
-                  sqlite3 "$DB" ".backup $DEST/fasten-$DATE.db"
-                  cp "$DEST/fasten-$DATE.db" "$DEST/fasten-latest.db"
+                  echo "Backing up $DB → $DEST/yourphr-$DATE.db"
+                  sqlite3 "$DB" ".backup $DEST/yourphr-$DATE.db"
+                  cp "$DEST/yourphr-$DATE.db" "$DEST/yourphr-latest.db"
                   # Prune backups older than 7 days
-                  find "$DEST" -name "fasten-2*.db" -mtime +7 -delete
+                  find "$DEST" -name "yourphr-2*.db" -mtime +7 -delete
                   echo "Backup complete."
               volumeMounts:
-                - name: fasten-data
+                - name: yourphr-data
                   mountPath: /data
                   readOnly: true
                 - name: nas-backup
@@ -49,10 +51,10 @@ spec:
                   cpu: 200m
                   memory: 128Mi
           volumes:
-            - name: fasten-data
+            - name: yourphr-data
               persistentVolumeClaim:
-                claimName: fasten-data
+                claimName: yourphr-data
             - name: nas-backup
               hostPath:
-                path: /mnt/tank/jims/data/fasten-backup
+                path: /mnt/tank/jims/data/yourphr-backup
                 type: DirectoryOrCreate
