@@ -5,7 +5,8 @@ kind: Kustomization
 resources:
   - ./deployment.yaml
   - ./service.yaml
-  - ./ingress.yaml
+  # Public exposure is via the Cloudflare Tunnel (dashboard-managed), NOT a Traefik
+  # ingress — this network has no public inbound to Traefik. See README.md.
   # Create the encrypted secret from relay-secret.sops.yaml.example, then uncomment:
   # - ./relay-secret.sops.yaml
 
