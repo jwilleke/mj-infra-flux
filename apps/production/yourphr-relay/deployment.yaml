@@ -21,7 +21,7 @@ spec:
           # Image built by https://github.com/jwilleke/yourphr/actions/workflows/docker-relay.yaml (yourphr#71).
           # Flux image-automation bumps this to the latest main-<N> tag (see
           # ../image-automation/yourphr-relay-policy.yaml); immutable tags, so no imagePullPolicy needed.
-          image: ghcr.io/jwilleke/yourphr-relay:main-8 # {"$imagepolicy": "flux-system:yourphr-relay"}
+          image: ghcr.io/jwilleke/yourphr-relay:main-17 # {"$imagepolicy": "flux-system:yourphr-relay"}
           ports:
             - containerPort: 8080
               name: http
