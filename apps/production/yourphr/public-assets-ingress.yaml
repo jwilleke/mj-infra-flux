@@ -1,0 +1,41 @@
+# Public (no forward-auth) ingress for static branding assets ONLY:
+# the PWA web app manifest + favicons under /web/assets/favicon/.
+#
+# Why: browsers fetch rel="manifest" (and favicons) WITHOUT credentials, so the
+# authentik-forwardauth middleware on the main ingress 302's them to the auth server;
+# the browser then refuses to use the auth login page as a manifest (and YourPHR's
+# own manifest-src 'self' CSP blocks the cross-origin result). These are non-sensitive
+# static branding files, so route them straight to the app, bypassing forward-auth.
+#
+# Scope is deliberately narrow: only /web/assets/favicon/. All app code, data, and
+# PHI stay behind auth -- the app's own JWT guards /api/secure, and the rest of the
+# site keeps the forward-auth middleware via yourphr-ingress.
+#
+# Traefik picks this router over the catch-all "/" router for matching requests
+# because its PathPrefix rule is longer (higher auto-priority). There is intentionally
+# NO authentik-forwardauth middleware annotation here.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: yourphr-public-assets
+  namespace: yourphr
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - yourphr.nerdsbythehour.com
+      secretName: yourphr-nerdsbythehour-com-tls
+  rules:
+    - host: yourphr.nerdsbythehour.com
+      http:
+        paths:
+          - path: /web/assets/favicon
+            pathType: Prefix
+            backend:
+              service:
+                name: yourphr
+                port:
+                  number: 8080

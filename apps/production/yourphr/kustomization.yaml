@@ -6,6 +6,7 @@ resources:
   - ./service.yaml
   - ./authentik-middleware.yaml
   - ./ingress.yaml
+  - ./public-assets-ingress.yaml
   - ./backup-cronjob.yaml
 
 labels:
