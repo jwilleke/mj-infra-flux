@@ -2,6 +2,8 @@
 # Uses sqlite3 .backup (hot backup — consistent regardless of open transactions).
 # NAS path: 192.168.68.41:/var/nfs/shared/jims → /mnt/tank/jims/data/yourphr-backup/
 # Retains 7 daily backups by filename (YYYYMMDD); keeps the latest as yourphr-latest.db.
+# Image: keinos/sqlite3 (Alpine + sqlite3 pre-installed) — avoids runtime apk install,
+# which fails when the APK CDN resolves to IPv6 and pod networking has no global IPv6 route.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -19,15 +21,12 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: backup
-              image: alpine:3.20
+              image: keinos/sqlite3:latest
               command:
                 - /bin/sh
                 - -c
                 - |
                   set -e
-                  for _i in 1 2 3; do
-                    apk add --no-cache sqlite >/dev/null 2>&1 && break || sleep 10
-                  done
                   DB=/data/fasten.db
                   DEST=/nas-backup
                   DATE=$(date +%Y%m%d)
