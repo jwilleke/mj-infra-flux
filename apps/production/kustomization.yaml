@@ -26,6 +26,7 @@ resources:
   # Protected Applications
   - ./yourphr            # Personal health record aggregator; authentik forward-auth, internal-only (mj-infra-flux#103)
   - ./yourphr-relay      # SMART OAuth relay; public via Cloudflare Tunnel (yourphr#50, mj-infra-flux#104+#105)
+  - ./yourphr-cda-converter  # C-CDA/CCD import sidecar; internal-only, no Ingress (mj-infra-flux#114, yourphr#254)
   - ./traefik-dashboard  # Traefik dashboard at traefik.nerdsbythehour.com; authentik forward-auth (mj-infra-flux#89)
   - ./teslamate
   - ./home-assistant-proxy

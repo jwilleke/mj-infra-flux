@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yourphr-cda-converter
+  namespace: yourphr
+  labels:
+    app: yourphr-cda-converter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yourphr-cda-converter
+  template:
+    metadata:
+      labels:
+        app: yourphr-cda-converter
+    spec:
+      containers:
+        - name: cda-converter
+          # Metriport AGPL-3.0 fhir-converter, repackaged for YourPHR (yourphr#254, mj-infra-flux#114).
+          # Built by https://github.com/jwilleke/yourphr/actions/workflows/docker-cda-converter.yaml.
+          # Image is public (ghcr.io/jwilleke); no imagePullSecret needed.
+          # Pinned to immutable SHA; no Flux image-automation (no numerical tag scheme).
+          image: ghcr.io/jwilleke/yourphr-cda-converter:c6751a33ac5dc7aae18a041dca42e14a5a482111
+          ports:
+            - containerPort: 8080
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
