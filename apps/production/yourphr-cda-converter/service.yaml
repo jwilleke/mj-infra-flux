@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: yourphr-cda-converter
+  namespace: yourphr
+spec:
+  selector:
+    app: yourphr-cda-converter
+  ports:
+    - port: 8080
+      targetPort: 8080
+# INTERNAL-ONLY: intentionally no Ingress — raw C-CDA is full PHI; cluster-internal access only.

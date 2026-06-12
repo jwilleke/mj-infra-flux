@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# C-CDA / CCD converter sidecar for YourPHR (mj-infra-flux#114, yourphr#254).
+# Deploys into the `yourphr` namespace (owned by ../yourphr/namespace.yaml — not redeclared here).
+# INTERNAL-ONLY: no Ingress — raw C-CDA documents are full PHI; must never leave the cluster.
+resources:
+  - ./deployment.yaml
+  - ./service.yaml
+
+labels:
+  - pairs:
+      app.jimwilleke.com/name: yourphr-cda-converter
