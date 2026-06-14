@@ -19,6 +19,7 @@ configMapGenerator:
     files:
       - config/dashboards/jimstest-wiki.json
       - config/dashboards/deby-host-errors.json
+      - config/dashboards/env-health-noc.json
 
 labels:
   - pairs:
