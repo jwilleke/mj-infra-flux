@@ -260,3 +260,9 @@ scrape_configs:
       - source_labels: [__meta_kubernetes_service_name]
         action: replace
         target_label: service
+      # kube-state-metrics is scraped by this generic job but dashboards (e.g. garysdevil/kube-state-metrics-v2)
+      # filter on job="kube-state-metrics". Override the job label for that service only.
+      - source_labels: [__meta_kubernetes_service_name]
+        regex: kube-state-metrics
+        target_label: job
+        replacement: kube-state-metrics
