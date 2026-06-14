@@ -46,9 +46,9 @@ spec:
                   optional: true
             # C-CDA / CCD converter sidecar (mj-infra-flux#114, yourphr#254).
             # Reaches the converter in-cluster; same namespace so short DNS resolves.
-            - name: FASTEN_CDA_CONVERTER_ENABLED
+            - name: YOURPHR_CDA_CONVERTER_ENABLED
               value: "true"
-            - name: FASTEN_CDA_CONVERTER_URL
+            - name: YOURPHR_CDA_CONVERTER_URL
               value: "http://yourphr-cda-converter.yourphr.svc.cluster.local:8080"
           volumeMounts:
             - name: yourphr-data
