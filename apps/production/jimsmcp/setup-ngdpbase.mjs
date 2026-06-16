@@ -4,14 +4,21 @@
  * ngdpbase agent ingest. Resolves mj-infra-flux#123.
  *
  * Creates (idempotent):
- *   1. OAuth2/OIDC Provider "ngdpbase"      — confidential, RS256, per-provider issuer
- *   2. Application "ngdpbase"               — slug: ngdpbase
- *   3. Service account user "svc-ingest-jim" — email=jim@willeke.com, name="Jim Willeke"
- *      + an API token for that user (stored as the SOPS client_secret)
+ *   1. OAuth2/OIDC Provider "ngdpbase"            — confidential, RS256, per-provider issuer
+ *   2. Application "ngdpbase"                     — slug: ngdpbase
+ *   3. Service account user "svc-ingest-jim"      — named identity record (not the CC principal)
+ *   4. Custom scope mapping "ngdpbase: service account identity"
+ *      — hard-codes name/preferred_username since Authentik's CC synthetic user
+ *        (ak-ngdpbase-client_credentials) resets name on each grant
+ *   5. Provider property_mappings: openid + email + custom profile
  *
- * Outputs (after successful run):
- *   - Four ngdpbase server-side config values (issuer, jwks-url, token-endpoint, audience)
- *   - Service account client_id + client_secret for the SOPS secret
+ * Authentik CC grant mechanics (discovered during setup):
+ *   - CC grant uses the PROVIDER's client_id + client_secret (not a user token)
+ *   - Authentik auto-creates a synthetic user "ak-ngdpbase-client_credentials" on first CC grant
+ *   - That synthetic user's name resets on each grant; email persists after PATCH
+ *   - The custom scope mapping overrides name/preferred_username with stable values
+ *
+ * Outputs the four ngdpbase server-side config values and the CC credential for the SOPS secret.
  *
  * Usage:
  *   node apps/production/jimsmcp/setup-ngdpbase.mjs
@@ -59,7 +66,7 @@ async function api(path, method = 'GET', body) {
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
   if (!res.ok) {
-    const e = new Error(`${method} ${path} -> ${res.status}: ${text}`);
+    const e = new Error(`${method} ${path} -> ${res.status}: ${text.slice(0, 300)}`);
     e.status = res.status;
     throw e;
   }
@@ -88,6 +95,11 @@ async function main() {
   const SVC_EMAIL = 'jim@willeke.com';
   const SVC_NAME = 'Jim Willeke';
   const TOKEN_IDENTIFIER = 'svc-ingest-jim-cc';
+  const CUSTOM_MAPPING_NAME = 'ngdpbase: service account identity';
+
+  // Built-in scope mapping PKs (openid + email — stable managed UUIDs)
+  const SCOPE_OPENID = 'bcfbb6aa-efb9-4e90-9e96-8615779abbc1';
+  const SCOPE_EMAIL  = '9e83b5d5-f6f7-49e7-a4ea-fba58998c12c';
 
   // --- 1. OAuth2/OIDC Provider ---
   let providerPk, providerClientId, providerClientSecret;
@@ -96,7 +108,6 @@ async function main() {
     ({ pk: providerPk, client_id: providerClientId, client_secret: providerClientSecret } =
       existingProviders[0]);
     console.log(`✅ Provider already exists (pk: ${providerPk})`);
-    console.log(`   client_id: ${providerClientId}`);
   } else {
     const [authFlow, invFlow, signingKey] = await Promise.all([
       getFlow('authorization'),
@@ -112,13 +123,14 @@ async function main() {
       sub_mode: 'user_email',
       include_claims_in_id_token: true,
       issuer_mode: 'per_provider',
+      redirect_uris: [], // required by API even for CC-only providers; never used
     });
     providerPk = provider.pk;
     providerClientId = provider.client_id;
     providerClientSecret = provider.client_secret;
     console.log(`✅ Created provider "${PROVIDER_NAME}" (pk: ${providerPk})`);
-    console.log(`   client_id: ${providerClientId}`);
   }
+  console.log(`   client_id (= audience): ${providerClientId}`);
 
   // --- 2. Application ---
   let appExists = false;
@@ -138,16 +150,12 @@ async function main() {
     console.log(`✅ Created application "${APP_SLUG}"`);
   }
 
-  // --- 3. Service account user ---
-  // type=service_account creates a non-interactive user whose attributes (email, name)
-  // flow into CC-granted JWTs via Authentik's scope mappings.
-  let svcUser;
+  // --- 3. Named service account user (identity record for svc-ingest-jim) ---
   const existingUsers = (await api(`/core/users/?username=${SVC_USERNAME}`)).results;
   if (existingUsers.length) {
-    svcUser = existingUsers[0];
-    console.log(`✅ Service account "${SVC_USERNAME}" already exists (pk: ${svcUser.pk})`);
+    console.log(`✅ Service account "${SVC_USERNAME}" already exists (pk: ${existingUsers[0].pk})`);
   } else {
-    svcUser = await api('/core/users/', 'POST', {
+    const svcUser = await api('/core/users/', 'POST', {
       username: SVC_USERNAME,
       name: SVC_NAME,
       email: SVC_EMAIL,
@@ -157,29 +165,72 @@ async function main() {
     console.log(`✅ Created service account "${SVC_USERNAME}" (pk: ${svcUser.pk})`);
   }
 
-  // --- 4. Service account API token ---
-  // This token serves as the client_secret for the client_credentials grant.
-  // Authentik CC flow: client_id=svc_username, client_secret=token_key, grant_type=client_credentials.
-  let tokenKey = null;
-  const existingTokens = (await api(`/core/tokens/?user=${svcUser.pk}&identifier=${TOKEN_IDENTIFIER}`))
-    .results;
-  if (existingTokens.length) {
-    console.log(`⚠️  Token "${TOKEN_IDENTIFIER}" already exists — cannot retrieve key via API.`);
-    console.log(
-      '    Authentik UI → Directory → Tokens → svc-ingest-jim-cc → Copy Token to get the key.'
-    );
+  // --- 4. Custom scope mapping (overrides profile claims for CC synthetic user) ---
+  // Authentik auto-creates "ak-ngdpbase-client_credentials" on first CC grant and resets
+  // its name on every grant. We provide stable name/preferred_username via this mapping.
+  const allMappings = await api('/propertymappings/provider/scope/?page_size=100');
+  const existingMapping = allMappings.results.find((m) => m.name === CUSTOM_MAPPING_NAME);
+  let customMappingPk;
+  if (existingMapping) {
+    customMappingPk = existingMapping.pk;
+    console.log(`✅ Custom scope mapping already exists (pk: ${customMappingPk})`);
   } else {
-    const token = await api('/core/tokens/', 'POST', {
-      identifier: TOKEN_IDENTIFIER,
-      user: svcUser.pk,
-      intent: 'api',
-      description: 'client_credentials token for ngdpbase agent ingest (mj-infra-flux#123)',
-      expiring: false,
+    const mapping = await api('/propertymappings/provider/scope/', 'POST', {
+      name: CUSTOM_MAPPING_NAME,
+      scope_name: 'profile',
+      description: `Stable identity for ngdpbase CC grant — ${SVC_NAME} <${SVC_EMAIL}>`,
+      expression: `return {
+    "name": "${SVC_NAME}",
+    "given_name": "${SVC_NAME}",
+    "preferred_username": "${SVC_USERNAME}",
+    "nickname": "${SVC_USERNAME}",
+    "groups": [group.name for group in request.user.ak_groups.all()],
+}`,
     });
-    const tokenView = await api(`/core/tokens/${token.identifier}/view_key/`, 'POST');
-    tokenKey = tokenView.key;
-    console.log(`✅ Created service account token "${TOKEN_IDENTIFIER}"`);
-    console.log('   ⚠️  Save the client_secret below — it cannot be retrieved again via API.');
+    customMappingPk = mapping.pk;
+    console.log(`✅ Created custom scope mapping (pk: ${customMappingPk})`);
+  }
+
+  // --- 5. Wire scope mappings onto provider ---
+  const currentProvider = await api(`/providers/oauth2/${providerPk}/`);
+  const desiredMappings = [customMappingPk, SCOPE_OPENID, SCOPE_EMAIL];
+  const alreadyWired =
+    desiredMappings.every((pk) => currentProvider.property_mappings.includes(pk)) &&
+    currentProvider.property_mappings.length === desiredMappings.length;
+  if (alreadyWired) {
+    console.log('✅ Provider property_mappings already correct');
+  } else {
+    await api(`/providers/oauth2/${providerPk}/`, 'PATCH', {
+      property_mappings: desiredMappings,
+    });
+    console.log('✅ Provider property_mappings updated (openid + email + custom profile)');
+  }
+
+  // --- 6. Service account API token (retrieve key if newly created) ---
+  let tokenKey = null;
+  const existingTokens = (await api(`/core/tokens/?identifier=${TOKEN_IDENTIFIER}`)).results;
+  if (existingTokens.length) {
+    try {
+      const tokenView = await api(`/core/tokens/${TOKEN_IDENTIFIER}/view_key/`);
+      tokenKey = tokenView.key;
+      console.log(`✅ Retrieved service account token key`);
+    } catch {
+      console.log(`⚠️  Token "${TOKEN_IDENTIFIER}" exists — retrieve key from Authentik UI if needed.`);
+    }
+  } else {
+    const svcUsers = (await api(`/core/users/?username=${SVC_USERNAME}`)).results;
+    if (svcUsers.length) {
+      await api('/core/tokens/', 'POST', {
+        identifier: TOKEN_IDENTIFIER,
+        user: svcUsers[0].pk,
+        intent: 'api',
+        description: 'API token for svc-ingest-jim (informational; CC grant uses provider creds)',
+        expiring: false,
+      });
+      const tokenView = await api(`/core/tokens/${TOKEN_IDENTIFIER}/view_key/`);
+      tokenKey = tokenView.key;
+      console.log(`✅ Created service account token`);
+    }
   }
 
   // --- Summary ---
@@ -188,26 +239,29 @@ async function main() {
   const jwksUrl = `${baseUrl}/application/o/${APP_SLUG}/jwks/`;
   const tokenEndpoint = `${baseUrl}/application/o/token/`;
 
+  // Fetch client_secret if not in memory (existing provider path)
+  if (!providerClientSecret) {
+    const p = await api(`/providers/oauth2/${providerPk}/`);
+    providerClientSecret = p.client_secret;
+  }
+
   console.log('\n── ngdpbase config (server-side — no secret needed) ──────────────────────────');
   console.log(`  issuer:         ${issuer}`);
   console.log(`  jwks-url:       ${jwksUrl}`);
   console.log(`  token-endpoint: ${tokenEndpoint}`);
   console.log(`  audience:       ${providerClientId}`);
 
-  console.log('\n── Service account credential → SOPS secret (mj-infra-flux#123 step 5) ──────');
-  console.log(`  client_id:      ${SVC_USERNAME}`);
-  if (tokenKey) {
-    console.log(`  client_secret:  ${tokenKey}`);
-  } else {
-    console.log(`  client_secret:  (retrieve from Authentik UI — see warning above)`);
-  }
+  console.log('\n── CC credential → SOPS secret ngdpbase-ingest-creds.sops.yaml ──────────────');
+  console.log(`  client-id:      ${providerClientId}`);
+  console.log(`  client-secret:  ${providerClientSecret}`);
 
   console.log('\n── Verification curl ──────────────────────────────────────────────────────────');
   console.log(`  curl -s -X POST ${tokenEndpoint} \\`);
   console.log(`    -d grant_type=client_credentials \\`);
-  console.log(`    -d client_id=${SVC_USERNAME} \\`);
-  console.log(`    -d client_secret=<token_key> | jq .`);
-  console.log('\n  Decode JWT: paste access_token at https://jwt.io and confirm iss, aud, email, name.');
+  console.log(`    -d client_id=${providerClientId} \\`);
+  console.log(`    -d 'client_secret=<secret>' \\`);
+  console.log(`    -d 'scope=openid profile email' | jq '.access_token | split(".")[1] | @base64d | fromjson'`);
+  console.log('\n  Confirm: iss, aud, sub=jim@willeke.com, email=jim@willeke.com, name=Jim Willeke');
   console.log(`\n  Authentik admin: ${baseUrl}/if/admin/`);
 }
 
