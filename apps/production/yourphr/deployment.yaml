@@ -62,7 +62,11 @@ spec:
               memory: 256Mi
             limits:
               cpu: "1"
-              memory: 1Gi
+              # Raised 1Gi -> 2Gi: the backend was OOMKilled (exit 137) intermittently — baseline is
+              # ~33Mi but it occasionally spikes past 1Gi (heavy FHIR query/import over the Blue Button
+              # data, or a slow leak over hours). Headroom stops the crash-restart 503s. If it OOMs
+              # again at 2Gi, it's a leak — profile the backend (pprof) rather than just raising again.
+              memory: 2Gi
           livenessProbe:
             httpGet:
               path: /healthz
