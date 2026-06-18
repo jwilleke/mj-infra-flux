@@ -72,6 +72,24 @@ spec:
                   name: yourphr-sandbox-credentials
                   key: YOURPHR_SANDBOX_EPIC_CLIENT_ID
                   optional: true
+            - name: YOURPHR_SANDBOX_ORACLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: yourphr-sandbox-credentials
+                  key: YOURPHR_SANDBOX_ORACLE_CLIENT_ID
+                  optional: true
+            - name: YOURPHR_SANDBOX_ATHENA_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: yourphr-sandbox-credentials
+                  key: YOURPHR_SANDBOX_ATHENA_CLIENT_ID
+                  optional: true
+            - name: YOURPHR_SANDBOX_ATHENA_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: yourphr-sandbox-credentials
+                  key: YOURPHR_SANDBOX_ATHENA_CLIENT_SECRET
+                  optional: true
           volumeMounts:
             - name: yourphr-data
               mountPath: /opt/fasten/db
