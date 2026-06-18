@@ -50,6 +50,28 @@ spec:
               value: "true"
             - name: YOURPHR_CDA_CONVERTER_URL
               value: "http://yourphr-cda-converter.yourphr.svc.cluster.local:8080"
+            # Admin-only sandbox provider credentials (yourphr#291). The backend seeds the /sandbox
+            # catalog entries from these at startup, so the admin connects with one click and the
+            # client_id/secret never reach the browser. From ./sandbox-credentials.sops.yaml; all
+            # optional so the app still starts (and just shows no sandboxes) if a value is absent.
+            - name: YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: yourphr-sandbox-credentials
+                  key: YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_ID
+                  optional: true
+            - name: YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: yourphr-sandbox-credentials
+                  key: YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_SECRET
+                  optional: true
+            - name: YOURPHR_SANDBOX_EPIC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: yourphr-sandbox-credentials
+                  key: YOURPHR_SANDBOX_EPIC_CLIENT_ID
+                  optional: true
           volumeMounts:
             - name: yourphr-data
               mountPath: /opt/fasten/db
