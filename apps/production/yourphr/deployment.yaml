@@ -51,6 +51,12 @@ spec:
               value: "true"
             - name: YOURPHR_CDA_CONVERTER_URL
               value: "http://yourphr-cda-converter.yourphr.svc.cluster.local:8080"
+            # Instance tag stamped into Admin -> Database backup filenames so prod backups are
+            # distinguishable from dev ones in the shared NAS folder, e.g.
+            # 2026-06-21T14-09-57Z-yourphr-prod-1.10.0-backup.db.gz (yourphr#361). No effect until the
+            # app release that reads backup.label is deployed (post-v1.9.0).
+            - name: YOURPHR_BACKUP_LABEL
+              value: "prod"
             # Admin-only sandbox provider credentials (yourphr#291). The backend seeds the /sandbox
             # catalog entries from these at startup, so the admin connects with one click and the
             # client_id/secret never reach the browser. From ./sandbox-credentials.sops.yaml; all
