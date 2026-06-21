@@ -23,7 +23,7 @@ spec:
           # RELEASE-GATED: Flux image-automation picks the highest semver tag (:X.Y.Z), published only
           # on a vX.Y.Z release tag. Pushes to main do NOT deploy. See the deployment contract:
           # https://github.com/jwilleke/yourphr/blob/main/docs/deployment/deployment-contract.md
-          image: ghcr.io/jwilleke/yourphr:1.8.0 # {"$imagepolicy": "flux-system:yourphr"}
+          image: ghcr.io/jwilleke/yourphr:1.8.1 # {"$imagepolicy": "flux-system:yourphr"}
           ports:
             - containerPort: 8080
               name: http
