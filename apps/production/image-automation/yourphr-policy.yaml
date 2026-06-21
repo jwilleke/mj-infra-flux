@@ -5,12 +5,12 @@ metadata:
   namespace: flux-system
 spec:
   image: ghcr.io/jwilleke/yourphr
-  interval: 1m   # scan ghcr frequently so a new build deploys soon after push (was 5m)
+  interval: 1m   # scan ghcr frequently so a new release deploys soon after the tag build publishes
   # GHCR package must be PUBLIC for anonymous scanning.
   # To make it public: GitHub → jwilleke/yourphr → Packages → yourphr → Package settings → Change visibility → Public
-  # Tags: :main (mutable, always latest) and :main-<run_number> (immutable, numerically sorted).
-  # docker-jwilleke.yaml uses type=raw,value=main-${{ github.run_number }} so Flux
-  # can apply numerical ordering to pick the latest build.
+  # RELEASE-GATED: docker-jwilleke.yaml builds + publishes :X.Y.Z (+ :X.Y, :latest) ONLY on a vX.Y.Z
+  # release tag. Pushes to main no longer build an image, so the live instance updates strictly when a
+  # release is cut. The ImagePolicy below selects the highest semver tag.
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
@@ -21,13 +21,14 @@ spec:
   imageRepositoryRef:
     name: yourphr
   filterTags:
-    # Matches main-<N> tags emitted by docker-jwilleke.yaml; extracts the
-    # build number for numerical ordering.
-    pattern: '^main-(\d+)$'
+    # Matches the semver release tags emitted by docker-jwilleke.yaml on a vX.Y.Z tag
+    # (type=semver,pattern={{version}} -> e.g. "1.6.0"). Non-release tags (:latest, :sha-*,
+    # any leftover :main-*) are ignored, so only releases deploy.
+    pattern: '^(\d+\.\d+\.\d+)$'
     extract: '$1'
   policy:
-    numerical:
-      order: asc
+    semver:
+      range: '>=1.0.0'
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageUpdateAutomation

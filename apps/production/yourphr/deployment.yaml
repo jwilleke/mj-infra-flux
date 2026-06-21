@@ -20,9 +20,10 @@ spec:
       containers:
         - name: yourphr
           # CI: https://github.com/jwilleke/yourphr/actions/workflows/docker-jwilleke.yaml
-          # Flux image-automation picks the latest main-<N> tag (numerical order).
-          # Run scripts/yourphr-pin.sh only if you need to manually override.
-          image: ghcr.io/jwilleke/yourphr:main-379 # {"$imagepolicy": "flux-system:yourphr"}
+          # RELEASE-GATED: Flux image-automation picks the highest semver tag (:X.Y.Z), published only
+          # on a vX.Y.Z release tag. Pushes to main do NOT deploy. See the deployment contract:
+          # https://github.com/jwilleke/yourphr/blob/main/docs/deployment/deployment-contract.md
+          image: ghcr.io/jwilleke/yourphr:1.6.0 # {"$imagepolicy": "flux-system:yourphr"}
           ports:
             - containerPort: 8080
               name: http
