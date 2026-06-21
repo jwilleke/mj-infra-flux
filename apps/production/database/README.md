@@ -57,11 +57,13 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO teslamate;
 Applications connect using Kubernetes service DNS:
 
 **Connection String Format**:
+
 ```
 postgresql://username:password@postgresql.database.svc.cluster.local:5432/dbname
 ```
 
 **Example (TeslaMate)**:
+
 ```yaml
 env:
   - name: DATABASE_HOST
@@ -138,6 +140,7 @@ sudo kubectl exec -n database postgresql-0 -- psql -U postgres -c "SELECT datnam
 ## Scaling Considerations
 
 This is a single-instance PostgreSQL deployment. For high availability:
+
 - Consider PostgreSQL operators (e.g., CloudNativePG, Zalando Postgres Operator)
 - Implement automated backups
 - Set up replication
@@ -178,6 +181,7 @@ If the pod is deleted, data persists and will be reused when pod restarts.
 ### PostgreSQL Version Upgrades
 
 When upgrading PostgreSQL major versions:
+
 1. Backup all databases
 2. Use pg_upgrade or logical replication
 3. Test thoroughly before production cutover

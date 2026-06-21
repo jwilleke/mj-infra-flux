@@ -21,6 +21,7 @@ Your infrastructure currently lacks comprehensive health checking and proactive 
 ## Current Monitoring State
 
 ### What's Working ✅
+
 - Prometheus metrics collection (Kubernetes pods, nodes, system metrics)
 - Grafana visualization dashboards
 - Alertmanager with Telegram notifications
@@ -29,6 +30,7 @@ Your infrastructure currently lacks comprehensive health checking and proactive 
 - Blackbox exporter (deployed but underutilized)
 
 ### Critical Gaps ❌
+
 1. **No application health checks** - Services can fail silently
 2. **No dependency monitoring** - PostgreSQL/MQTT failures not detected
 3. **No external endpoint monitoring** - Public services not checked from outside
@@ -46,6 +48,7 @@ Your infrastructure currently lacks comprehensive health checking and proactive 
 **Symptoms**: No vehicle data collection since November 2024
 
 **Monitoring Gaps**:
+
 - No alert if TeslaMate pod crashes/restarts
 - No check if PostgreSQL connection fails
 - No alert if MQTT broker becomes unavailable
@@ -54,6 +57,7 @@ Your infrastructure currently lacks comprehensive health checking and proactive 
 **Root Cause Likely**: Silent failure in one of the dependencies
 
 **Alert Required**:
+
 ```yaml
 alert: TeslaMateDataCollectionFailed
 expr: increase(teslamate_api_calls_total[10m]) == 0
@@ -65,9 +69,10 @@ severity: critical
 
 ### Issue #2: AMD Wiki - Server Not Found
 
-**Symptoms**: https://amd.nerdsbythehour.com/ returns "server not found"
+**Symptoms**: <https://amd.nerdsbythehour.com/> returns "server not found"
 
 **Monitoring Gaps**:
+
 - No external HTTP health check on the endpoint
 - No alert if Ingress route misconfigured
 - No alert if pod fails to start
@@ -76,6 +81,7 @@ severity: critical
 **Root Cause**: Service unreachable (DNS, Ingress, or Pod issue)
 
 **Alert Required**:
+
 ```yaml
 alert: ServiceEndpointDown
 expr: probe_success{endpoint="amd"} == 0
@@ -89,9 +95,10 @@ annotations:
 
 ### Issue #3: JimsWiki - 404 Error
 
-**Symptoms**: https://jimswiki.nerdsbythehour.com/ returns 404
+**Symptoms**: <https://jimswiki.nerdsbythehour.com/> returns 404
 
 **Monitoring Gaps**:
+
 - No alert for application initialization failures
 - No check if NFS mount is accessible
 - No monitoring of disk space
@@ -100,6 +107,7 @@ annotations:
 **Root Cause**: Likely NFS mount unmounted or data corruption
 
 **Alert Required**:
+
 ```yaml
 alert: JimsWikiApplicationError
 expr: probe_http_status_code{endpoint="jimswiki"} != 200
@@ -114,6 +122,7 @@ severity: critical
 **Symptoms**: "Replaying WAL (28/805)" message, extended startup
 
 **Monitoring Gaps**:
+
 - No alert if Prometheus takes too long to start
 - No monitoring of WAL replay progress
 - No alert for unclean shutdown
@@ -121,6 +130,7 @@ severity: critical
 **Root Cause**: Previous crash or hard shutdown
 
 **Alert Required**:
+
 ```yaml
 alert: PrometheusStartupDelayed
 expr: time() - prometheus_tsdb_symbol_table_size_bytes > 600 AND prometheus_tsdb_wal_replay_status != 1
@@ -135,6 +145,7 @@ severity: warning
 **Symptoms**: TeslaMate dashboard link redirects to Grafana login instead of serving dashboard
 
 **Monitoring Gaps**:
+
 - No health check for Grafana-Prometheus datasource connection
 - No alert if authentication middleware fails
 - No check if Authentik is accessible
@@ -142,6 +153,7 @@ severity: warning
 **Root Cause**: Authentik session/authentication misconfiguration
 
 **Alert Required**:
+
 ```yaml
 alert: GrafanaAuthenticationFailure
 expr: increase(grafana_dashboard_access_total{status="401"}[5m]) > 10
@@ -156,6 +168,7 @@ severity: warning
 **Symptoms**: "Unable to connect to Home Assistant. Retrying in 23 seconds..."
 
 **Monitoring Gaps**:
+
 - No alert for pod crash/restart
 - No check if port binding failed
 - No alert for OOM kills
@@ -164,6 +177,7 @@ severity: warning
 **Root Cause**: Pod not running or not responding on configured port
 
 **Alert Required**:
+
 ```yaml
 alert: HomeAssistantPodDown
 expr: up{job="home-assistant"} == 0
@@ -440,12 +454,14 @@ groups:
 **Recommended**: Deploy Loki + Promtail for centralized logging
 
 **Benefits**:
+
 - Single source for all pod logs
 - Search by labels (namespace, pod, container)
 - Linked to Prometheus metrics
 - Retention and compression
 
 **Implementation Steps**:
+
 1. Deploy Promtail to collect logs from all pods (DaemonSet)
 2. Deploy Loki to store logs
 3. Add Loki as Grafana datasource
@@ -458,6 +474,7 @@ groups:
 **Create these alert rule files**:
 
 `apps/production/monitoring/prometheus/config/alerting-rules.kubernetes.yaml`:
+
 ```yaml
 groups:
   - name: kubernetes_alerts
@@ -506,6 +523,7 @@ groups:
 **Create Service Health Dashboard in Grafana**:
 
 Components:
+
 - Service status table (probe_success by instance)
 - Availability % for each service (past 24h, 7d, 30d)
 - Response time graph
@@ -518,6 +536,7 @@ Components:
 ## Implementation Roadmap
 
 ### Phase 1: Immediate (Week 1-2) - CRITICAL
+
 - [ ] Enable Blackbox monitoring for public endpoints
 - [ ] Add alert rules for endpoint failures
 - [ ] Add TeslaMate metrics scraping
@@ -525,6 +544,7 @@ Components:
 - [ ] Test Telegram notifications work for critical alerts
 
 ### Phase 2: Short-term (Week 3-4) - HIGH
+
 - [ ] Add pod health/restart tracking
 - [ ] Create Kubernetes cluster health rules
 - [ ] Add JimsWiki/AMD Wiki application-level checks
@@ -532,12 +552,14 @@ Components:
 - [ ] Document runbooks for each alert
 
 ### Phase 3: Medium-term (Month 2) - MEDIUM
+
 - [ ] Deploy log aggregation (Loki + Promtail)
 - [ ] Create central status dashboard
 - [ ] Add SLA/uptime tracking
 - [ ] Set up trace collection (optional)
 
 ### Phase 4: Long-term (Month 3+) - LOW
+
 - [ ] Service mesh observability (Istio/Linkerd)
 - [ ] Advanced anomaly detection
 - [ ] Cost tracking per service
@@ -586,6 +608,7 @@ Components:
 ## Files to Create/Modify
 
 ### New Files
+
 ```
 apps/production/monitoring/prometheus/config/
 ├── scrape-configs.blackbox.yaml        # Endpoint monitoring
@@ -598,6 +621,7 @@ apps/production/monitoring/prometheus/config/
 ```
 
 ### Modified Files
+
 ```
 apps/production/monitoring/prometheus/kustomization.yaml  # Include new configs
 apps/production/teslamate/teslamate-deployment.yaml       # Add Prometheus metrics
@@ -618,8 +642,7 @@ apps/production/monitoring/grafana/                       # Add health dashboard
 
 ## References
 
-- Prometheus alerting rules: https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
-- Blackbox exporter: https://github.com/prometheus/blackbox_exporter
-- Alertmanager routing: https://prometheus.io/docs/alerting/latest/configuration/
-- Grafana dashboards: https://grafana.com/grafana/dashboards/
-
+- Prometheus alerting rules: <https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/>
+- Blackbox exporter: <https://github.com/prometheus/blackbox_exporter>
+- Alertmanager routing: <https://prometheus.io/docs/alerting/latest/configuration/>
+- Grafana dashboards: <https://grafana.com/grafana/dashboards/>

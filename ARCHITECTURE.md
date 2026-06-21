@@ -14,9 +14,10 @@ Complete Kubernetes (k3s) infrastructure running on `192.168.68.71` (deby) with 
 - **Cluster IP:** 192.168.68.71 (hostname: deby)
 
 ### Coding Standard:** DRY (Don't Repeat Yourself) principle
+
 - If logic repeats more than twice, refactor into reusable components
- - Abstract repeated logic into functions, classes, or modules
- - Improves maintainability, reduces bugs, simplifies updates
+- Abstract repeated logic into functions, classes, or modules
+- Improves maintainability, reduces bugs, simplifies updates
 
 ### Key Technologies
 
@@ -43,12 +44,14 @@ Complete Kubernetes (k3s) infrastructure running on `192.168.68.71` (deby) with 
 ### Public Access (No Authentication)
 
 **Landing Page:** `https://nerdsbythehour.com`
+
 - `/` - Main landing page
 - `/guest` - Guest page with public service links
   - OpenSpeedTest (`/speed`)
   - whoami (`https://deby.nerdsbythehour.com`)
 
 **CDN:** `https://cdn.nerdsbythehour.com`
+
 - Static asset server for icons, logos, and shared resources
 
 ### Authenticated Access (Authentik SSO)
@@ -56,6 +59,7 @@ Complete Kubernetes (k3s) infrastructure running on `192.168.68.71` (deby) with 
 **Members Portal:** `https://nerdsbythehour.com/members` → Redirects to Authentik User Library
 
 Protected services accessible after Authentik login at `https://auth.nerdsbythehour.com/if/user/#/library`:
+
 - **Home Assistant** - `https://ha.nerdsbythehour.com` (private DNS only)
 - **TeslaMate** - `https://teslamate.nerdsbythehour.com` (vehicle tracking)
 - **Grafana** - `https://grafana.nerdsbythehour.com` (dashboards)
@@ -158,6 +162,7 @@ Authentik Protected (ForwardAuth - TO BE ENABLED)
 ### Authentik Integration (Pending)
 
 Each protected service will have:
+
 1. **Authentik Application** - Configured in Authentik UI
 2. **Authentik Provider** - ForwardAuth provider with auth URL
 3. **Traefik Middleware** - ForwardAuth middleware CRD
@@ -211,6 +216,7 @@ k3s Traefik Ingress (192.168.68.71)
 ### Public DNS (Cloudflare)
 
 Points to your public IP:
+
 - `nerdsbythehour.com` → Public IP
 - `*.nerdsbythehour.com` → Public IP (includes cdn.nerdsbythehour.com)
 - Port forward 443 → 192.168.68.71:443
@@ -218,9 +224,11 @@ Points to your public IP:
 ### Private DNS (Local Network Only)
 
 Internal services that don't need public access:
+
 - `ha.nerdsbythehour.com` → `192.168.68.71` (local DNS only)
 
 Configure in:
+
 - Router DNS override, or
 - Pi-hole local DNS, or
 - `/etc/hosts` on client machines
@@ -228,21 +236,25 @@ Configure in:
 ## Security Model
 
 ### Public Layer
+
 - Let's Encrypt TLS certificates
 - Cloudflare DDoS protection (optional)
 - Rate limiting (Traefik)
 
 ### Authentication Layer
+
 - Authentik SSO for all protected services
 - Single sign-on across all apps
 - Group-based access control
 
 ### Application Layer
+
 - Each service runs in isolated namespace
 - Network policies (optional - can be added)
 - RBAC for Kubernetes resources
 
 ### Secrets Management
+
 - SOPS + Age encryption for secrets in git
 - Cluster-only secrets for sensitive data
 - Never commit plaintext secrets
@@ -250,17 +262,20 @@ Configure in:
 ## Migration Status
 
 ### ✅ Phase 1: Stateless Applications
+
 - Landing page
 - OpenSpeedTest
 - whoami
 
 ### ✅ Phase 2: Shared Infrastructure + TeslaMate
+
 - PostgreSQL
 - Mosquitto MQTT
 - Grafana
 - TeslaMate (with historical data)
 
 ### ✅ Phase 4: Home Assistant Proxy
+
 - External service proxy configured
 - Ready for Authentik integration
 
@@ -269,6 +284,7 @@ Configure in:
 ### 1. Authentik ForwardAuth Configuration
 
 Create ForwardAuth middleware and enable on:
+
 - [ ] Landing page `/members`
 - [ ] TeslaMate
 - [ ] Grafana
@@ -277,6 +293,7 @@ Create ForwardAuth middleware and enable on:
 ### 2. Home Assistant Trusted Proxies
 
 Update HA configuration to trust k3s:
+
 ```yaml
 http:
   trusted_proxies:
@@ -287,6 +304,7 @@ http:
 ### 3. Docker Cleanup (Optional)
 
 After verification period:
+
 - Stop Docker containers
 - Remove unused images
 - Archive `/opt/traefik/` for reference
@@ -296,11 +314,13 @@ After verification period:
 ### Critical Data Backups
 
 **Must backup:**
+
 1. Config: `/home/jim/docs/data/systems/mj-infra-flux/`
-3. PostgreSQL: Database dumps from `/mnt/local-k3s-data/postgresql/`
-4. Kubernetes secrets: Export and store securely
+2. PostgreSQL: Database dumps from `/mnt/local-k3s-data/postgresql/`
+3. Kubernetes secrets: Export and store securely
 
 **Can regenerate:**
+
 - Logs
 - Lucene indices
 - Container images (rebuild from Dockerfile)

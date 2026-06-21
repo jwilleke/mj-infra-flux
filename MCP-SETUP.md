@@ -5,11 +5,13 @@ This repository uses MCP servers to enable Claude Code to interact with external
 ## Configured MCP Servers
 
 ### 1. jimsmcp
+
 Custom MCP server for managing infrastructure.
 
 **Location:** `apps/production/jimsmcp/`
 
 ### 2. Authentik MCP Server
+
 Provides full API access to Authentik for automated user, group, and application management.
 
 **Configuration:** Encrypted with SOPS+Age
@@ -20,6 +22,7 @@ Provides full API access to Authentik for automated user, group, and application
 ### Prerequisites
 
 1. **SOPS installed:**
+
    ```bash
    # Already installed at /usr/local/bin/sops
    sops --version
@@ -31,6 +34,7 @@ Provides full API access to Authentik for automated user, group, and application
    - The private key is also stored in Kubernetes secret: `flux-system/sops-age`
 
 3. **jq installed:**
+
    ```bash
    sudo apt install jq
    ```
@@ -44,6 +48,7 @@ Run the update script to decrypt credentials and configure MCP:
 ```
 
 This script:
+
 1. Decrypts `.env.secret.mcp-authentik.encrypted` using SOPS+Age
 2. Extracts `AUTHENTIK_BASE_URL` and `AUTHENTIK_TOKEN`
 3. Updates `~/.config/claude-code/mcp.json` with the configuration
@@ -71,6 +76,7 @@ After running the update script, restart Claude Code to load the MCP servers:
 `.env.secret.mcp-authentik.encrypted` (committed to git)
 
 Contains:
+
 - `AUTHENTIK_BASE_URL` - Authentik instance URL
 - `AUTHENTIK_TOKEN` - API token with full access
 
@@ -116,12 +122,13 @@ chmod 600 home-infra-private.agekey
 ### Rotate Authentik API Token
 
 1. **Create new token in Authentik:**
-   - Go to: https://auth.nerdsbythehour.com
+   - Go to: <https://auth.nerdsbythehour.com>
    - Navigate to Directory → Tokens
    - Create new token with API intent
    - Copy the token
 
 2. **Update encrypted file:**
+
    ```bash
    # Create temp env file
    cat > /tmp/mcp-authentik.env <<EOF
@@ -142,11 +149,13 @@ chmod 600 home-infra-private.agekey
    ```
 
 3. **Update MCP config:**
+
    ```bash
    ./scripts/update-mcp-config.sh
    ```
 
 4. **Commit the new encrypted file:**
+
    ```bash
    git add .env.secret.mcp-authentik.encrypted
    git commit -m "Rotate Authentik MCP token"
@@ -159,33 +168,40 @@ chmod 600 home-infra-private.agekey
 After setup, Claude Code can use these Authentik MCP tools:
 
 ### User Management
+
 - Create, read, update, delete users
 - Manage user attributes and groups
 - Reset passwords
 
 ### Group Management
+
 - Create, read, update, delete groups
 - Manage group memberships
 
 ### Application Management
+
 - Create, read, update, delete applications
 - Configure proxy providers
 - Manage application settings
 
 ### Provider Management
+
 - Create proxy providers
 - Configure OAuth2/OIDC providers
 - Manage provider settings
 
 ### Flow Management
+
 - View and manage authentication flows
 - Configure flow bindings
 
 ### Event Monitoring
+
 - Search and filter events
 - Monitor system activity
 
 ### Token Management
+
 - Create API tokens
 - Manage token permissions
 
@@ -194,16 +210,19 @@ After setup, Claude Code can use these Authentik MCP tools:
 ### MCP Server Not Loading
 
 1. Check config syntax:
+
    ```bash
    cat ~/.config/claude-code/mcp.json | jq .
    ```
 
 2. Verify credentials are decrypted:
+
    ```bash
    ./scripts/update-mcp-config.sh
    ```
 
 3. Check SOPS can decrypt:
+
    ```bash
    export SOPS_AGE_KEY_FILE="$(pwd)/home-infra-private.agekey"
    sops decrypt .env.secret.mcp-authentik.encrypted
@@ -212,6 +231,7 @@ After setup, Claude Code can use these Authentik MCP tools:
 ### Authentication Errors
 
 1. Verify token is valid:
+
    ```bash
    TOKEN=$(sops decrypt --extract '["AUTHENTIK_TOKEN"]' .env.secret.mcp-authentik.encrypted)
    curl -H "Authorization: Bearer $TOKEN" https://auth.nerdsbythehour.com/api/v3/core/users/
@@ -222,12 +242,14 @@ After setup, Claude Code can use these Authentik MCP tools:
 ### Permission Denied Errors
 
 1. Check config file permissions:
+
    ```bash
    ls -l ~/.config/claude-code/mcp.json
    # Should be: -rw------- (600)
    ```
 
 2. Check age key permissions:
+
    ```bash
    ls -l home-infra-private.agekey
    # Should be: -rw------- (600)

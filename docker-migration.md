@@ -9,12 +9,11 @@ Except for:
 - traefik-docker (will be deleted)
 - dashy can be deleted we will use Authentik
 
-Migrated to be in k3s managed by https://github.com/jwilleke/mj-infra-flux (We are in cloned repo)
- 
- 
+Migrated to be in k3s managed by <https://github.com/jwilleke/mj-infra-flux> (We are in cloned repo)
+
 The Landing page should be the "home" page for everyone.
 
-The Members page (MembersPage.tsx) will be replaced with Authentik. (https://auth.nerdsbythehour.com/if/user/#/library)
+The Members page (MembersPage.tsx) will be replaced with Authentik. (<https://auth.nerdsbythehour.com/if/user/#/library>)
 
 The Guests Page (GuestPage.tsx) should contain
 
@@ -30,9 +29,10 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 ### ✅ Phase 1 Complete: Stateless Applications
 
 **C. Landing Page** ✅ COMPLETE
+
 - Status: Deployed to k3s
 - Namespace: `landingpage`
-- URL: https://nerdsbythehour.com
+- URL: <https://nerdsbythehour.com>
 - Routes:
   - `/` - Public landing page
   - `/guest` - Guest page with links to openspeedtest and whoami
@@ -45,9 +45,10 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 - Commit: 2ac59b8
 
 **B. whoami** ✅ COMPLETE
+
 - Status: Migrated from default namespace to GitOps
 - Namespace: `guest-services`
-- URL: https://deby.nerdsbythehour.com
+- URL: <https://deby.nerdsbythehour.com>
 - Changes:
   - Imported into GitOps from manual deployment
   - Moved from default to guest-services namespace
@@ -56,9 +57,10 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 - Commit: 237dea6
 
 **A. openspeedtest** ✅ COMPLETE
+
 - Status: Deployed to k3s
 - Namespace: `guest-services`
-- URL: https://nerdsbythehour.com/speed
+- URL: <https://nerdsbythehour.com/speed>
 - Changes:
   - Built custom image from /opt/traefik/openspeedtest
   - Imported to k3s containerd
@@ -69,6 +71,7 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 ### ✅ Phase 2 Complete: Shared Infrastructure & TeslaMate
 
 **PostgreSQL** (Shared Instance) ✅ COMPLETE
+
 - Status: Deployed to k3s
 - Namespace: `database`
 - Service: `postgresql.database.svc.cluster.local:5432`
@@ -77,6 +80,7 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 - Commit: 6d1dd39
 
 **Mosquitto MQTT** (Shared Broker) ✅ COMPLETE
+
 - Status: Deployed to k3s
 - Namespace: `messaging`
 - Service: `mosquitto.messaging.svc.cluster.local:1883`
@@ -85,17 +89,19 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 - Commit: 6d1dd39
 
 **Grafana** (Shared Dashboards) ✅ COMPLETE
+
 - Status: Deployed to k3s
 - Namespace: `monitoring`
-- URL: https://grafana.jimwilleke.com
+- URL: <https://grafana.jimwilleke.com>
 - Storage: `/mnt/local-k3s-data/grafana`
 - Ready for TeslaMate datasource
 - Commit: 3db228c
 
 **TeslaMate** ✅ COMPLETE
+
 - Status: Deployed to k3s
 - Namespace: `teslamate`
-- URL: https://teslamate.nerdsbythehour.com
+- URL: <https://teslamate.nerdsbythehour.com>
 - Connected to: Shared PostgreSQL + Shared MQTT
 - Data migration: Ready (instructions in README)
 - Commit: 3db228c
@@ -103,9 +109,10 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 ### ✅ Phase 3 Complete: jimswiki
 
 **jimswiki** ✅ COMPLETE
+
 - Status: Deployed to k3s
 - Namespace: `jimswiki`
-- URL: https://nerdsbythehour.com/jimswiki/
+- URL: <https://nerdsbythehour.com/jimswiki/>
 - Data: Host mount at /home/jim/docs/data/systems/wikis/jimswiki (38,004 pages, 3.4GB)
 - Image: `aug12018/jimswiki:latest` (imported to k3s)
 - Context: Webapp deployed at `/jimswiki` (not ROOT)
@@ -120,6 +127,7 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 ### 🗑️ To Be Removed from Docker
 
 After all migrations complete:
+
 - Stop: `cd /opt/traefik && docker-compose down`
 - Remove: authelia, dashy, traefik containers
 - Archive: /opt/traefik directory for reference
@@ -127,16 +135,19 @@ After all migrations complete:
 ### 📝 Current Status
 
 **Migration Status**: Phase 3 COMPLETE ✅ - ALL MIGRATIONS DONE!
+
 - ✅ Phase 1: Stateless apps (landingpage, openspeedtest, whoami)
 - ✅ Phase 2: Shared infrastructure (PostgreSQL, Mosquitto, Grafana) + TeslaMate
 - ✅ Phase 3: jimswiki (38,004 pages migrated)
 
 **Docker Services**: All stopped
+
 - Running on same host with same IP (192.168.68.71)
 - k3s Traefik ingress handling all traffic
 - No DNS changes needed - seamless cutover
 
 **Verification**:
+
 ```bash
 docker ps -a  # Shows all containers exited
 sudo kubectl get ingress -A  # Shows k3s ingresses active
@@ -158,7 +169,7 @@ sudo kubectl get pods -A  # Shows all k3s services running
 
 3. **jimswiki Migration** ✅ COMPLETE:
    - Deployed to k3s with all 38,004 pages
-   - Running at https://nerdsbythehour.com/jimswiki/
+   - Running at <https://nerdsbythehour.com/jimswiki/>
    - All data paths preserved
    - Details: `apps/production/jimswiki/README.md`
 

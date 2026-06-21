@@ -41,7 +41,7 @@ Then:
 - Rules live in `.markdownlint.jsonc`; the editor, CLI, CI and agents all read that one file.
 <!-- KIT:END -->
 
-# Project Context for AI Agents
+## Project Context for AI Agents
 
 This file serves as the single source of truth for project context and state. All AI agents (Claude, Gemini, etc.) should read this file first when working on this project.
 
@@ -67,7 +67,7 @@ Implications:
 ## Jim's Global Preference
 
 - Remeber this is Using FLUX CI
-In all interactions and commit messages 
+In all interactions and commit messages
 - Be concise and sacrifice grammar for consistion
 - We do Test-Driven-Developement
 - DRY (Don't Repeat Yourself) principle in Documentation and Code. Refer to other Documents.
@@ -143,6 +143,7 @@ mj-infra-flux/
 - **docker-migration.md** - Migration strategy from Docker to Kubernetes
 
 **Application READMEs:**
+
 - Each app in `apps/production/*/README.md` has detailed documentation
 
 ## Key Principles (MANDATORY)
@@ -156,6 +157,7 @@ mj-infra-flux/
 - ❌ Must justify why Kustomize won't work before considering Helm
 
 **Good Kustomize Examples:**
+
 - `apps/production/jimswiki/` - Complex app with 38K+ files
 - `apps/production/teslamate/` - Multi-component application
 - `apps/production/database/` - Shared PostgreSQL
@@ -168,6 +170,7 @@ mj-infra-flux/
 **Approved methods (in priority order):**
 
 1. **SOPS + Age encryption** (PREFERRED)
+
    ```bash
    # Store secrets in .env files
    # Encrypt with: ./scripts/encrypt-env-files.sh <directory>
@@ -175,6 +178,7 @@ mj-infra-flux/
    ```
 
 2. **Cluster-only Kubernetes Secrets**
+
    ```bash
    # Create directly in cluster (NOT in git)
    kubectl create secret generic my-secret -n namespace --from-literal=key="value"
@@ -188,6 +192,7 @@ mj-infra-flux/
 ### 3. Documentation Requirements
 
 Every application MUST have a README.md with:
+
 1. Overview - What it does
 2. URL - Where it's accessed
 3. Data Paths - Where persistent data is stored
@@ -202,6 +207,7 @@ Every application MUST have a README.md with:
 ### 4. Testing Before Commit
 
 **Always validate before committing:**
+
 ```bash
 # 1. Validate Kustomize
 kubectl kustomize apps/production/myapp/
@@ -222,20 +228,23 @@ kubectl logs -n namespace -l app=myapp
 ## Production Services
 
 ### Core Infrastructure
+
 - **Traefik** (kube-system) - Ingress controller
 - **cert-manager** (cert-manager) - Let's Encrypt certificates
 - **Flux** (flux-system) - GitOps automation
 
 ### Shared Services
+
 - **PostgreSQL** (database) - Shared database for multiple apps
 - **Mosquitto** (messaging) - MQTT broker for IoT
 - **Grafana** (monitoring) - Dashboards and monitoring
 - **Authentik** (authentik) - SSO/IdP for all protected services
 
 ### Applications
+
 - **Landing Page** - Public landing page at nerdsbythehour.com
 - **JimsWiki** - 38,004 pages wiki (JSPWiki)
-- **TeslaMate** - Vehicle tracking 
+- **TeslaMate** - Vehicle tracking
 - **Home Assistant** - Home automation
 - **Hoarder** - Bookmark and content management
 - **Guest Services** - Public services (OpenSpeedTest, whoami)
@@ -247,6 +256,7 @@ kubectl logs -n namespace -l app=myapp
 ## Data Organization
 
 ### NFS Mount (Persistent, Backed Up)
+
 ```
 /home/jim/docs/data/systems/
 ├── mj-infra-flux/          # k3s application data
@@ -261,6 +271,7 @@ kubectl logs -n namespace -l app=myapp
 ```
 
 ### Local SSD (Fast, Ephemeral)
+
 ```
 /mnt/local-k3s-data/
 ├── postgresql/             # PostgreSQL data (8Gi)
@@ -272,6 +283,7 @@ kubectl logs -n namespace -l app=myapp
 ## Common Commands
 
 ### Flux Operations
+
 ```bash
 # Force reconciliation
 flux reconcile kustomization flux-system --with-source
@@ -287,6 +299,7 @@ flux reconcile kustomization apps
 ```
 
 ### Kustomize Operations
+
 ```bash
 # Validate manifests
 kubectl kustomize apps/production/myapp/
@@ -299,6 +312,7 @@ kubectl apply -k apps/production/myapp/
 ```
 
 ### Secret Management
+
 ```bash
 # Encrypt secrets with SOPS + Age
 ./scripts/encrypt-env-files.sh apps/production/myapp/
@@ -309,6 +323,7 @@ kubectl create secret generic my-secret -n namespace \
 ```
 
 ### Debugging
+
 ```bash
 # Check pod status
 kubectl get pods -n namespace
@@ -326,24 +341,28 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 ## Key Decisions
 
 ### Migration to Kubernetes
+
 - **Decision:** Migrate all Docker Compose services to k3s
 - **Status:** Phase 3 Complete - All services migrated
 - **Rationale:** Better orchestration, scaling, and GitOps integration
 - **Documentation:** `docker-migration.md`
 
 ### Kustomize Over Helm
+
 - **Decision:** Use Kustomize for all new deployments
 - **Rationale:** Transparency, simplicity, better GitOps integration
 - **Exception:** Existing Helm charts (e.g., Authentik) acceptable
 - **Documentation:** `DEPLOYMENT-GUIDELINES.md`
 
 ### SOPS + Age for Secrets
+
 - **Decision:** Use SOPS + Age encryption for all secrets in git
 - **Rationale:** Security, audit trail, GitOps compatibility
 - **Alternative:** Cluster-only secrets for highly sensitive data
 - **Documentation:** `SECURITY-INCIDENT.md` (lessons learned)
 
 ### Port Range for Applications
+
 - **Decision:** Run apps within ports 9200-9299 when possible
 - **User/Group:** Run as apps:apps (3003:3003) when possible
 - **Rationale:** Consistency, security, easy firewall rules
@@ -353,6 +372,7 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 > **Frozen as of 2026-05-22.** Operational history is consolidated at [`jwilleke/deby:docs/project_log.md`](https://github.com/jwilleke/deby/blob/master/docs/project_log.md). The entries below are preserved as historical record; do not add new session-shaped entries here.
 
 ### Session: 2025-12-01 (Morning)
+
 - Agent: Claude
 - Work Done:
   - Initialized AGENTS.md with complete project context
@@ -362,9 +382,10 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 - Files Modified: AGENTS.md (created), CLAUDE.md (removed), README.md
 
 ### Session: 2025-12-01 (Afternoon)
+
 - Agent: Claude
 - Work Done:
-  - Fixed amdwiki service (https://amd.nerdsbythehour.com) which was showing "no available server"
+  - Fixed amdwiki service (<https://amd.nerdsbythehour.com>) which was showing "no available server"
   - Rebuilt amdwiki Docker image from source (missing config files)
   - Imported rebuilt image to k3s cluster
   - Copied config files from Docker image to host directory at `/home/jim/docs/data/systems/mj-infra-flux/amdwiki/config/`
@@ -376,6 +397,7 @@ kubectl port-forward -n namespace svc/myservice 8080:80
   - `/home/jim/docs/data/systems/mj-infra-flux/amdwiki/config/app-production-config.json` (added install.completed flag)
 
 ### Session: 2025-12-10 (Evening)
+
 - Agent: Claude
 - Work Done:
   - Fixed Home Assistant proxy connectivity issue (ha.nerdsbythehour.com)
@@ -391,6 +413,7 @@ kubectl port-forward -n namespace svc/myservice 8080:80
   - `apps/production/home-assistant-proxy/ingressroute.yaml` (created, replaces Ingress with proper WebSocket support)
 
 ### Session: 2025-12-11 (Evening)
+
 - Agent: Claude
 - Work Done:
   - Added zero-threat.html static page to landing page unprotected
@@ -405,6 +428,7 @@ kubectl port-forward -n namespace svc/myservice 8080:80
   - `/opt/traefik/landingpage/Dockerfile` (updated to use serve.json for routing control)
 
 ### Session: 2026-05-09 (geohazardwatch image automation end-to-end)
+
 - Agent: Claude Opus 4.7
 - Work Done:
   - Closed issue #64. Image automation now runs end-to-end for geohazardwatch: GHCR scan → ImagePolicy resolves to highest semver in range → fluxcdbot pushes auto-bump commit → Flux reconciles → rolling deploy.
@@ -419,6 +443,7 @@ kubectl port-forward -n namespace svc/myservice 8080:80
   - Re-encrypt `apps/production/monitoring/prometheus/.env.secret.prometheus-self-scrape.encrypted` and `apps/production/monitoring/prometheus-alertmanager/.env.secret.alertmanager.encrypted` from `age1nur86…` to the unified `age1sr8j…` — currently apply as garbled-but-functional env vars; blocks any future "enable SOPS on apps Kustomization" cleanup.
 
 ### Session: 2025-12-11 (Night)
+
 - Agent: Claude
 - Work Done:
   - Reviewed ZeroThreat security scan report for nerdsbythehour.com
@@ -438,11 +463,13 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 **Status:** In Progress - WebSocket failing due to HTTP/2 limitation
 
 **Problem:**
+
 - Home Assistant accessible at ha.nerdsbythehour.com but frontend shows "Unable to connect"
 - Root cause: Traefik's standard Ingress uses HTTP/2, but WebSocket requires HTTP/1.1
 - Traefik's HTTP/2 doesn't support the Upgrade header needed for WebSocket connections
 
 **What's Working:**
+
 - DNS resolution fixed (192.168.68.71 - correct Traefik IP)
 - Home Assistant backend accessible at 192.168.68.20:8123
 - HTTP proxy working through Traefik
@@ -450,15 +477,18 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 - Home Assistant config updated with external/internal URLs
 
 **Solution Applied:**
+
 - Switched from standard Ingress to Traefik IngressRoute
 - IngressRoute properly handles HTTP/1.1 protocol for WebSocket connections
 - Created: `/home/jim/Documents/mj-infra-flux/apps/production/home-assistant-proxy/ingressroute.yaml`
 
 **Next Steps:**
+
 - Verify WebSocket connection works after IngressRoute deployment
 - Test frontend can establish connection to backend API
 
 ### Potential Improvements
+
 - Create port allocation table for all applications (ports 9200-9220)
 - Monitor for security updates on all containers
 - Review and optimize resource allocations as needed
@@ -495,10 +525,12 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 ### Security Model
 
 **Authentication Flow:**
+
 - Public services: No authentication (landing page, guest services)
 - Protected services: Authentik ForwardAuth (jimswiki, teslamate, grafana, home assistant)
 
 **Secrets Management:**
+
 - SOPS + Age encryption for secrets in git
 - Cluster-only secrets for highly sensitive data
 - Never commit plaintext secrets (see SECURITY-INCIDENT.md)
@@ -506,6 +538,7 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 ### Resource Ownership
 
 Prefer running as apps:apps (3003:3003):
+
 ```yaml
 securityContext:
   runAsUser: 3003
@@ -581,10 +614,10 @@ kubectl get pods -A
 
 ## References
 
-- **GitHub Repository:** https://github.com/jwilleke/mj-infra-flux
-- **Original Inspiration:** https://github.com/activescott/home-infra-k8s-flux
-- **Flux Documentation:** https://fluxcd.io/
-- **Kustomize Documentation:** https://kustomize.io/
+- **GitHub Repository:** <https://github.com/jwilleke/mj-infra-flux>
+- **Original Inspiration:** <https://github.com/activescott/home-infra-k8s-flux>
+- **Flux Documentation:** <https://fluxcd.io/>
+- **Kustomize Documentation:** <https://kustomize.io/>
 
 ---
 

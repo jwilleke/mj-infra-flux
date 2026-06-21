@@ -1,6 +1,6 @@
 # traefik ingress
 
-K3S bundles Traefik for it's ingress controller as explained [here](https://docs.k3s.io/networking#traefik-ingress-controller) and implemented [here](https://github.com/k3s-io/k3s/blob/v1.25.3%2Bk3s1/manifests/traefik.yaml). However, on TrueNAS when they install k3s they disable/remove the traefik ingress controller. so `Ingress` resources have no effect. This adds Traefik back as the default ingress controller .
+K3S bundles Traefik for it's ingress controller as explained in the [K3s networking docs](https://docs.k3s.io/networking#traefik-ingress-controller) and implemented in the [K3s Traefik manifest](https://github.com/k3s-io/k3s/blob/v1.25.3%2Bk3s1/manifests/traefik.yaml). However, on TrueNAS when they install k3s they disable/remove the traefik ingress controller. so `Ingress` resources have no effect. This adds Traefik back as the default ingress controller .
 
 ## Helm
 

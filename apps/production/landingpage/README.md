@@ -5,6 +5,7 @@ Main landing page for nerdsbythehour.com built with React and Vite.
 ## Overview
 
 The landing page serves three main routes:
+
 - `/` - Public landing page
 - `/guest` - Guest access page with links to:
   - OpenSpeedTest at `/speed`
@@ -18,22 +19,26 @@ The landing page serves three main routes:
 ### Build and Deploy Process
 
 1. **Build the Docker image** (from `/opt/traefik/landingpage`):
+
    ```bash
    cd /opt/traefik/landingpage
    docker build -t landingpage:latest .
    ```
 
 2. **Export the image for k3s**:
+
    ```bash
    docker save landingpage:latest -o /tmp/landingpage.tar
    ```
 
 3. **Import into k3s**:
+
    ```bash
    sudo k3s ctr images import /tmp/landingpage.tar
    ```
 
 4. **Apply with Flux** (or kubectl):
+
    ```bash
    # Flux will automatically pick up changes from git
    # Or manually apply:
@@ -47,6 +52,7 @@ When you make changes to the React source code:
 1. Rebuild the Docker image with a new tag or updated content
 2. Re-export and re-import to k3s
 3. Restart the deployment:
+
    ```bash
    sudo kubectl rollout restart deployment/landingpage -n landingpage
    ```
@@ -68,6 +74,7 @@ When you make changes to the React source code:
 The `/members` route uses a Traefik middleware to redirect users directly to the Authentik User Library at `https://auth.nerdsbythehour.com/if/user/#/library`. This eliminates the need for a separate Members page since Authentik already provides a user portal showing all authorized applications.
 
 **Implementation**:
+
 - `middleware-redirect-members.yaml` - Traefik redirectRegex middleware
 - Permanent (301) redirect to Authentik library
 - Users authenticate at Authentik and see their application library
@@ -82,6 +89,7 @@ The `/members` route uses a Traefik middleware to redirect users directly to the
 ## Monitoring
 
 Health checks:
+
 - Liveness probe: HTTP GET `/` every 30s
 - Readiness probe: HTTP GET `/` every 10s
 
@@ -89,7 +97,8 @@ Health checks:
 
 The React application source is located at `/opt/traefik/landingpage/` on the host.
 
-### Key Files:
+### Key Files
+
 - `src/App.tsx` - React Router configuration
 - `src/pages/LandingPage.tsx` - Main landing page
 - `src/pages/GuestPage.tsx` - Guest access page

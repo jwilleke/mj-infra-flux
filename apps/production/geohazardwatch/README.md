@@ -48,6 +48,7 @@ kubectl -n geohazardwatch create secret generic geohazardwatch-secrets \
 - The hostPath `/mnt/tank/jims/data/systems/geohazardwatch` is auto-created (`DirectoryOrCreate`). Confirm permissions allow uid/gid 1000 to write.
 - Default credentials `admin` / `admin123` — change immediately after first access.
 - Run an initial data import once before relying on the site:
+
   ```bash
   kubectl -n geohazardwatch create job --from=cronjob/geohazardwatch-data-refresh initial-import
   ```

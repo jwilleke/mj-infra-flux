@@ -3,7 +3,8 @@
 ## Current Status
 
 ✅ **Completed:**
-- Authentik deployed via Flux at https://auth.nerdsbythehour.com
+
+- Authentik deployed via Flux at <https://auth.nerdsbythehour.com>
 - PostgreSQL and Redis persistence configured
 - Let's Encrypt certificate issued
 - Traefik ForwardAuth middleware created
@@ -12,21 +13,23 @@
 > **Note:** This guide was originally written using Filebrowser as the worked example for an Authentik-protected application. That deployment was removed on 2026-05-05 (the SMB stack it served was orphaned — see the related cleanup commit). The Step 1 / Step 2 / Step 3 instructions below still reference Filebrowser by name; treat them as historical reference for the shape of the setup, and substitute your own application's name and URLs when adapting.
 
 🔧 **Pending Configuration:**
+
 - Complete OAuth2/Proxy Provider setup in Authentik UI (steps below)
 - Test authentication flow
 
 ## Initial Setup
 
-1. Access Authentik at: https://auth.nerdsbythehour.com/if/flow/initial-setup/
+1. Access Authentik at: <https://auth.nerdsbythehour.com/if/flow/initial-setup/>
 2. Set password for the default `akadmin` user
 3. Login with `akadmin` credentials
 
 ## Configure OAuth2/Proxy Provider for Traefik ForwardAuth
 
 **To access the Admin Interface:**
+
 - Click on your username in the top right corner
 - Select **Admin Interface** from the dropdown
-- OR directly access: https://auth.nerdsbythehour.com/if/admin/
+- OR directly access: <https://auth.nerdsbythehour.com/if/admin/>
 
 ### Step 1: Create Provider
 
@@ -73,6 +76,7 @@
 The ForwardAuth middleware has been created in the cluster. To protect a service:
 
 1. Add the middleware annotation to your Ingress:
+
    ```yaml
    annotations:
      traefik.ingress.kubernetes.io/router.middlewares: authentik-authentik-forwardauth@kubernetescrd
@@ -84,12 +88,12 @@ Other services in the cluster apply the Authentik ForwardAuth middleware directl
 
 Unprotected (accessible without login):
 
-- **Whoami**: https://nerdsbythehour.com and https://deby.nerdsbythehour.com
+- **Whoami**: <https://nerdsbythehour.com> and <https://deby.nerdsbythehour.com>
 
 ## Important URLs
 
-- **Authentik Setup**: https://auth.nerdsbythehour.com/if/flow/initial-setup/
-- **Authentik Admin Portal**: https://auth.nerdsbythehour.com/if/admin/
+- **Authentik Setup**: <https://auth.nerdsbythehour.com/if/flow/initial-setup/>
+- **Authentik Admin Portal**: <https://auth.nerdsbythehour.com/if/admin/>
 
 ## Default Credentials
 
@@ -98,6 +102,7 @@ Unprotected (accessible without login):
 ## DNS Configuration
 
 All DNS records are configured in Cloudflare with Proxy enabled (orange cloud):
+
 - auth.nerdsbythehour.com → Cloudflare Proxy → 174.105.183.192 → 192.168.68.71
 
 ## Troubleshooting
@@ -105,6 +110,7 @@ All DNS records are configured in Cloudflare with Proxy enabled (orange cloud):
 ### "Not Found" Error from Authentik
 
 If you see an Authentik-branded "Not Found" page when accessing a protected service:
+
 - ✅ **Good**: ForwardAuth middleware is working and intercepting requests
 - ❌ **Issue**: OAuth2/Proxy Provider configuration is incomplete or missing
 
@@ -113,6 +119,7 @@ If you see an Authentik-branded "Not Found" page when accessing a protected serv
 ### Version-Specific UI Differences
 
 You're running Authentik **2025.10.1**. The UI and options may differ from older guides:
+
 - Look for "Proxy" or "Forward auth" when creating providers
 - Some versions have "Forward auth (single application)" vs "Forward auth (domain level)"
 - Use "Forward auth (single application)" if available
