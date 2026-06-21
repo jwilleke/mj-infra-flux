@@ -5,18 +5,20 @@ This guide walks you through configuring Authentik to work with Home Assistant.
 ## Status
 
 ✅ **Technical Setup Complete**
+
 - Traefik ingress configured with ForwardAuth middleware
 - External service proxy configured (192.168.68.20:8123)
 - Let's Encrypt certificate issued
 
 ⏳ **Authentik Configuration Required**
+
 - Create Proxy Provider application in Authentik
 - Configure Home Assistant trusted proxies
 
 ## Step 1: Create Authentik Proxy Provider
 
 1. **Log into Authentik**
-   - URL: https://auth.nerdsbythehour.com
+   - URL: <https://auth.nerdsbythehour.com>
    - Login as administrator
 
 2. **Navigate to Applications**
@@ -66,12 +68,14 @@ Home Assistant needs to trust the reverse proxy headers from Traefik/Authentik.
 ### Edit configuration.yaml
 
 1. **SSH to Home Assistant host:**
+
    ```bash
    ssh 192.168.68.20
    # or access the Home Assistant terminal
    ```
 
 2. **Edit `/homeassistant/configuration.yaml`:**
+
    ```yaml
    http:
      use_x_forwarded_for: true
@@ -88,7 +92,7 @@ Home Assistant needs to trust the reverse proxy headers from Traefik/Authentik.
 ## Step 3: Test Access
 
 1. **Open browser in private/incognito mode**
-   - Navigate to: https://ha.nerdsbythehour.com
+   - Navigate to: <https://ha.nerdsbythehour.com>
 
 2. **Expected Flow:**
    - You should be redirected to Authentik login
@@ -109,9 +113,10 @@ By default, Home Assistant still requires its own authentication after passing t
 
 1. **Install the custom component:**
    - Add via HACS or manually install `hass-auth-header`
-   - Reference: https://github.com/BeryJu/hass-auth-header
+   - Reference: <https://github.com/BeryJu/hass-auth-header>
 
 2. **Configure in Home Assistant:**
+
    ```yaml
    # configuration.yaml
    auth_header:
@@ -152,6 +157,7 @@ curl -I -k https://ha.nerdsbythehour.com
 ```
 
 You should see headers like:
+
 ```
 x-authentik-id: <uuid>
 x-powered-by: authentik
@@ -164,6 +170,7 @@ sudo kubectl get certificate -n home-assistant-proxy
 ```
 
 Should show:
+
 ```
 NAME                  READY   SECRET               AGE
 home-assistant-cert   True    home-assistant-tls   1d
@@ -176,6 +183,7 @@ sudo kubectl get ingress -n home-assistant-proxy
 ```
 
 Should show:
+
 ```
 NAME             CLASS     HOSTS                   ADDRESS         PORTS
 home-assistant   traefik   ha.nerdsbythehour.com   192.168.68.71   80, 443
@@ -205,6 +213,6 @@ Traefik → home-assistant-external Service
 
 ## Related Documentation
 
-- Authentik Home Assistant Integration: https://integrations.goauthentik.io/miscellaneous/home-assistant/
-- Home Assistant HTTP Integration: https://www.home-assistant.io/integrations/http/
-- Traefik ForwardAuth: https://doc.traefik.io/traefik/middlewares/http/forwardauth/
+- Authentik Home Assistant Integration: <https://integrations.goauthentik.io/miscellaneous/home-assistant/>
+- Home Assistant HTTP Integration: <https://www.home-assistant.io/integrations/http/>
+- Traefik ForwardAuth: <https://doc.traefik.io/traefik/middlewares/http/forwardauth/>

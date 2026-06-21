@@ -5,18 +5,20 @@ Public-facing services that don't require authentication.
 ## Services
 
 ### whoami
+
 Simple HTTP service that displays request information including IP address, headers, and connection details.
 
-- **URL**: https://deby.nerdsbythehour.com
+- **URL**: <https://deby.nerdsbythehour.com>
 - **Image**: traefik/whoami:latest
 - **Authentication**: None (public)
 - **Purpose**: Debugging and connection information display
 - **Security**: Runs as apps:apps (3003:3003)
 
 ### openspeedtest
+
 Self-hosted network speed testing tool for measuring upload and download speeds.
 
-- **URL**: https://nerdsbythehour.com/speed
+- **URL**: <https://nerdsbythehour.com/speed>
 - **Image**: Custom build from /opt/traefik/openspeedtest
 - **Authentication**: None (public)
 - **Purpose**: Network speed testing
@@ -50,6 +52,7 @@ When making changes to the OpenSpeedTest source or configuration:
 1. Rebuild the image
 2. Re-import to k3s
 3. Restart the deployment:
+
    ```bash
    sudo kubectl rollout restart deployment/openspeedtest -n guest-services
    ```

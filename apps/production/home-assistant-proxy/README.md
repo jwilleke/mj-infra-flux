@@ -4,7 +4,7 @@ Proxy for external Home Assistant instance with Authentik authentication.
 
 ## Overview
 
-- **URL:** https://ha.nerdsbythehour.com
+- **URL:** <https://ha.nerdsbythehour.com>
 - **Backend:** 192.168.68.20:8123 (external host on local network)
 - **Type:** External Service Proxy (Home Assistant runs outside k3s)
 - **Security:** Protected by Authentik ForwardAuth (to be enabled)
@@ -74,7 +74,8 @@ curl -I https://ha.nerdsbythehour.com
 ### Architecture
 
 This setup uses Authentik as a forward authentication proxy:
-1. User requests https://ha.nerdsbythehour.com
+
+1. User requests <https://ha.nerdsbythehour.com>
 2. Traefik forwards authentication to Authentik
 3. If authenticated, Authentik passes request to Home Assistant with user headers
 4. Home Assistant trusts the headers from Authentik
@@ -85,7 +86,7 @@ This setup uses Authentik as a forward authentication proxy:
 
 Create a Proxy Provider application in Authentik:
 
-1. Log into Authentik at https://auth.nerdsbythehour.com
+1. Log into Authentik at <https://auth.nerdsbythehour.com>
 2. Navigate to **Applications > Applications**
 3. Click **Create with Provider**
 4. Select **Proxy** as provider type
@@ -102,6 +103,7 @@ Home Assistant needs to trust the proxy headers from Authentik:
 
 1. SSH to the Home Assistant host (192.168.68.20)
 2. Edit `/homeassistant/configuration.yaml`:
+
    ```yaml
    http:
      use_x_forwarded_for: true
@@ -110,6 +112,7 @@ Home Assistant needs to trust the proxy headers from Authentik:
        - 10.43.0.0/16  # k3s service network
        - 192.168.68.71 # k3s host (deby)
    ```
+
 3. Restart Home Assistant
 
 #### 3. (Optional) Install hass-auth-header Component
@@ -120,7 +123,7 @@ For automatic user matching based on Authentik username:
 2. Configure it to use `X-authentik-username` header
 3. Users will auto-login if their HA username matches Authentik username
 
-Reference: https://integrations.goauthentik.io/miscellaneous/home-assistant/
+Reference: <https://integrations.goauthentik.io/miscellaneous/home-assistant/>
 
 **Important:** Home Assistant will still require its own user accounts. Authentik provides SSO layer, but users must exist in HA.
 
@@ -137,6 +140,7 @@ This directory contains the Home Assistant configuration files that sync to the 
 ### 502 Bad Gateway
 
 Check if Home Assistant is running on the backend:
+
 ```bash
 curl -I https://192.168.68.20:8123 -k
 ```
@@ -144,6 +148,7 @@ curl -I https://192.168.68.20:8123 -k
 ### Certificate Issues
 
 Check cert-manager:
+
 ```bash
 kubectl describe certificate -n home-assistant-proxy
 kubectl get certificaterequest -n home-assistant-proxy
@@ -152,6 +157,7 @@ kubectl get certificaterequest -n home-assistant-proxy
 ### DNS Not Resolving
 
 Verify DNS:
+
 ```bash
 nslookup ha.nerdsbythehour.com
 # Should resolve to your public IP
@@ -160,6 +166,7 @@ nslookup ha.nerdsbythehour.com
 ### Authentik 401 Errors
 
 Check Authentik configuration:
+
 ```bash
 kubectl logs -n authentik -l app.kubernetes.io/name=authentik
 ```

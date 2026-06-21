@@ -4,13 +4,13 @@ This guide walks through configuring Grafana to visualize TeslaMate data.
 
 ## Prerequisites
 
-- Grafana deployed and accessible at https://grafana.nerdsbythehour.com
+- Grafana deployed and accessible at <https://grafana.nerdsbythehour.com>
 - TeslaMate deployed with data in shared PostgreSQL
 - PostgreSQL database `teslamate` with data migrated
 
 ## Step 1: Access Grafana
 
-1. Open https://grafana.nerdsbythehour.com
+1. Open <https://grafana.nerdsbythehour.com>
 2. Default credentials:
    - Username: `admin`
    - Password: `admin` (you'll be prompted to change this)
@@ -47,29 +47,30 @@ TeslaMate provides pre-built dashboards. You can import them individually or use
 2. Import each dashboard from the official TeslaMate repository:
 
 **Available Dashboards**:
-- **Overview**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/overview.json
-- **Drives**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/drives.json
-- **Charges**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charges.json
-- **Charging Stats**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charging-stats.json
-- **Charge Level**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charge-level.json
-- **Battery Health**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/battery-health.json
-- **Drive Stats**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/drive-stats.json
-- **Updates**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/updates.json
-- **Efficiency**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/efficiency.json
-- **Vampire Drain**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/vampire-drain.json
-- **Visited**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/visited.json
-- **Drive Details**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/drive-details.json
-- **Charge Details**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charge-details.json
-- **Projected Range**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/projected-range.json
-- **States**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/states.json
-- **Trip**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/trip.json
-- **Timeline**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/timeline.json
-- **Locations**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/locations.json
-- **Degradation**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/degradation.json
-- **Drive Mileage**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/mileage.json
-- **Database Info**: https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/database-info.json
 
-3. For each dashboard:
+- **Overview**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/overview.json>
+- **Drives**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/drives.json>
+- **Charges**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charges.json>
+- **Charging Stats**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charging-stats.json>
+- **Charge Level**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charge-level.json>
+- **Battery Health**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/battery-health.json>
+- **Drive Stats**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/drive-stats.json>
+- **Updates**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/updates.json>
+- **Efficiency**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/efficiency.json>
+- **Vampire Drain**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/vampire-drain.json>
+- **Visited**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/visited.json>
+- **Drive Details**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/drive-details.json>
+- **Charge Details**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charge-details.json>
+- **Projected Range**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/projected-range.json>
+- **States**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/states.json>
+- **Trip**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/trip.json>
+- **Timeline**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/timeline.json>
+- **Locations**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/locations.json>
+- **Degradation**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/degradation.json>
+- **Drive Mileage**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/mileage.json>
+- **Database Info**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/database-info.json>
+
+1. For each dashboard:
    - Paste the URL in the "Import via grafana.com" field
    - Click **Load**
    - Select the **TeslaMate** data source you created
@@ -103,7 +104,7 @@ This allows TeslaMate to provide direct links to relevant Grafana dashboards.
 
 ## Step 5: Verify Everything Works
 
-1. Access TeslaMate: https://teslamate.nerdsbythehour.com
+1. Access TeslaMate: <https://teslamate.nerdsbythehour.com>
 2. Sign in with your Tesla credentials
 3. Once vehicles are logging data, check Grafana dashboards
 4. Recommended starting dashboards:
@@ -132,6 +133,7 @@ If dashboards show data from before the migration, it worked! 🎉
 **Error**: "dial tcp: lookup postgresql.database.svc.cluster.local"
 
 **Solution**: Ensure PostgreSQL service exists and is running:
+
 ```bash
 sudo kubectl get svc -n database postgresql
 sudo kubectl get pods -n database
@@ -140,11 +142,12 @@ sudo kubectl get pods -n database
 ### No Data in Dashboards
 
 1. **Check TeslaMate is signed in**:
-   - Visit https://teslamate.nerdsbythehour.com
+   - Visit <https://teslamate.nerdsbythehour.com>
    - Sign in with Tesla credentials
    - Verify vehicles appear and are logging
 
 2. **Check data exists in database**:
+
    ```bash
    sudo kubectl exec -n database postgresql-0 -- psql -U teslamate -d teslamate -c \
      "SELECT COUNT(*) FROM positions;"
@@ -170,11 +173,14 @@ Or re-import the dashboard and select the correct data source.
 
 1. **Change Grafana admin password** immediately after first login
 2. **Restrict Grafana access** with Authentik ForwardAuth:
+
    ```yaml
    # In grafana-ingress.yaml, uncomment:
    traefik.ingress.kubernetes.io/router.middlewares: authentik-authentik-forwardauth@kubernetescrd
    ```
+
 3. **Change PostgreSQL password**:
+
    ```bash
    # Update teslamate-secret.yaml with new password
    kubectl edit secret teslamate-secret -n teslamate
@@ -192,6 +198,6 @@ Or re-import the dashboard and select the correct data source.
 
 ## Resources
 
-- TeslaMate Dashboard Gallery: https://docs.teslamate.org/docs/guides/dashboards
-- Grafana Documentation: https://grafana.com/docs/grafana/latest/
-- PostgreSQL Data Source: https://grafana.com/docs/grafana/latest/datasources/postgres/
+- TeslaMate Dashboard Gallery: <https://docs.teslamate.org/docs/guides/dashboards>
+- Grafana Documentation: <https://grafana.com/docs/grafana/latest/>
+- PostgreSQL Data Source: <https://grafana.com/docs/grafana/latest/datasources/postgres/>

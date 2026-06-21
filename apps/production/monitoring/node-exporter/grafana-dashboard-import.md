@@ -2,12 +2,12 @@
 
 ## Quick Import Instructions
 
-1. **Open Grafana**: https://grafana.nerdsbythehour.com
+1. **Open Grafana**: <https://grafana.nerdsbythehour.com>
 
 2. **Navigate to Import**:
    - Click the **+** icon (or menu) in the left sidebar
    - Select **Import dashboard**
-   - Or go directly to: https://grafana.nerdsbythehour.com/dashboard/import
+   - Or go directly to: <https://grafana.nerdsbythehour.com/dashboard/import>
 
 3. **Import Dashboard 1860 (Node Exporter Full)**:
    - Enter dashboard ID: `1860`
@@ -18,9 +18,11 @@
 ## Recommended Dashboards
 
 ### 1. Node Exporter Full (Dashboard ID: 1860) ⭐ RECOMMENDED
-**Best comprehensive dashboard for host metrics**
+
+#### Best comprehensive dashboard for host metrics
 
 Shows:
+
 - CPU Usage (per core and overall)
 - Memory Usage (RAM, Swap, Cache)
 - Disk I/O and Space
@@ -31,23 +33,28 @@ Shows:
 - Context Switches
 
 **Features:**
+
 - Multiple time ranges
 - Per-node view
 - Detailed breakdowns
 - Most popular Node Exporter dashboard (1M+ downloads)
 
 ### 2. Node Exporter Server Metrics (Dashboard ID: 11074)
-**Clean, modern alternative**
+
+#### Clean, modern alternative
 
 Shows:
+
 - CPU, Memory, Disk overview
 - Clean card-based layout
 - Less cluttered than 1860
 
 ### 3. Node Exporter for Prometheus (Dashboard ID: 13978)
-**Simple and focused**
+
+#### Simple and focused
 
 Shows:
+
 - Key metrics only
 - Easy to read at a glance
 - Good for NOC displays
@@ -57,6 +64,7 @@ Shows:
 If you prefer to import via JSON:
 
 1. Download dashboard JSON:
+
    ```bash
    curl -o node-exporter-full.json \
      https://grafana.com/api/dashboards/1860/revisions/latest/download
@@ -73,7 +81,7 @@ If you prefer to import via JSON:
 
 Before importing dashboards, verify Node Exporter metrics in Prometheus:
 
-1. Go to: https://prometheus.nerdsbythehour.com/graph
+1. Go to: <https://prometheus.nerdsbythehour.com/graph>
 
 2. Run these test queries:
 
@@ -111,12 +119,13 @@ After importing, you can customize:
 ### Dashboard Shows "No Data"
 
 1. **Check Node Exporter is running**:
+
    ```bash
    kubectl get pods -n monitoring -l app=node-exporter
    ```
 
 2. **Check Prometheus targets**:
-   - Go to: https://prometheus.nerdsbythehour.com/targets
+   - Go to: <https://prometheus.nerdsbythehour.com/targets>
    - Look for node-exporter targets
    - Should show as "UP"
 

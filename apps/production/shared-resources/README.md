@@ -6,7 +6,7 @@ Static file server (nginx) that serves shared resources like icons, logos, and o
 
 ## URL
 
-**Production**: https://cdn.nerdsbythehour.com
+**Production**: <https://cdn.nerdsbythehour.com>
 
 ## Purpose
 
@@ -18,6 +18,7 @@ Static file server (nginx) that serves shared resources like icons, logos, and o
 ## Data Paths
 
 **Source Data** (NFS mount, backed up):
+
 ```
 /home/jim/docs/data/systems/shared-resources/
 ├── icons/              # General application icons
@@ -26,7 +27,7 @@ Static file server (nginx) that serves shared resources like icons, logos, and o
 └── README.md
 ```
 
-**Served via nginx at**: https://cdn.nerdsbythehour.com
+**Served via nginx at**: <https://cdn.nerdsbythehour.com>
 
 ## Architecture
 
@@ -43,6 +44,7 @@ Static file server (nginx) that serves shared resources like icons, logos, and o
 ### nginx Configuration
 
 Custom nginx config includes:
+
 - Autoindex enabled for directory browsing
 - Cache headers for static assets (30 days)
 - Security headers
@@ -55,6 +57,7 @@ See `configmap.yaml` for full nginx configuration.
 ### For Authentik Applications
 
 When configuring applications in Authentik Admin UI, use URLs like:
+
 ```
 https://cdn.nerdsbythehour.com/icons-logos/home-assistant-logo/icon.png
 ```
@@ -62,6 +65,7 @@ https://cdn.nerdsbythehour.com/icons-logos/home-assistant-logo/icon.png
 ### For Other Applications
 
 Reference assets directly by URL:
+
 ```html
 <img src="https://cdn.nerdsbythehour.com/icons/app-icon.png" />
 ```
@@ -69,11 +73,13 @@ Reference assets directly by URL:
 ## Adding New Assets
 
 1. Add files to the NFS mount:
+
    ```bash
    cp my-icon.png /home/jim/docs/data/systems/shared-resources/icons/
    ```
 
 2. Assets are immediately available at:
+
    ```
    https://cdn.nerdsbythehour.com/icons/my-icon.png
    ```
@@ -95,16 +101,19 @@ None required - public read-only static file server.
 ## Deployment
 
 Managed by Flux GitOps from:
+
 ```
 apps/production/shared-resources/
 ```
 
 Manual apply:
+
 ```bash
 kubectl apply -k apps/production/shared-resources/
 ```
 
 Force Flux reconciliation:
+
 ```bash
 flux reconcile kustomization apps
 ```
@@ -112,22 +121,26 @@ flux reconcile kustomization apps
 ## Troubleshooting
 
 ### Check pod status
+
 ```bash
 kubectl get pods -n shared-resources
 kubectl logs -n shared-resources -l app=shared-resources
 ```
 
 ### Verify ingress
+
 ```bash
 kubectl get ingress -n shared-resources
 ```
 
 ### Test locally
+
 ```bash
 curl https://cdn.nerdsbythehour.com/
 ```
 
 ### Check certificate
+
 ```bash
 kubectl get certificate -n shared-resources
 ```
@@ -148,6 +161,7 @@ kubectl get certificate -n shared-resources
 ## DNS Configuration
 
 Add DNS record in Cloudflare:
+
 ```
 Type: A
 Name: cdn

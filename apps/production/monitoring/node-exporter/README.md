@@ -12,36 +12,42 @@ Node Exporter exposes hardware and kernel-level metrics from the host system to 
 ## What It Monitors
 
 ### CPU Metrics
+
 - CPU usage per core
 - CPU time by mode (user, system, idle, iowait)
 - Context switches
 - Interrupts
 
 ### Memory Metrics
+
 - Total, available, used memory
 - Swap usage
 - Page faults
 - Memory pressure
 
 ### Disk Metrics
+
 - Disk I/O operations
 - Read/write throughput
 - Disk space usage per filesystem
 - Inode usage
 
 ### Network Metrics
+
 - Network traffic (bytes in/out)
 - Packet counts
 - Network errors and drops
 - Connection states
 
 ### System Metrics
+
 - System load averages (1m, 5m, 15m)
 - Uptime
 - Number of processes
 - File descriptors
 
 ### Additional Collectors
+
 - Systemd unit states
 - Temperature sensors (if available)
 - Network statistics
@@ -81,7 +87,7 @@ annotations:
 
 ### Verify Scraping
 
-1. Go to Prometheus: https://prometheus.nerdsbythehour.com/targets
+1. Go to Prometheus: <https://prometheus.nerdsbythehour.com/targets>
 2. Look for `kubernetes-pods` job
 3. Find `node-exporter` targets - should show as "UP"
 
@@ -106,7 +112,7 @@ Import these dashboard IDs in Grafana (Dashboards → Import):
 
 ### Import Steps
 
-1. Navigate to Grafana: https://grafana.nerdsbythehour.com
+1. Navigate to Grafana: <https://grafana.nerdsbythehour.com>
 2. Click **Dashboards** → **Import**
 3. Enter dashboard ID (e.g., `1860`)
 4. Select **Prometheus** as data source
@@ -172,6 +178,7 @@ node_load15
 ### Enabled Collectors
 
 The following collectors are enabled:
+
 - `processes` - Process statistics
 - `systemd` - Systemd unit status
 - Default collectors (cpu, memory, disk, network, etc.)
@@ -207,15 +214,17 @@ kubectl logs -n monitoring <node-exporter-pod>
 ### Metrics Not Appearing in Prometheus
 
 1. Verify pod annotations:
+
    ```bash
    kubectl get pod -n monitoring -l app=node-exporter -o yaml | grep prometheus
    ```
 
 2. Check Prometheus targets:
-   - Go to https://prometheus.nerdsbythehour.com/targets
+   - Go to <https://prometheus.nerdsbythehour.com/targets>
    - Search for "node-exporter"
 
 3. Test metrics endpoint directly:
+
    ```bash
    kubectl port-forward -n monitoring <node-exporter-pod> 9100:9100
    curl localhost:9100/metrics
@@ -224,6 +233,7 @@ kubectl logs -n monitoring <node-exporter-pod>
 ### No Systemd Metrics
 
 If systemd metrics aren't appearing, ensure:
+
 - The pod has `hostPID: true`
 - Volume mount for `/host/sys` is correct
 - Running with proper privileges
@@ -231,12 +241,14 @@ If systemd metrics aren't appearing, ensure:
 ## Security
 
 Node Exporter runs with:
+
 - `runAsNonRoot: true`
 - `runAsUser: 65534` (nobody user)
 - Minimal capabilities (all dropped)
 - Read-only volume mounts
 
 It requires:
+
 - `hostNetwork: true` - To see host network stats
 - `hostPID: true` - To see all processes
 - `hostIPC: true` - For complete system view

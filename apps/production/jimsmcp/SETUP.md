@@ -22,6 +22,7 @@ Add jimsmcp to your Claude Code MCP configuration:
 ```
 
 Or copy the example config:
+
 ```bash
 mkdir -p ~/.config/claude-code
 cp /home/jim/Documents/mj-infra-flux/apps/production/jimsmcp/mcp-config-example.json ~/.config/claude-code/mcp.json
@@ -50,6 +51,7 @@ Or:
 jimsmcp provides 10 tools for managing your infrastructure:
 
 ### Kubernetes Management (5 tools)
+
 - `mcp__jimsmcp__k8s_get_pods` - List pods with status
 - `mcp__jimsmcp__k8s_get_pod_logs` - Get pod logs
 - `mcp__jimsmcp__k8s_get_deployments` - View deployments
@@ -57,10 +59,12 @@ jimsmcp provides 10 tools for managing your infrastructure:
 - `mcp__jimsmcp__k8s_get_ingresses` - View ingresses
 
 ### Flux GitOps (2 tools)
+
 - `mcp__jimsmcp__flux_get_status` - Check Flux resource status
 - `mcp__jimsmcp__flux_reconcile` - Force reconciliation
 
 ### Application Management (3 tools)
+
 - `mcp__jimsmcp__app_health_check` - Comprehensive health check
 - `mcp__jimsmcp__app_get_urls` - List all application URLs
 - `mcp__jimsmcp__authentik_get_info` - Get Authentik info
@@ -88,6 +92,7 @@ npm run build
 ```
 
 For development with auto-rebuild:
+
 ```bash
 npm run watch
 ```
@@ -95,25 +100,32 @@ npm run watch
 ## Troubleshooting
 
 ### "Cannot find module"
+
 Make sure dependencies are installed:
+
 ```bash
 cd /home/jim/Documents/mj-infra-flux/apps/production/jimsmcp
 npm install
 ```
 
 ### "Unable to connect to cluster"
+
 jimsmcp uses your default kubeconfig. Verify kubectl works:
+
 ```bash
 kubectl get nodes
 ```
 
 ### "Flux command not found"
+
 Ensure flux CLI is installed and in PATH:
+
 ```bash
 flux version
 ```
 
 ### Claude Code doesn't see the tools
+
 1. Check that `~/.config/claude-code/mcp.json` exists and has the correct path
 2. Restart Claude Code completely
 3. Check Claude Code logs for MCP connection errors
@@ -121,6 +133,7 @@ flux version
 ## Security Notes
 
 jimsmcp runs with the same permissions as your kubectl/kubeconfig. It can:
+
 - ✅ Read all cluster resources
 - ✅ View logs
 - ✅ Trigger Flux reconciliations

@@ -15,16 +15,19 @@
 ### When to Use Helm
 
 Use Helm **only** when:
+
 - Complex third-party applications with extensive configuration
 - Active upstream Helm chart with frequent updates
 - Converting would require significant effort
 
 **Current Helm deployments** (to be migrated when time permits):
+
 - Authentik (SSO/IdP)
 
 ### Examples of Kustomize Deployments
 
 See `apps/production/` for reference implementations:
+
 - ✅ `landingpage/` - React app
 - ✅ `openspeedtest/` - Custom image
 - ✅ `whoami/` - Simple service
@@ -41,12 +44,14 @@ See `apps/production/` for reference implementations:
 ### Approved Methods
 
 1. **SOPS + Age (Preferred)**
+
    ```bash
    # Encrypt secrets with SOPS
    ./scripts/encrypt-env-files.sh <directory>
    ```
 
 2. **Cluster-only Secrets**
+
    ```bash
    # Create secret directly in cluster (not in git)
    kubectl create secret generic my-secret -n my-namespace \
@@ -54,6 +59,7 @@ See `apps/production/` for reference implementations:
    ```
 
 3. **Helm valuesFrom** (for Helm deployments)
+
    ```yaml
    valuesFrom:
      - kind: Secret
@@ -123,6 +129,7 @@ kubectl apply -k apps/production/myapp/
 See `docker-migration.md` for the complete migration process from Docker Compose to Kubernetes.
 
 Key principles:
+
 - ✅ Preserve data paths
 - ✅ Use hostPath for persistent data
 - ✅ Document volume mounts

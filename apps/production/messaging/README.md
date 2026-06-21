@@ -27,6 +27,7 @@ Each application uses its own topic prefix for isolation:
 Applications connect using Kubernetes service DNS:
 
 **Connection Example (TeslaMate)**:
+
 ```yaml
 env:
   - name: MQTT_HOST
@@ -36,6 +37,7 @@ env:
 ```
 
 **Connection Example (Python)**:
+
 ```python
 import paho.mqtt.client as mqtt
 
@@ -82,6 +84,7 @@ sudo kubectl run -it --rm mqtt-debug --image=eclipse-mosquitto:2 --restart=Never
 The Mosquitto configuration is managed via ConfigMap (`mosquitto-configmap.yaml`).
 
 Current settings:
+
 - **Persistence**: Enabled (messages persisted to disk)
 - **Authentication**: Anonymous allowed (internal cluster only)
 - **Listeners**: 1883 (MQTT)
@@ -96,11 +99,13 @@ Current settings:
 ## Security Notes
 
 ### Current Setup (Internal Only)
+
 - **No authentication**: Safe for internal cluster communication
 - **No TLS**: Not exposed outside cluster
 - **Topic isolation**: Applications use prefixed topics
 
 ### Future Enhancements (If Exposing Externally)
+
 - Add username/password authentication
 - Enable TLS/SSL
 - Use Network Policies for pod-level access control
@@ -109,6 +114,7 @@ Current settings:
 ## Data Persistence
 
 Message persistence is stored at:
+
 ```
 /mnt/local-k3s-data/mosquitto/data/
 ```
@@ -131,6 +137,7 @@ The host-level `backup-deby.sh` already covers `/mnt/local-k3s-data/` as part of
 ### Connection Refused
 
 Check that the service is running:
+
 ```bash
 sudo kubectl get svc -n messaging
 sudo kubectl get endpoints -n messaging mosquitto
@@ -139,11 +146,13 @@ sudo kubectl get endpoints -n messaging mosquitto
 ### Messages Not Persisting
 
 Check PVC is bound:
+
 ```bash
 sudo kubectl get pvc -n messaging
 ```
 
 Check logs for errors:
+
 ```bash
 sudo kubectl logs -n messaging -l app=mosquitto --tail=50
 ```
@@ -151,6 +160,7 @@ sudo kubectl logs -n messaging -l app=mosquitto --tail=50
 ### High Memory Usage
 
 Adjust retain limits in ConfigMap if needed:
+
 ```conf
 max_queued_messages 1000
 max_inflight_messages 20
@@ -192,17 +202,20 @@ sudo kubectl apply -k apps/production/messaging/
 ## Use Cases
 
 ### TeslaMate Telemetry
+
 - Real-time vehicle state updates
 - Location tracking
 - Charging status
 - Climate control state
 
 ### Home Assistant (Future)
+
 - Smart home device state
 - Automation triggers
 - Sensor readings
 
 ### Custom IoT Projects
+
 - Weather stations
 - Custom sensors
 - Integration bridges

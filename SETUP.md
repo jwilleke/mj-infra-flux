@@ -8,7 +8,7 @@ Step-by-step instructions to set up the project locally for development.
 
 - **Node.js**: v18 or higher
   - Check: `node --version`
-  - Download: https://nodejs.org/
+  - Download: <https://nodejs.org/>
 - **npm**: v9 or higher
   - Check: `npm --version`
 - **Git**: Latest version
@@ -36,6 +36,7 @@ npm install
 ```
 
 Or with other package managers:
+
 ```bash
 yarn install
 pnpm install

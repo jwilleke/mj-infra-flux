@@ -18,16 +18,19 @@ jimsmcp complements the official Kubernetes MCP server with custom features spec
 ## Features
 
 ### Flux GitOps
+
 - **flux_get_status** - Check status of all Flux resources
 - **flux_reconcile** - Force reconciliation of kustomizations, helm releases, or git repositories
 
 ### Application Management
+
 - **app_health_check** - Comprehensive health check for a specific app (pods + service + ingress)
 - **app_health_check_all** - Check health of all applications in the cluster (auto-discovers via ingresses)
 - **app_get_urls** - List all application URLs and ingress endpoints
 - **authentik_get_info** - Get Authentik API and admin URLs
 
 ### Authentik Management
+
 - **authentik_create_homeassistant_app** - Create complete Home Assistant Authentik setup
 - **authentik_list_applications** - List all Authentik applications
 - **authentik_list_providers** - List all Authentik providers
@@ -35,6 +38,7 @@ jimsmcp complements the official Kubernetes MCP server with custom features spec
 - **authentik_bind_provider_to_outpost** - Bind a provider to an outpost (enables ForwardAuth)
 
 ### Financial Data
+
 - **stocks_get_price** - Get real-time stock quotes from Alpha Vantage (requires API key)
 
 ## Installation
@@ -96,12 +100,14 @@ Configure both the official Kubernetes MCP server and jimsmcp in your Claude Cod
 ## Tool Examples
 
 ### Check health of all applications
+
 ```typescript
 // Using app_health_check_all
 // Returns status of all ingress-exposed apps with pod/service/ingress details
 ```
 
 ### Check specific app health
+
 ```typescript
 // Using app_health_check
 {
@@ -111,6 +117,7 @@ Configure both the official Kubernetes MCP server and jimsmcp in your Claude Cod
 ```
 
 ### Get Flux status
+
 ```typescript
 // Using flux_get_status
 {
@@ -119,6 +126,7 @@ Configure both the official Kubernetes MCP server and jimsmcp in your Claude Cod
 ```
 
 ### Reconcile Flux resources
+
 ```typescript
 // Using flux_reconcile
 {
@@ -129,6 +137,7 @@ Configure both the official Kubernetes MCP server and jimsmcp in your Claude Cod
 ```
 
 ### Get all application URLs
+
 ```typescript
 // Using app_get_urls
 {
@@ -146,6 +155,7 @@ jimsmcp runs as a standalone Node.js process that:
 4. Communicates via stdio using the MCP protocol
 
 **Separation of Concerns:**
+
 - **Kubernetes MCP Server**: Handles standard K8s queries and operations
 - **jimsmcp**: Handles infrastructure-specific features (Flux, Authentik, custom health checks)
 
@@ -160,6 +170,7 @@ jimsmcp runs as a standalone Node.js process that:
 ## Security
 
 jimsmcp inherits permissions from your kubeconfig. It can:
+
 - Read Kubernetes resources (via kubernetes MCP server)
 - View logs (via kubernetes MCP server)
 - Trigger Flux reconciliations
@@ -167,6 +178,7 @@ jimsmcp inherits permissions from your kubeconfig. It can:
 - Trigger infrastructure workflows
 
 It CANNOT:
+
 - Modify or delete resources (read-only by design)
 - Execute commands in pods
 - Change cluster configuration
@@ -175,6 +187,7 @@ It CANNOT:
 ## Kubernetes Deployment (Future)
 
 While jimsmcp currently runs locally, it can be deployed as a Kubernetes service with:
+
 - API server for HTTP-based MCP communication
 - ServiceAccount with RBAC for cluster access
 - Ingress for external access (with Authentik protection)
@@ -182,16 +195,21 @@ While jimsmcp currently runs locally, it can be deployed as a Kubernetes service
 ## Troubleshooting
 
 ### "Unable to connect to cluster"
+
 Ensure kubectl is working: `kubectl get nodes`
 
 ### "Flux command not found"
-Install flux CLI: https://fluxcd.io/flux/installation/
+
+Install flux CLI: <https://fluxcd.io/flux/installation/>
 
 ### "Permission denied"
+
 Check your kubeconfig has the necessary RBAC permissions
 
 ### Using both MCP servers
+
 If you get errors about unknown tools:
+
 - Standard K8s operations (pods, deployments, services, logs) → use `kubernetes` MCP server
 - Custom infrastructure features (Flux, Authentik, health checks) → use `jimsmcp` MCP server
 

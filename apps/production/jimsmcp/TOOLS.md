@@ -9,10 +9,12 @@ Complete reference for all 14 tools provided by jimsmcp.
 Get pods in a namespace or across all namespaces.
 
 **Parameters:**
+
 - `namespace` (optional): Namespace to query
 - `labelSelector` (optional): Label selector (e.g., 'app=grafana')
 
 **Examples:**
+
 ```json
 // All pods in monitoring namespace
 {"namespace": "monitoring"}
@@ -25,6 +27,7 @@ Get pods in a namespace or across all namespaces.
 ```
 
 **Returns:**
+
 ```json
 [
   {
@@ -45,12 +48,14 @@ Get pods in a namespace or across all namespaces.
 Get logs from a specific pod.
 
 **Parameters:**
+
 - `namespace` (required): Namespace of the pod
 - `podName` (required): Name of the pod
 - `container` (optional): Container name
 - `tailLines` (optional): Number of lines to tail (default: 100)
 
 **Example:**
+
 ```json
 {
   "namespace": "monitoring",
@@ -66,9 +71,11 @@ Get logs from a specific pod.
 Get deployments in a namespace or across all namespaces.
 
 **Parameters:**
+
 - `namespace` (optional): Namespace to query
 
 **Returns:**
+
 ```json
 [
   {
@@ -89,9 +96,11 @@ Get deployments in a namespace or across all namespaces.
 Get services in a namespace or across all namespaces.
 
 **Parameters:**
+
 - `namespace` (optional): Namespace to query
 
 **Returns:**
+
 ```json
 [
   {
@@ -117,9 +126,11 @@ Get services in a namespace or across all namespaces.
 Get ingresses in a namespace or across all namespaces.
 
 **Parameters:**
+
 - `namespace` (optional): Namespace to query
 
 **Returns:**
+
 ```json
 [
   {
@@ -145,10 +156,12 @@ Get ingresses in a namespace or across all namespaces.
 Get status of all Flux resources or specific kustomizations.
 
 **Parameters:**
+
 - `resource` (optional): Specific resource type ('kustomization', 'helmrelease')
 - `namespace` (optional): Namespace to query (default: flux-system)
 
 **Examples:**
+
 ```json
 // All Flux resources
 {}
@@ -169,12 +182,14 @@ Get status of all Flux resources or specific kustomizations.
 Force reconciliation of a Flux resource.
 
 **Parameters:**
+
 - `kind` (required): 'kustomization', 'helmrelease', or 'gitrepository'
 - `name` (required): Name of the resource
 - `namespace` (optional): Namespace (default: flux-system)
 - `withSource` (optional): Also reconcile source (default: false)
 
 **Example:**
+
 ```json
 {
   "kind": "kustomization",
@@ -192,10 +207,12 @@ Force reconciliation of a Flux resource.
 Comprehensive health check for an application (pods + service + ingress).
 
 **Parameters:**
+
 - `app` (required): Application name
 - `namespace` (required): Namespace
 
 **Example:**
+
 ```json
 {
   "app": "grafana",
@@ -204,6 +221,7 @@ Comprehensive health check for an application (pods + service + ingress).
 ```
 
 **Returns:**
+
 ```json
 {
   "app": "grafana",
@@ -235,9 +253,11 @@ Comprehensive health check for an application (pods + service + ingress).
 Get all URLs/ingresses for applications in the cluster.
 
 **Parameters:**
+
 - `namespace` (optional): Filter by namespace
 
 **Returns:**
+
 ```json
 [
   {
@@ -264,6 +284,7 @@ Get information about Authentik deployment and API endpoint.
 **Parameters:** None
 
 **Returns:**
+
 ```json
 {
   "namespace": "authentik",
@@ -290,6 +311,7 @@ Create a complete Authentik setup for Home Assistant (proxy provider + applicati
 **Parameters:** None (uses hardcoded configuration for ha.nerdsbythehour.com)
 
 **What it does:**
+
 1. Creates a Proxy Provider with:
    - External host: `https://ha.nerdsbythehour.com`
    - Internal host: `https://192.168.68.20:8123`
@@ -299,6 +321,7 @@ Create a complete Authentik setup for Home Assistant (proxy provider + applicati
 3. Returns URLs for admin configuration
 
 **Returns:**
+
 ```json
 {
   "provider": {
@@ -319,6 +342,7 @@ Create a complete Authentik setup for Home Assistant (proxy provider + applicati
 ```
 
 **Example:**
+
 ```json
 {}
 ```
@@ -332,6 +356,7 @@ List all applications configured in Authentik.
 **Parameters:** None
 
 **Returns:**
+
 ```json
 [
   {
@@ -353,6 +378,7 @@ List all providers configured in Authentik.
 **Parameters:** None
 
 **Returns:**
+
 ```json
 [
   {
@@ -428,13 +454,13 @@ cd /home/jim/Documents/mj-infra-flux/apps/production/jimsmcp
 echo "ALPHA_VANTAGE_KEY=your_api_key_here" > .env.secret.stocks
 ```
 
-2. Encrypt it with SOPS:
+1. Encrypt it with SOPS:
 
 ```bash
 ./scripts/encrypt-env-files.sh apps/production/jimsmcp/
 ```
 
-3. Load the environment before running jimsmcp:
+1. Load the environment before running jimsmcp:
 
 ```bash
 export ALPHA_VANTAGE_KEY=$(cat .env.secret.stocks)

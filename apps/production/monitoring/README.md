@@ -5,8 +5,8 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
 ## Overview
 
 - **Namespace**: `monitoring`
-- **Prometheus URL**: https://prometheus.nerdsbythehour.com (with basic auth)
-- **Grafana URL**: https://grafana.nerdsbythehour.com
+- **Prometheus URL**: <https://prometheus.nerdsbythehour.com> (with basic auth)
+- **Grafana URL**: <https://grafana.nerdsbythehour.com>
 - **Components**:
   - Prometheus - Metrics collection and storage
   - Grafana - Visualization and dashboards
@@ -40,6 +40,7 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
 ## Deployed Components
 
 ### Prometheus
+
 - **Version**: 3.0.1
 - **Service**: `prometheus-service.monitoring.svc.cluster.local:80`
 - **Storage**: PVC `prometheus-storage-volume-prometheus-0` (60Gi, local-path provisioner); mounted at `/prometheus` in the pod
@@ -53,6 +54,7 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
   - Alert rules
 
 ### Grafana
+
 - **Version**: 10.1.6
 - **Service**: `grafana-service.monitoring.svc.cluster.local:80`
 - **Storage**: `/mnt/local-k3s-data/grafana`
@@ -65,6 +67,7 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
   - Alert visualization
 
 ### Alertmanager
+
 - **Version**: Latest
 - **Service**: `alertmanager.monitoring.svc.cluster.local:9093`
 - **Purpose**: Routes and manages alerts from Prometheus
@@ -74,28 +77,30 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
   - Notification routing (email, Slack, webhook)
 
 ### Blackbox Exporter
+
 - **Version**: 0.25.0
 - **Service**: `blackbox-exporter.monitoring.svc.cluster.local:9115`
 - **DNS**: Uses local DNS (192.168.68.1) for external domain resolution
 - **Purpose**: Probes external HTTP/HTTPS endpoints
 - **Monitored Services**:
-  - https://nerdsbythehour.com (landing page)
-  - https://auth.nerdsbythehour.com (Authentik SSO)
-  - https://teslamate.nerdsbythehour.com
-  - https://grafana.nerdsbythehour.com
-  - https://ha.nerdsbythehour.com (Home Assistant)
-  - https://cdn.nerdsbythehour.com
+  - <https://nerdsbythehour.com> (landing page)
+  - <https://auth.nerdsbythehour.com> (Authentik SSO)
+  - <https://teslamate.nerdsbythehour.com>
+  - <https://grafana.nerdsbythehour.com>
+  - <https://ha.nerdsbythehour.com> (Home Assistant)
+  - <https://cdn.nerdsbythehour.com>
 - **Excluded**: traefik (internal), jimsmcp (internal), amd (known broken)
 
 ## Checking Service Health Probes
 
 ### Web UI
 
-- **https://prometheus.nerdsbythehour.com/alerts** - View all alert rules and current state (firing/pending/inactive)
-- **https://prometheus.nerdsbythehour.com/targets** - View all scrape targets including blackbox probes
-- **https://prometheus.nerdsbythehour.com/graph** - Query metrics directly with PromQL
+- **<https://prometheus.nerdsbythehour.com/alerts>** - View all alert rules and current state (firing/pending/inactive)
+- **<https://prometheus.nerdsbythehour.com/targets>** - View all scrape targets including blackbox probes
+- **<https://prometheus.nerdsbythehour.com/graph>** - Query metrics directly with PromQL
 
 **Alertmanager UI** (cluster internal):
+
 ```bash
 kubectl port-forward -n monitoring svc/alertmanager 9093:9093
 # Then browse to http://localhost:9093
@@ -166,13 +171,13 @@ kubectl exec -n monitoring deploy/blackbox-exporter -- wget -qO- \
 
 ### Access Grafana
 
-1. Navigate to: https://grafana.nerdsbythehour.com
+1. Navigate to: <https://grafana.nerdsbythehour.com>
 2. Login with admin credentials (check Grafana data directory or reset password)
 3. Prometheus datasource is already configured and set as default
 
 ### View Prometheus Metrics
 
-1. Navigate to: https://prometheus.nerdsbythehour.com
+1. Navigate to: <https://prometheus.nerdsbythehour.com>
 2. Enter credentials from web.yaml basic auth
 3. Explore metrics, run PromQL queries
 
@@ -195,6 +200,7 @@ Dashboard ID: 893
 ```
 
 **To import:**
+
 1. Grafana → Dashboards → Import
 2. Enter dashboard ID
 3. Select "Prometheus" as data source
@@ -207,6 +213,7 @@ Dashboard ID: 893
 Located in: `apps/production/monitoring/prometheus/config/`
 
 **Current scrape configs:**
+
 - `scrape-configs.prometheus.yaml` - Prometheus self-monitoring
 - `scrape-configs.coinpoet.yaml` - Custom application scraping
 - Kubernetes service discovery (built-in)
@@ -224,6 +231,7 @@ metadata:
 ```
 
 **Example:**
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -246,6 +254,7 @@ spec:
 ### Grafana Datasource
 
 Pre-configured via provisioning at:
+
 - `apps/production/monitoring/grafana/config/provisioning/datasources/prometheus.yaml`
 
 ```yaml
@@ -263,6 +272,7 @@ datasources:
 Instrument your application to expose Prometheus metrics:
 
 **Go (with prometheus/client_golang):**
+
 ```go
 import "github.com/prometheus/client_golang/prometheus/promhttp"
 
@@ -270,6 +280,7 @@ http.Handle("/metrics", promhttp.Handler())
 ```
 
 **Python (with prometheus-client):**
+
 ```python
 from prometheus_client import start_http_server, Counter
 
@@ -279,6 +290,7 @@ start_http_server(8080)  # Exposes /metrics on port 8080
 ```
 
 **Node.js (with prom-client):**
+
 ```javascript
 const client = require('prom-client');
 const register = new client.Registry();
@@ -296,18 +308,21 @@ Then add the annotation to your deployment as shown above.
 Install exporters for services that don't natively expose metrics:
 
 **PostgreSQL Exporter:**
+
 ```bash
 # Deploy postgres_exporter as a sidecar or separate deployment
 # Configure to connect to postgresql.database.svc.cluster.local
 ```
 
 **MQTT Exporter:**
+
 ```bash
 # Deploy mosquitto_exporter
 # Configure to connect to mosquitto.messaging.svc.cluster.local
 ```
 
 **Node Exporter (System Metrics):**
+
 ```bash
 # Deploy node-exporter as DaemonSet
 # Scrapes CPU, memory, disk, network from nodes
@@ -361,6 +376,7 @@ histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
 Located in: `apps/production/monitoring/prometheus/config/`
 
 **Active alert rule files:**
+
 - `alerting-rules.prometheus.yaml` - Prometheus TSDB health (WAL, compaction, restarts, memory)
 - `alerting-rules.service-health.yaml` - Service failure alerts (added 2026-01-22)
 
@@ -394,15 +410,18 @@ Located in: `apps/production/monitoring/prometheus/config/`
 ### Alertmanager Configuration
 
 Configure notification routing in:
+
 - `apps/production/monitoring/prometheus-alertmanager/config/alertmanager.yaml`
 
 **Current configuration:**
+
 - **Receiver**: Telegram (chat_id: 510755639)
 - **Group wait**: 30s
 - **Group interval**: 5m
 - **Repeat interval**: 4h
 
 **Supported receivers:**
+
 - Email (SMTP)
 - Slack webhooks
 - PagerDuty
@@ -440,7 +459,7 @@ groups:
 
 ### 4. Monitor the Monitor
 
-- Check Prometheus targets: https://prometheus.nerdsbythehour.com/targets
+- Check Prometheus targets: <https://prometheus.nerdsbythehour.com/targets>
 - Check Grafana datasource health
 - Monitor Prometheus disk usage
 
@@ -505,12 +524,15 @@ curl -X POST https://prometheus.nerdsbythehour.com/-/reload
 
 ### Prometheus Not Scraping Targets
 
-1. Check target status: https://prometheus.nerdsbythehour.com/targets
+1. Check target status: <https://prometheus.nerdsbythehour.com/targets>
 2. Verify pod annotations:
+
    ```bash
    sudo kubectl get pod <pod-name> -o yaml | grep prometheus
    ```
+
 3. Check Prometheus logs:
+
    ```bash
    sudo kubectl logs -n monitoring prometheus-0 | grep -i error
    ```
@@ -518,18 +540,21 @@ curl -X POST https://prometheus.nerdsbythehour.com/-/reload
 ### Grafana Can't Connect to Prometheus
 
 1. Verify datasource config:
+
    ```bash
    sudo kubectl exec -n monitoring grafana-0 -- \
      cat /etc/grafana/provisioning/datasources/prometheus.yaml
    ```
 
 2. Test connectivity from Grafana:
+
    ```bash
    sudo kubectl exec -n monitoring grafana-0 -- \
      wget -qO- http://prometheus-service.monitoring.svc.cluster.local:80/-/healthy
    ```
 
 3. Check Grafana logs:
+
    ```bash
    sudo kubectl logs -n monitoring grafana-0 | grep -i prometheus
    ```
@@ -537,15 +562,18 @@ curl -X POST https://prometheus.nerdsbythehour.com/-/reload
 ### High Memory Usage
 
 Prometheus memory usage grows with:
+
 - Number of time series
 - Scrape frequency
 - Retention period
 
 **Solutions:**
+
 - Reduce retention time (default: 30d)
 - Reduce scrape frequency
 - Use recording rules
 - Drop unnecessary metrics:
+
   ```yaml
   metric_relabel_configs:
     - source_labels: [__name__]
@@ -569,11 +597,13 @@ sudo kubectl exec -n monitoring prometheus-0 -- \
 ### TeslaMate
 
 TeslaMate has built-in Prometheus metrics at `:4000/metrics`:
+
 - Vehicle state updates
 - API call rates
 - Database connection pool
 
 **Enable scraping:**
+
 ```yaml
 # In apps/production/teslamate/teslamate-deployment.yaml
 annotations:
@@ -584,6 +614,7 @@ annotations:
 ### PostgreSQL
 
 Deploy postgres_exporter to monitor:
+
 - Connection count
 - Query performance
 - Lock statistics
@@ -592,6 +623,7 @@ Deploy postgres_exporter to monitor:
 ### Authentik
 
 Authentik exposes metrics at `:9300/metrics`:
+
 - Login attempts
 - Active sessions
 - Token generation
@@ -599,32 +631,36 @@ Authentik exposes metrics at `:9300/metrics`:
 
 ## Resources
 
-- Prometheus docs: https://prometheus.io/docs/
-- Grafana docs: https://grafana.com/docs/grafana/latest/
-- PromQL guide: https://prometheus.io/docs/prometheus/latest/querying/basics/
-- Grafana dashboards: https://grafana.com/grafana/dashboards/
-- Kubernetes monitoring: https://github.com/prometheus-operator/kube-prometheus
+- Prometheus docs: <https://prometheus.io/docs/>
+- Grafana docs: <https://grafana.com/docs/grafana/latest/>
+- PromQL guide: <https://prometheus.io/docs/prometheus/latest/querying/basics/>
+- Grafana dashboards: <https://grafana.com/grafana/dashboards/>
+- Kubernetes monitoring: <https://github.com/prometheus-operator/kube-prometheus>
 
 ## TODO / Future Improvements
 
 ### High Priority
+
 - [ ] Add Grafana dashboard for service health probes
 - [ ] Configure alert silencing for maintenance windows
 - [ ] Add PostgreSQL exporter for detailed database metrics
 
 ### Medium Priority
+
 - [ ] Add Node Exporter dashboard to Grafana
 - [ ] Configure alert escalation (critical → page, warning → email)
 - [ ] Add MQTT broker health monitoring
 - [ ] Monitor Authentik login success/failure rates
 
 ### Low Priority
+
 - [ ] Add custom recording rules for common queries
 - [ ] Set up remote write for long-term metric storage
 - [ ] Add application-specific metrics (TeslaMate)
 - [ ] Configure Grafana alerting as backup to Alertmanager
 
 ### Known Issues
+
 - `amd.nerdsbythehour.com` excluded from probes (service broken)
 - `traefik.nerdsbythehour.com` excluded (internal dashboard, not publicly exposed)
 - `jimsmcp.nerdsbythehour.com` excluded (internal service)
@@ -632,6 +668,7 @@ Authentik exposes metrics at `:9300/metrics`:
 ## Recent Changes
 
 ### 2026-01-22: Service Failure Monitoring
+
 - Added HTTP probe modules (http_2xx, http_2xx_3xx) to blackbox-exporter
 - Configured blackbox-exporter with local DNS (192.168.68.1)
 - Created `scrape-configs.blackbox.yaml` for external service probes

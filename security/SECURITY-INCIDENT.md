@@ -18,6 +18,7 @@ The following secrets were committed in plaintext in `apps/production/authentik/
 ### ✅ Step 1: Remove Secrets from Current Code (Completed)
 
 Commit `de98c43` removed plaintext secrets:
+
 - Updated HelmRelease to use `valuesFrom` with Secret reference
 - Secrets now stored only in Kubernetes cluster
 - Added SECRET-MANAGEMENT.md documentation
@@ -71,6 +72,7 @@ git push --force origin master
 ```
 
 **Note:** Only do this if:
+
 - You're the sole maintainer
 - Or you've coordinated with all team members
 - You understand the implications of rewriting history

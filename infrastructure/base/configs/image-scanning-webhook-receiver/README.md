@@ -1,1 +1,1 @@
-Per https://fluxcd.io/flux/guides/webhook-receivers/
+Per <https://fluxcd.io/flux/guides/webhook-receivers/>

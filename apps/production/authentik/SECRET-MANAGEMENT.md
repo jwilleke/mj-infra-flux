@@ -7,6 +7,7 @@ Authentik requires sensitive credentials that **must not** be stored in git. Thi
 ## Secrets Location
 
 Secrets are stored in a Kubernetes Secret named `authentik-secrets` in the `authentik` namespace. This secret is:
+
 - ✅ Created directly in the cluster
 - ✅ NOT stored in git
 - ✅ Referenced by the HelmRelease via `valuesFrom`
@@ -72,6 +73,7 @@ valuesFrom:
 ```
 
 This approach:
+
 - ✅ Keeps secrets out of git
 - ✅ Works with Flux/HelmRelease
 - ✅ Allows secret rotation without git commits
@@ -82,12 +84,14 @@ This approach:
 To rotate secrets:
 
 1. Generate new secrets:
+
    ```bash
    NEW_SECRET_KEY=$(openssl rand -base64 64 | tr -d '\n')
    NEW_DB_PASSWORD=$(openssl rand -base64 32 | tr -d '\n')
    ```
 
 2. Update the Kubernetes secret:
+
    ```bash
    kubectl create secret generic authentik-secrets \
      -n authentik \
@@ -97,6 +101,7 @@ To rotate secrets:
    ```
 
 3. Restart Authentik:
+
    ```bash
    kubectl rollout restart deployment -n authentik -l app.kubernetes.io/name=authentik
    ```
@@ -119,16 +124,19 @@ The `authentik-secrets` secret doesn't exist. Create it using the commands above
 ### Authentik fails to start after secret rotation
 
 1. Check the secret exists:
+
    ```bash
    kubectl get secret authentik-secrets -n authentik
    ```
 
 2. Verify secret contents (base64 encoded):
+
    ```bash
    kubectl get secret authentik-secrets -n authentik -o yaml
    ```
 
 3. Check HelmRelease logs:
+
    ```bash
    kubectl logs -n authentik -l app.kubernetes.io/name=authentik
    ```
