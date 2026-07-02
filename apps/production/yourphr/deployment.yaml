@@ -57,6 +57,10 @@ spec:
             # app release that reads backup.label is deployed (post-v1.9.0).
             - name: YOURPHR_BACKUP_LABEL
               value: "prod"
+            # Patient-friendly medication names via the embedded (offline) RxTerms crosswalk
+            # (yourphr#387, v1.13.0). No external calls. Off by default in the app; enabled here.
+            - name: YOURPHR_MEDICATIONS_RXTERMS_ENRICH
+              value: "true"
             # Admin-only sandbox provider credentials (yourphr#291). The backend seeds the /sandbox
             # catalog entries from these at startup, so the admin connects with one click and the
             # client_id/secret never reach the browser. From ./sandbox-credentials.sops.yaml; all
