@@ -42,6 +42,10 @@ Upstream's own docs warn some releases ship resource-heavy migrations — bump `
 
 **Tier 2 — public, app-auth** (same tier as OwnTracks, see `docs/access/access.md`): exposed directly via the existing Cloudflare Tunnel → Traefik path, **no** Authentik forward-auth middleware. Dawarich has its own user accounts (login page) and per-device API keys for the mobile app, so — like OwnTracks — an interactive SSO redirect in front would break unattended location POSTs.
 
+## `APPLICATION_PROTOCOL` must stay `http`
+
+`maps-configmap.yaml` sets `APPLICATION_PROTOCOL: "http"` even though the public URL is HTTPS. This is intentional, not an oversight — TLS is terminated upstream (Cloudflare + Traefik/cert-manager), and Dawarich's `config/environments/production.rb` does `config.force_ssl = ENV.fetch('APPLICATION_PROTOCOL', 'http').downcase == 'https'`. Setting it to `https` makes Rails redirect any plain-HTTP request to HTTPS at the same host — including the liveness/readiness probes, which hit the pod's plain-HTTP port directly and have no way to follow that redirect over TLS, causing a permanent crash loop (`http: server gave HTTP response to HTTPS client`). Matches upstream's own compose default.
+
 ## Secrets
 
 `maps-secret.sops.yaml` is **encrypted** (`postgres-password` and `secret-key-base`, both freshly random — `openssl rand -base64 32` / `-hex 64`), using the same age recipient as `owntracks/recorder-basic-auth.sops.yaml` and `authentik/authentik-secrets.sops.yaml` (`age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj` — verified against `home-infra-private.agekey`, the same key `sops-age`/Flux decrypts with on `deby`). To rotate either value later:

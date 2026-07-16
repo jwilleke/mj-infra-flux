@@ -8,7 +8,7 @@ data:
   SELF_HOSTED: "true"
   RAILS_LOG_TO_STDOUT: "true"
   APPLICATION_HOSTS: "maps.nerdsbythehour.com"
-  APPLICATION_PROTOCOL: "https"
+  APPLICATION_PROTOCOL: "http"
   TIME_ZONE: "America/New_York"
   STORE_GEODATA: "true"
   PROMETHEUS_EXPORTER_ENABLED: "false"
