@@ -64,6 +64,20 @@ spec:
                   name: geohazardwatch-secrets
                   key: session-secret
                   optional: true
+            # Authentik client credentials for the agent-ingest flow
+            # (mj-infra-flux#124, ngdpbase#822) — secret via ngdpbase-ingest-creds.sops.yaml
+            - name: NGDPBASE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: ngdpbase-ingest-creds
+                  key: client-id
+                  optional: true
+            - name: NGDPBASE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ngdpbase-ingest-creds
+                  key: client-secret
+                  optional: true
           volumeMounts:
             - name: data
               mountPath: /app/data

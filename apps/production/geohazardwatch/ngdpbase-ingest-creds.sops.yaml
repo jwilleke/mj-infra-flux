@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: ngdpbase-ingest-creds
+    namespace: jimsmcp
+type: Opaque
+stringData:
+    client-id: ENC[AES256_GCM,data://+ktz/lKFPcr8CjeWUV6AEwtoDjhsokodlwVvX6Bx45C9veVwql6g==,iv:XjcwGS1L80kQ5dMuy7SR9J4jG7cp2XLIsVNrUW3myAA=,tag:Rt1Nq11C7KtXam/izhFbUA==,type:str]
+    client-secret: ENC[AES256_GCM,data:DZcuw6tDIpBSHm0Y+ScVCXhQl4yakuGzu0zyY6TFXntbCz7uZEJrWwA4tfUpyBZEYjMtasMyxGtPy/F/xeA+mBQVNXzN9fFCY20CM3B+okSM2RsWPRSe1pk+BWPZ5iqnLGMWVN9PnYtBBrTQuwtxICbK7N6SJzYez5a2jjgRgE0=,iv:Opf+aLlOgcLPe8pwJZHNehrtMXSnaLTUMJsMjpgUP7Y=,tag:zvq4vWPYLfdVyIRBz5UXYw==,type:str]
+sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age:
+        - recipient: age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBqZEg2Q3dhUU5iODIvWVgv
+            NXEwamh4OXM0V0NzcGFSZ25ISStXOUowclVrCkpqd3NnL1daNmpWb3JydW1nYjZQ
+            c0RQVHZEbW11enJRTzdzbXJKWnVnVTgKLS0tIFpVem55eHNBdnVKditjdUtockdI
+            VlAyaTZVTUdsM0ZTRnVHNzg2WGNBMG8K5FM3szb5IGoBo8z32YRaBnclh/ncPyYU
+            qLHhp4e2Bn5I8e0pHrfA0Dtqb/OCGGRwO5XPx1q8wwX3ow4pW0e5Ag==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-06-16T10:41:17Z"
+    mac: ENC[AES256_GCM,data:0/bKS5x8gVmLLgSxNHzsOZgKYDfFMVtXrAI0nwwi8ofstNwXCSZBaFzreqqXxFBH2dQdSMUqLQ3h6jXk4qHY+fZorrbQ2O0P+I72Ti/gQ1C+0i8JRYVKFKFnx+4tJbVOfkY124tOXdu8Y2TUGuSMtLCmjrKgxnDUFIVJTbGt6HI=,iv:pulwxHC0yPia6JyobEBd/fWFlgikmaIy7tF38v3PjTE=,tag:ua0guHCZI0Ia63Sv4Qv82g==,type:str]
+    pgp: []
+    encrypted_regex: ^(data|stringData)$
+    version: 3.9.3
