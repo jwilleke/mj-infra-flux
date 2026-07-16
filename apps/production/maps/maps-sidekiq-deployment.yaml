@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maps-sidekiq
+  namespace: maps
+  labels:
+    app: maps-sidekiq
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: maps-sidekiq
+  template:
+    metadata:
+      labels:
+        app: maps-sidekiq
+    spec:
+      containers:
+        - name: sidekiq
+          image: freikin/dawarich:latest # {"$imagepolicy": "flux-system:maps-app"}
+          imagePullPolicy: IfNotPresent
+          command: ["sidekiq-entrypoint.sh"]
+          args: ["sidekiq"]
+          envFrom:
+            - configMapRef:
+                name: maps-config
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: maps-secret
+                  key: postgres-password
+            - name: SECRET_KEY_BASE
+              valueFrom:
+                secretKeyRef:
+                  name: maps-secret
+                  key: secret-key-base
+          volumeMounts:
+            - name: app-data
+              mountPath: /var/app/public
+              subPath: public
+            - name: app-data
+              mountPath: /var/app/tmp/imports/watched
+              subPath: watched
+            - name: app-data
+              mountPath: /var/app/storage
+              subPath: storage
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "512Mi"
+          livenessProbe:
+            exec:
+              command: ["pgrep", "-f", "sidekiq"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: app-data
+          persistentVolumeClaim:
+            claimName: maps-app-data-pvc
+      restartPolicy: Always

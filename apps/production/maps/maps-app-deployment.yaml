@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maps-app
+  namespace: maps
+  labels:
+    app: maps-app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: maps-app
+  template:
+    metadata:
+      labels:
+        app: maps-app
+    spec:
+      containers:
+        - name: app
+          image: freikin/dawarich:latest # {"$imagepolicy": "flux-system:maps-app"}
+          imagePullPolicy: IfNotPresent
+          command: ["web-entrypoint.sh"]
+          args: ["bin/rails", "server", "-p", "3000", "-b", "::"]
+          envFrom:
+            - configMapRef:
+                name: maps-config
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: maps-secret
+                  key: postgres-password
+            - name: SECRET_KEY_BASE
+              valueFrom:
+                secretKeyRef:
+                  name: maps-secret
+                  key: secret-key-base
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          volumeMounts:
+            - name: app-data
+              mountPath: /var/app/public
+              subPath: public
+            - name: app-data
+              mountPath: /var/app/tmp/imports/watched
+              subPath: watched
+            - name: app-data
+              mountPath: /var/app/storage
+              subPath: storage
+          resources:
+            requests:
+              cpu: "150m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "1536Mi"
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 5
+      volumes:
+        - name: app-data
+          persistentVolumeClaim:
+            claimName: maps-app-data-pvc
+      restartPolicy: Always

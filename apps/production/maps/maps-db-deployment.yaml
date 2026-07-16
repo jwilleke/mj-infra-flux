@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maps-db
+  namespace: maps
+  labels:
+    app: maps-db
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: maps-db
+  template:
+    metadata:
+      labels:
+        app: maps-db
+    spec:
+      containers:
+        - name: db
+          # ARM64 nodes should use imresamu/postgis:17-3.5-alpine instead.
+          image: postgis/postgis:17-3.5-alpine
+          env:
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: maps-config
+                  key: DATABASE_NAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: maps-secret
+                  key: postgres-password
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: shared
+              mountPath: /var/shared
+            - name: dshm
+              mountPath: /dev/shm
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "768Mi"
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U postgres -d maps_production
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U postgres -d maps_production
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: maps-db-pvc
+        - name: shared
+          persistentVolumeClaim:
+            claimName: maps-shared-pvc
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
+      restartPolicy: Always

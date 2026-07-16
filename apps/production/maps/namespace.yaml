@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: maps
+  labels:
+    app.kubernetes.io/name: maps
+    app.kubernetes.io/component: telemetry

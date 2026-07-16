@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: maps-app
+  namespace: maps
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - maps.nerdsbythehour.com
+      secretName: maps-tls
+  rules:
+    - host: maps.nerdsbythehour.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: maps-app
+                port:
+                  number: 3000

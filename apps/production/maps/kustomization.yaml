@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: maps
+
+resources:
+  - namespace.yaml
+  - maps-db-pv.yaml
+  - maps-db-pvc.yaml
+  - maps-shared-pv.yaml
+  - maps-shared-pvc.yaml
+  - maps-app-data-pv.yaml
+  - maps-app-data-pvc.yaml
+  - maps-configmap.yaml
+  - maps-secret.sops.yaml
+  - maps-db-deployment.yaml
+  - maps-db-service.yaml
+  - maps-redis-deployment.yaml
+  - maps-redis-service.yaml
+  - maps-app-deployment.yaml
+  - maps-app-service.yaml
+  - maps-sidekiq-deployment.yaml
+  - maps-ingress.yaml
