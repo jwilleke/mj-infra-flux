@@ -34,9 +34,11 @@ Requests/limits are deliberately conservative for a household single-user instan
 | db | 100m / 128Mi | 500m / 768Mi |
 | redis | 50m / 32Mi | 200m / 128Mi |
 | app | 150m / 256Mi | 500m / 1536Mi |
-| sidekiq | 100m / 128Mi | 250m / 512Mi |
+| sidekiq | 100m / 256Mi | 500m / 3Gi |
 
 Upstream's own docs warn some releases ship resource-heavy migrations — bump `app`/`sidekiq` limits temporarily around an upgrade if a migration OOMs.
+
+`sidekiq`'s memory limit was raised from the original 512Mi to 3Gi after an OOMKill during a one-time bulk import of historical OwnTracks `.rec` files (`OwnTracks::RecParser`/`OwnTracks::Importer` load the entire file into memory at once — not streamed — so a 211MB `.rec` file needs real headroom, especially with `BACKGROUND_PROCESSING_CONCURRENCY: 3` potentially parsing multiple large files at once). Safe to dial back down for normal day-to-day operation (small live-tracking payloads only need a fraction of this) if a future need for tighter bin-packing arises — nothing about steady-state usage requires 3Gi.
 
 ## Access tier
 
