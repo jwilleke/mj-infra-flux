@@ -5,6 +5,7 @@ metadata:
   namespace: maps
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.middlewares: maps-maps-forwarded-proto@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:

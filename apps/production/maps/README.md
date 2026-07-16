@@ -42,9 +42,16 @@ Upstream's own docs warn some releases ship resource-heavy migrations — bump `
 
 **Tier 2 — public, app-auth** (same tier as OwnTracks, see `docs/access/access.md`): exposed directly via the existing Cloudflare Tunnel → Traefik path, **no** Authentik forward-auth middleware. Dawarich has its own user accounts (login page) and per-device API keys for the mobile app, so — like OwnTracks — an interactive SSO redirect in front would break unattended location POSTs.
 
-## `APPLICATION_PROTOCOL` must stay `http`
+## `APPLICATION_PROTOCOL`, `force_ssl`, and why there's a forwarded-proto Middleware
 
-`maps-configmap.yaml` sets `APPLICATION_PROTOCOL: "http"` even though the public URL is HTTPS. This is intentional, not an oversight — TLS is terminated upstream (Cloudflare + Traefik/cert-manager), and Dawarich's `config/environments/production.rb` does `config.force_ssl = ENV.fetch('APPLICATION_PROTOCOL', 'http').downcase == 'https'`. Setting it to `https` makes Rails redirect any plain-HTTP request to HTTPS at the same host — including the liveness/readiness probes, which hit the pod's plain-HTTP port directly and have no way to follow that redirect over TLS, causing a permanent crash loop (`http: server gave HTTP response to HTTPS client`). Matches upstream's own compose default.
+`maps-configmap.yaml` sets `APPLICATION_PROTOCOL: "https"`. Dawarich's `config/environments/production.rb` does `config.force_ssl = ENV.fetch('APPLICATION_PROTOCOL', 'http').downcase == 'https'`, so this turns on Rails' `force_ssl` (needed so Rails perceives itself as HTTPS — otherwise Rails computes its own request origin as `http://...`, which mismatches the browser's real `Origin: https://...` header on every form POST and gets rejected by Rails' CSRF/Origin check with a silent 422, before Devise even checks the password).
+
+This creates two problems that both needed a fix, since our TLS is terminated upstream (Cloudflare edge + the Cloudflare Tunnel), and the tunnel's Public Hostname connects to Traefik in **HTTP** mode (`traefik.kube-system.svc.cluster.local:80`, matching owntracks) — so nothing downstream of Cloudflare ever sees a real TLS handshake:
+
+1. **Real traffic via Traefik** — without `X-Forwarded-Proto: https`, Rails would treat every request (even the legitimate HTTPS ones from users) as insecure and force_ssl would redirect them, breaking cookies/CSRF. Fixed by `maps-forwarded-proto-middleware.yaml`, a Traefik `Middleware` that stamps `X-Forwarded-Proto: https` on every request before it reaches `maps-app`, referenced from `maps-ingress.yaml` via the `traefik.ingress.kubernetes.io/router.middlewares` annotation.
+2. **Kubernetes' own liveness/readiness probes** — these hit the pod's port 3000 directly, bypassing Traefik (and the Middleware above) entirely. Fixed by adding the same `X-Forwarded-Proto: https` as an explicit `httpHeaders` entry on both probes in `maps-app-deployment.yaml`. Rails trusts this header by default because the probe's source IP (kubelet, same node) falls within Rails' default trusted-proxy ranges (`10.0.0.0/8` / `192.168.0.0/16` / loopback) — no extra `trusted_proxies` config needed.
+
+**Do not set `APPLICATION_PROTOCOL` back to `http`** — that was an earlier, incomplete fix for a *different* symptom (a crash loop from the probes hitting a force_ssl redirect they couldn't follow) that in turn broke login (Origin/CSRF mismatch) for every real user. Both pieces — the Middleware and the probe headers — must stay in place together.
 
 ## Secrets
 

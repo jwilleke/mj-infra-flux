@@ -1,0 +1,9 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: maps-forwarded-proto
+  namespace: maps
+spec:
+  headers:
+    customRequestHeaders:
+      X-Forwarded-Proto: https

@@ -20,4 +20,5 @@ resources:
   - maps-app-deployment.yaml
   - maps-app-service.yaml
   - maps-sidekiq-deployment.yaml
+  - maps-forwarded-proto-middleware.yaml
   - maps-ingress.yaml
