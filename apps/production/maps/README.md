@@ -31,14 +31,19 @@ Requests/limits are deliberately conservative for a household single-user instan
 
 | Container | Requests | Limits |
 |---|---|---|
-| db | 100m / 128Mi | 500m / 768Mi |
+| db | 100m / 256Mi | 1000m / 2Gi |
 | redis | 50m / 32Mi | 200m / 128Mi |
 | app | 150m / 256Mi | 500m / 1536Mi |
 | sidekiq | 100m / 256Mi | 500m / 3Gi |
 
 Upstream's own docs warn some releases ship resource-heavy migrations — bump `app`/`sidekiq` limits temporarily around an upgrade if a migration OOMs.
 
-`sidekiq`'s memory limit was raised from the original 512Mi to 3Gi after an OOMKill during a one-time bulk import of historical OwnTracks `.rec` files (`OwnTracks::RecParser`/`OwnTracks::Importer` load the entire file into memory at once — not streamed — so a 211MB `.rec` file needs real headroom, especially with `BACKGROUND_PROCESSING_CONCURRENCY: 3` potentially parsing multiple large files at once). Safe to dial back down for normal day-to-day operation (small live-tracking payloads only need a fraction of this) if a future need for tighter bin-packing arises — nothing about steady-state usage requires 3Gi.
+`sidekiq`'s memory limit was raised from the original 512Mi to 3Gi, and `db`'s from 768Mi to 2Gi, after a one-time bulk import of historical OwnTracks `.rec` files:
+
+- `sidekiq` OOMKilled almost immediately — `OwnTracks::RecParser`/`OwnTracks::Importer` load the entire file into memory at once (not streamed), so multi-hundred-MB `.rec` files need real headroom, especially with `BACKGROUND_PROCESSING_CONCURRENCY: 3` potentially parsing several large files concurrently. **Large `.rec` files should be pre-split into ~35MB chunks** (`split -l 97000 --numeric-suffixes=1 --suffix-length=2 --additional-suffix=.rec`) before dropping into the watched-imports folder — a single 211MB file never got past initial parsing within Dawarich's 6-hour stuck-import watchdog (`StaleJobsRecoveryJob::IMPORT_TIMEOUT`) even after the memory fix, while the same data split into ~35MB chunks completed cleanly and processed ~99.5% of its lines into points.
+- `db` (Postgres) then OOMKilled once bulk-upserting ~600K+ point rows with PostGIS geometry indexing started outpacing its 768Mi limit — collateral `maps-app` restarts (clean `SIGINT`, not its own OOM) followed from losing the DB connection mid-crash-loop.
+
+Both are safe to dial back down for normal day-to-day operation (live-tracking payloads and steady-state row counts need only a fraction of this) if tighter bin-packing is ever needed — nothing about steady-state usage requires these ceilings, they exist for bulk-import bursts.
 
 ## Access tier
 
