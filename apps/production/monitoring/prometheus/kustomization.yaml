@@ -27,6 +27,8 @@ configMapGenerator:
       - config/alerting-rules.prometheus.yaml
       - config/alerting-rules.service-health.yaml
       - config/alerting-rules.k3s-cluster.yaml
+      # Alertmanager's own delivery-health self-monitoring (mj-infra-flux#136)
+      - config/alerting-rules.alertmanager.yaml
       # Loki-independent storage/backup alerts (mj-infra-flux#74)
       - config/alerting-rules.storage-backup.yaml
       # Loki-independent Docker container liveness alerts (mj-infra-flux#76)

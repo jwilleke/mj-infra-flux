@@ -1,0 +1,43 @@
+groups:
+  - name: alertmanager_delivery_health
+    interval: 30s
+    rules:
+
+      # Alertmanager itself failing to deliver notifications -- e.g. a dead
+      # SMTP credential -- is otherwise invisible: alerts fire correctly in
+      # Prometheus, Alertmanager receives and retries them, then silently
+      # gives up after ~16-18 attempts with nothing surfaced anywhere an
+      # operator would see it. This alert exists because exactly that
+      # happened undetected for >36h (mj-infra-flux#136) -- a Gmail App
+      # Password was rejected and every single notification, cluster-wide,
+      # failed with no visible signal.
+      #
+      # `for: 10m` gives Alertmanager's own retry loop (which normally
+      # resolves within a few minutes if the failure is transient) a chance
+      # to self-heal before this fires, so a single blip doesn't page.
+      #
+      # IMPORTANT CAVEAT: this alert routes through the same
+      # on_call_operator_default email receiver as everything else. If that
+      # receiver is the thing that's broken (as in #136), this alert will
+      # ALSO fail to deliver by email -- it will still show as firing in
+      # Prometheus (/alerts) and Alertmanager's own UI (/alerting/list), just
+      # not proactively pushed. A genuinely independent delivery path
+      # (mj-infra-flux#86 -- exim4 host-local fallback) is what closes that
+      # gap; this alert alone does not.
+      - alert: AlertmanagerNotificationDeliveryFailing
+        expr: |
+          increase(alertmanager_notifications_failed_total[15m]) > 0
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alertmanager failing to deliver {{ $labels.integration }} notifications"
+          description: |
+            Alertmanager has had failed {{ $labels.integration }} notification
+            attempts for >10 minutes. Every other alert in this cluster may be
+            silently undelivered right now.
+            Check:
+              k3s kubectl -n monitoring logs deploy/alertmanager --since=15m | grep -i fail
+            Also check Alertmanager's own UI directly (this alert may not have
+            reached you by email if the email receiver is what's broken):
+              https://grafana.nerdsbythehour.com/alerting/list

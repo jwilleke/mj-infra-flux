@@ -2,6 +2,16 @@ apiVersion: v1
 kind: Service
 metadata:
     name: alertmanager
+    annotations:
+      # Picked up by the generic kubernetes-service-endpoints scrape job
+      # (prometheus.yaml). Path must include the /alerting/list prefix -- same
+      # requirement as the alerting.alertmanagers path_prefix in
+      # prometheus.yaml, since --web.external-url=.../alerting/list makes
+      # Alertmanager require that prefix on every incoming request, including
+      # /metrics.
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9093"
+      prometheus.io/path: "/alerting/list/metrics"
 
 spec:
   # Exposes the Service on a cluster-internal IP. Choosing this value makes the Service only reachable from within the cluster
