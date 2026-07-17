@@ -31,21 +31,22 @@ Requests/limits are deliberately conservative for a household single-user instan
 
 | Container | Requests | Limits |
 |---|---|---|
-| db | 100m / 256Mi | 1000m / 2Gi |
+| db | 100m / 512Mi | 1000m / 4Gi |
 | redis | 50m / 32Mi | 200m / 128Mi |
 | app | 150m / 256Mi | 500m / 1536Mi |
 | sidekiq | 100m / 256Mi | 1000m / 6Gi |
 
 Upstream's own docs warn some releases ship resource-heavy migrations — bump `app`/`sidekiq` limits temporarily around an upgrade if a migration OOMs.
 
-`sidekiq`'s memory limit was raised twice (512Mi → 3Gi → 6Gi), and `db`'s from 768Mi to 2Gi, during one-time bulk imports of historical location data (OwnTracks `.rec` files, then a Google Timeline JSON export):
+`sidekiq`'s memory limit was raised twice (512Mi → 3Gi → 6Gi), and `db`'s twice (768Mi → 2Gi → 4Gi), during and after one-time bulk imports of historical location data (OwnTracks `.rec` files, then a Google Timeline JSON export) that brought the dataset to 1.3M+ points:
 
 - `sidekiq` OOMKilled almost immediately on the `.rec` import — `OwnTracks::RecParser`/`OwnTracks::Importer` load the entire file into memory at once (not streamed), so multi-hundred-MB `.rec` files need real headroom, especially with `BACKGROUND_PROCESSING_CONCURRENCY: 3` potentially parsing several large files concurrently. **Large `.rec` files should be pre-split into ~35MB chunks** (`split -l 97000 --numeric-suffixes=1 --suffix-length=2 --additional-suffix=.rec`) before dropping into the watched-imports folder — a single 211MB file never got past initial parsing within Dawarich's 6-hour stuck-import watchdog (`StaleJobsRecoveryJob::IMPORT_TIMEOUT`) even after the memory fix, while the same data split into ~35MB chunks completed cleanly and processed ~99.5% of its lines into points.
-- `db` (Postgres) then OOMKilled once bulk-upserting ~600K+ point rows with PostGIS geometry indexing started outpacing its 768Mi limit — collateral `maps-app` restarts (clean `SIGINT`, not its own OOM) followed from losing the DB connection mid-crash-loop.
+- `db` (Postgres) then OOMKilled once bulk-upserting ~600K+ point rows with PostGIS geometry indexing started outpacing its 768Mi limit — collateral `maps-app` restarts (clean `SIGINT`, not its own OOM) followed from losing the DB connection mid-crash-loop. Raised to 2Gi.
 - `sidekiq` OOMKilled *again* at 3Gi during a Google Timeline JSON import (`GoogleMaps::PhoneTakeoutImporter`), even with chunks pre-split down to ~20-27MB each — nested JSON parsing (`JSON.parse`/`Oj.load` into deep Hash/Array graphs) has substantially higher per-byte memory overhead than the `.rec` format's simple tab-separated lines, and 3 concurrent chunk-parses compounded it. Raised to 6Gi to give real headroom.
+- `db` OOMKilled *again* at 2Gi, this time in ordinary steady-state operation (no bulk import running) once the dataset reached ~1.3M rows — heavy WAL/checkpoint churn from ongoing writes (live tracking + PostGIS index maintenance) at that row count outpaced 2Gi; `checkpoints are occurring too frequently` warnings preceded the crash. Raised to 4Gi. Unlike the sidekiq bumps (safe to dial back after a one-time import finishes), **this one reflects genuine steady-state need at the current data volume** — don't lower it without confirming row-count growth hasn't made it necessary again.
 - **A sidekiq restart mid-import silently drops whatever job was executing at that moment** — Sidekiq OSS has no reliability queue for jobs killed by a hard process exit (OOM, pod restart), only for jobs that raise a catchable Ruby exception. An import stuck at `status: processing` forever, with an empty `imports` Sidekiq queue and no matching `Import::ProcessJob` in `Sidekiq::Workers.new`, means the job was lost, not slow — just re-run it: `Import::ProcessJob.perform_later(id)` (safe/idempotent — `Point.upsert_all(unique_by: [:lonlat, :timestamp, :user_id], on_duplicate: :skip)`).
 
-Both are safe to dial back down for normal day-to-day operation (live-tracking payloads and steady-state row counts need only a fraction of this) if tighter bin-packing is ever needed — nothing about steady-state usage requires these ceilings, they exist for bulk-import bursts.
+`sidekiq`'s 6Gi is safe to dial back down for normal day-to-day operation if tighter bin-packing is ever needed — live-tracking payloads need only a fraction of it, that ceiling exists for bulk-import bursts. `db`'s 4Gi is different: the second OOM happened with *no* import running, purely from steady-state write/checkpoint load at ~1.3M rows, so don't lower it without confirming the row count hasn't grown further since.
 
 ## Access tier
 
