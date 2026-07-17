@@ -3,6 +3,11 @@ kind: Deployment
 metadata:
   name: jimsmcp
   namespace: jimsmcp
+  labels:
+    # Opts into the Grafana env-health-noc "Cluster" row's dynamic repeated
+    # panel (label_values(kube_deployment_labels{label_noc_monitor="true"}, deployment)).
+    # See apps/production/monitoring/README.md.
+    noc-monitor: "true"
 spec:
   replicas: 1
   selector:

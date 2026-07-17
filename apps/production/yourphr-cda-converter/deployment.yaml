@@ -5,6 +5,9 @@ metadata:
   namespace: yourphr
   labels:
     app: yourphr-cda-converter
+    # Opts into the Grafana env-health-noc "Cluster" row's dynamic repeated
+    # panel. See apps/production/monitoring/README.md.
+    noc-monitor: "true"
 spec:
   replicas: 1
   selector:

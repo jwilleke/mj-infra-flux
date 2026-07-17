@@ -19,3 +19,25 @@ patches:
           prometheus.io/scrape: "true"
           prometheus.io/port: "8080"
           prometheus.io/path: "/metrics"
+
+  - patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: kube-state-metrics
+        namespace: kube-system
+      spec:
+        template:
+          spec:
+            containers:
+              - name: kube-state-metrics
+                # Exposes the "noc-monitor" Deployment label as a queryable
+                # Prometheus label (label_noc_monitor) on kube_deployment_labels.
+                # kube-state-metrics v2.x allowlists custom labels by default
+                # (none are exposed otherwise). Convention: set
+                # `noc-monitor: "true"` on any Deployment that should appear
+                # in the Grafana env-health-noc "Cluster" row automatically —
+                # no dashboard edit needed. See
+                # apps/production/monitoring/README.md.
+                args:
+                  - --metric-labels-allowlist=deployments=[noc-monitor]

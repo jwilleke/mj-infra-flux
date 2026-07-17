@@ -629,6 +629,15 @@ Authentik exposes metrics at `:9300/metrics`:
 - Token generation
 - Provider requests
 
+### Getting a new app onto the "Environment Health" NOC dashboard
+
+`grafana/config/dashboards/env-health-noc.json` (`https://grafana.nerdsbythehour.com/d/env-health-noc/`) has two rows that auto-populate — adding a new app to either takes **zero dashboard edits**:
+
+- **"External Services" row** (public, browser-facing apps): add the app's URL to `prometheus/config/scrape-configs.blackbox.yaml`'s target list. The row is a single panel that repeats over `label_values(probe_success, instance)` — one tile per probed URL appears automatically, titled with the full URL.
+- **"Cluster" row** (internal apps with no public URL, health = "is the Deployment's replica available"): add the label `noc-monitor: "true"` to the Deployment's `metadata.labels`. The row repeats over `label_values(kube_deployment_labels{label_noc_monitor="true"}, deployment)`. Requires `kube-state-metrics` to have this label allowlisted (already configured in `apps/base/monitoring/kube-state-metrics/kustomization.yaml` — `--metric-labels-allowlist=deployments=[noc-monitor]`; if you ever add a *different* label for this purpose, extend that allowlist too, or it silently won't show up as a Prometheus label).
+
+Neither convention covers apps that are internal-only *and* have no Kubernetes Deployment of their own (e.g. `netalertx-proxy`, which is just an Ingress + ExternalName Service pointing at a Docker container running directly on `deby`, outside k3s) — those still need ad-hoc handling; `netalertx-proxy` specifically is instead covered by adding `netalertx.nerdsbythehour.com` to the blackbox list, since blackbox-exporter runs in-cluster and can reach it via Traefik regardless of public exposure.
+
 ## Resources
 
 - Prometheus docs: <https://prometheus.io/docs/>

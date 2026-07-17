@@ -1,17 +1,26 @@
 {
-  "annotations": { "list": [] },
+  "annotations": {
+    "list": []
+  },
   "description": "Single-pane NOC — what is NOT working well. Red = needs attention. Green = good.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "links": [],
-  "tags": ["noc", "health", "overview"],
+  "tags": [
+    "noc",
+    "health",
+    "overview"
+  ],
   "title": "Environment Health",
   "uid": "env-health-noc",
   "schemaVersion": 39,
-  "version": 2,
+  "version": 3,
   "refresh": "30s",
-  "time": { "from": "now-5m", "to": "now" },
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "browser",
   "templating": {
@@ -23,6 +32,52 @@
         "current": {},
         "hide": 2,
         "label": "Data source"
+      },
+      {
+        "name": "cluster_app",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "query": "label_values(kube_deployment_labels{label_noc_monitor=\"true\"}, deployment)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "definition": "label_values(kube_deployment_labels{label_noc_monitor=\"true\"}, deployment)",
+        "refresh": 2,
+        "hide": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "sort": 1,
+        "options": []
+      },
+      {
+        "name": "service_instance",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "query": "label_values(probe_success, instance)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "definition": "label_values(probe_success, instance)",
+        "refresh": 2,
+        "hide": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "sort": 1,
+        "options": []
       }
     ]
   },
@@ -32,10 +87,24 @@
       "title": "Firing Alerts",
       "description": "Count of Prometheus alerts currently in alertstate=firing.",
       "id": 1,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 6, "w": 3, "x": 0, "y": 0 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 3,
+        "x": 0,
+        "y": 0
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "textMode": "auto",
         "colorMode": "background",
         "graphMode": "none",
@@ -44,25 +113,40 @@
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
             ]
           },
           "unit": "short",
           "noValue": "0",
           "links": [
-            { "title": "Grafana alert list", "url": "https://grafana.nerdsbythehour.com/alerting/list", "targetBlank": true }
+            {
+              "title": "Grafana alert list",
+              "url": "https://grafana.nerdsbythehour.com/alerting/list",
+              "targetBlank": true
+            }
           ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "count(ALERTS{alertstate=\"firing\"}) or vector(0)",
           "instant": true,
           "legendFormat": "firing",
@@ -75,34 +159,75 @@
       "title": "Active Alerts",
       "description": "All ALERTS{alertstate=firing} in Prometheus. Empty = nothing firing.",
       "id": 2,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 6, "w": 21, "x": 3, "y": 0 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 21,
+        "x": 3,
+        "y": 0
+      },
       "links": [
-        { "title": "Prometheus alerts", "url": "https://prometheus.nerdsbythehour.com/alerts", "targetBlank": true }
+        {
+          "title": "Prometheus alerts",
+          "url": "https://prometheus.nerdsbythehour.com/alerts",
+          "targetBlank": true
+        }
       ],
       "options": {
         "showHeader": true,
         "cellHeight": "sm",
-        "footer": { "show": false, "enablePagination": false }
+        "footer": {
+          "show": false,
+          "enablePagination": false
+        }
       },
       "fieldConfig": {
         "defaults": {
-          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false }
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "severity" },
+            "matcher": {
+              "id": "byName",
+              "options": "severity"
+            },
             "properties": [
-              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
               {
                 "id": "mappings",
                 "value": [
                   {
                     "type": "value",
                     "options": {
-                      "critical": { "color": "red",    "index": 0, "text": "critical" },
-                      "warning":  { "color": "yellow", "index": 1, "text": "warning" },
-                      "info":     { "color": "blue",   "index": 2, "text": "info" }
+                      "critical": {
+                        "color": "red",
+                        "index": 0,
+                        "text": "critical"
+                      },
+                      "warning": {
+                        "color": "yellow",
+                        "index": 1,
+                        "text": "warning"
+                      },
+                      "info": {
+                        "color": "blue",
+                        "index": 2,
+                        "text": "info"
+                      }
                     }
                   }
                 ]
@@ -116,20 +241,40 @@
           "id": "organize",
           "options": {
             "excludeByName": {
-              "Time": true, "Value": true, "__name__": true, "alertstate": true,
-              "app": true, "app_jimwilleke_com_name": true, "controller_revision_hash": true,
-              "endpoint": true, "instance": true, "job": true, "kubernetes_namespace": true,
-              "kustomize_toolkit_fluxcd_io_name": true, "kustomize_toolkit_fluxcd_io_namespace": true,
-              "pod_template_generation": true, "service": true
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "alertstate": true,
+              "app": true,
+              "app_jimwilleke_com_name": true,
+              "controller_revision_hash": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "kubernetes_namespace": true,
+              "kustomize_toolkit_fluxcd_io_name": true,
+              "kustomize_toolkit_fluxcd_io_namespace": true,
+              "pod_template_generation": true,
+              "service": true
             },
-            "indexByName": { "alertname": 0, "severity": 1, "namespace": 2, "pod": 3, "summary": 4, "description": 5 },
+            "indexByName": {
+              "alertname": 0,
+              "severity": 1,
+              "namespace": 2,
+              "pod": 3,
+              "summary": 4,
+              "description": 5
+            },
             "renameByName": {}
           }
         }
       ],
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "ALERTS{alertstate=\"firing\"}",
           "instant": true,
           "format": "table",
@@ -138,12 +283,16 @@
         }
       ]
     },
-
     {
       "type": "row",
       "title": "Cluster",
       "id": 10,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
       "collapsed": false,
       "panels": []
     },
@@ -151,26 +300,69 @@
       "type": "stat",
       "title": "Failed Pods",
       "id": 11,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 7 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 7
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] },
-          "unit": "short", "noValue": "0",
-          "links": [ { "title": "KSM dashboard", "url": "https://grafana.nerdsbythehour.com/d/garysdevil-kube-state-metrics-v2", "targetBlank": true } ]
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0",
+          "links": [
+            {
+              "title": "KSM dashboard",
+              "url": "https://grafana.nerdsbythehour.com/d/garysdevil-kube-state-metrics-v2",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "count(kube_pod_status_phase{phase=\"Failed\"} == 1) or vector(0)",
-          "instant": true, "legendFormat": "failed", "refId": "A"
+          "instant": true,
+          "legendFormat": "failed",
+          "refId": "A"
         }
       ]
     },
@@ -178,27 +370,85 @@
       "type": "stat",
       "title": "Node Ready",
       "id": 12,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 7 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 7
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] },
-          "mappings": [ { "type": "value", "options": { "0": { "text": "NOT READY", "color": "red", "index": 0 }, "1": { "text": "READY", "color": "green", "index": 1 } } } ],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "NOT READY",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "READY",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ],
           "unit": "short",
-          "links": [ { "title": "Prometheus targets", "url": "https://prometheus.nerdsbythehour.com/targets", "targetBlank": true } ]
+          "links": [
+            {
+              "title": "Prometheus targets",
+              "url": "https://prometheus.nerdsbythehour.com/targets",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "min(kube_node_status_condition{condition=\"Ready\",status=\"true\"})",
-          "instant": true, "legendFormat": "node", "refId": "A"
+          "instant": true,
+          "legendFormat": "node",
+          "refId": "A"
         }
       ]
     },
@@ -206,27 +456,85 @@
       "type": "stat",
       "title": "yourphr",
       "id": 13,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 7 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 7
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] },
-          "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red", "index": 0 }, "1": { "text": "UP", "color": "green", "index": 1 } } } ],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ],
           "unit": "short",
-          "links": [ { "title": "Open yourphr", "url": "https://yourphr.nerdsbythehour.com", "targetBlank": true } ]
+          "links": [
+            {
+              "title": "Open yourphr",
+              "url": "https://yourphr.nerdsbythehour.com",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "kube_deployment_status_replicas_available{deployment=\"yourphr\",namespace=\"yourphr\"}",
-          "instant": true, "legendFormat": "yourphr", "refId": "A"
+          "instant": true,
+          "legendFormat": "yourphr",
+          "refId": "A"
         }
       ]
     },
@@ -234,27 +542,85 @@
       "type": "stat",
       "title": "yourphr relay",
       "id": 14,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 7 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 7
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] },
-          "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red", "index": 0 }, "1": { "text": "UP", "color": "green", "index": 1 } } } ],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ],
           "unit": "short",
-          "links": [ { "title": "Relay metrics", "url": "https://prometheus.nerdsbythehour.com/graph?g0.expr=up%7Bjob%3D%22yourphr-relay%22%7D", "targetBlank": true } ]
+          "links": [
+            {
+              "title": "Relay metrics",
+              "url": "https://prometheus.nerdsbythehour.com/graph?g0.expr=up%7Bjob%3D%22yourphr-relay%22%7D",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "up{job=\"yourphr-relay\"}",
-          "instant": true, "legendFormat": "relay", "refId": "A"
+          "instant": true,
+          "legendFormat": "relay",
+          "refId": "A"
         }
       ]
     },
@@ -263,35 +629,176 @@
       "title": "Backup — last success",
       "description": "Seconds since the last yourphr-backup job completed successfully. Green < 90 min, yellow < 2h, red ≥ 2h.",
       "id": 15,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 7 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 7
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 5400 }, { "color": "red", "value": 7200 } ] },
-          "unit": "s", "decimals": 0,
-          "links": [ { "title": "deby host errors", "url": "https://grafana.nerdsbythehour.com/d/deby-host-errors", "targetBlank": true } ]
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5400
+              },
+              {
+                "color": "red",
+                "value": 7200
+              }
+            ]
+          },
+          "unit": "s",
+          "decimals": 0,
+          "links": [
+            {
+              "title": "deby host errors",
+              "url": "https://grafana.nerdsbythehour.com/d/deby-host-errors",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "time() - max(kube_job_status_completion_time{namespace=\"yourphr\"})",
-          "instant": true, "legendFormat": "age", "refId": "A"
+          "instant": true,
+          "legendFormat": "age",
+          "refId": "A"
         }
       ]
     },
-
+    {
+      "type": "stat",
+      "title": "$cluster_app",
+      "description": "Deployments labeled noc-monitor: \"true\". Add the label to opt a new internal app in -- no dashboard edit needed.",
+      "id": 16,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 7
+      },
+      "repeat": "cluster_app",
+      "repeatDirection": "h",
+      "maxPerRow": 6,
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "unit": "short",
+          "links": [
+            {
+              "title": "KSM dashboard",
+              "url": "https://grafana.nerdsbythehour.com/d/garysdevil-kube-state-metrics-v2",
+              "targetBlank": true
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "kube_deployment_status_replicas_available{deployment=\"$cluster_app\"}",
+          "instant": true,
+          "legendFormat": "$cluster_app",
+          "refId": "A"
+        }
+      ]
+    },
     {
       "type": "row",
       "title": "Host — deby",
       "id": 20,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 11 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
       "collapsed": false,
       "panels": []
     },
@@ -299,27 +806,85 @@
       "type": "stat",
       "title": "ZFS deby-backup",
       "id": 21,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 12 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 16
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] },
-          "mappings": [ { "type": "value", "options": { "0": { "text": "DEGRADED", "color": "red", "index": 0 }, "1": { "text": "ONLINE", "color": "green", "index": 1 } } } ],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DEGRADED",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "ONLINE",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ],
           "unit": "short",
-          "links": [ { "title": "deby host errors", "url": "https://grafana.nerdsbythehour.com/d/deby-host-errors", "targetBlank": true } ]
+          "links": [
+            {
+              "title": "deby host errors",
+              "url": "https://grafana.nerdsbythehour.com/d/deby-host-errors",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "min(deby_zfs_pool_healthy{pool=\"deby-backup\",job=\"kubernetes-service-endpoints\"})",
-          "instant": true, "legendFormat": "", "refId": "A"
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
         }
       ]
     },
@@ -327,27 +892,85 @@
       "type": "stat",
       "title": "ZFS nas-backup",
       "id": 22,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 12 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 16
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] },
-          "mappings": [ { "type": "value", "options": { "0": { "text": "DEGRADED", "color": "red", "index": 0 }, "1": { "text": "ONLINE", "color": "green", "index": 1 } } } ],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DEGRADED",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "ONLINE",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ],
           "unit": "short",
-          "links": [ { "title": "deby host errors", "url": "https://grafana.nerdsbythehour.com/d/deby-host-errors", "targetBlank": true } ]
+          "links": [
+            {
+              "title": "deby host errors",
+              "url": "https://grafana.nerdsbythehour.com/d/deby-host-errors",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "min(deby_zfs_pool_healthy{pool=\"nas-backup\",job=\"kubernetes-service-endpoints\"})",
-          "instant": true, "legendFormat": "", "refId": "A"
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
         }
       ]
     },
@@ -356,26 +979,73 @@
       "title": "ZFS cap (worst pool)",
       "description": "Highest capacity % across both ZFS pools. nas-backup is typically the fuller one.",
       "id": 23,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 12 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 16
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 85 } ] },
-          "unit": "percent", "decimals": 0,
-          "links": [ { "title": "deby host errors", "url": "https://grafana.nerdsbythehour.com/d/deby-host-errors", "targetBlank": true } ]
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "percent",
+          "decimals": 0,
+          "links": [
+            {
+              "title": "deby host errors",
+              "url": "https://grafana.nerdsbythehour.com/d/deby-host-errors",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "max(deby_zfs_pool_capacity_pct{job=\"kubernetes-service-endpoints\"})",
-          "instant": true, "legendFormat": "", "refId": "A"
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
         }
       ]
     },
@@ -383,26 +1053,69 @@
       "type": "stat",
       "title": "Systemd failed",
       "id": 24,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 12 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 16
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] },
-          "unit": "short", "noValue": "0",
-          "links": [ { "title": "deby host errors", "url": "https://grafana.nerdsbythehour.com/d/deby-host-errors", "targetBlank": true } ]
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0",
+          "links": [
+            {
+              "title": "deby host errors",
+              "url": "https://grafana.nerdsbythehour.com/d/deby-host-errors",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "count(node_systemd_unit_state{state=\"failed\",job=\"kubernetes-service-endpoints\"} == 1) or vector(0)",
-          "instant": true, "legendFormat": "units", "refId": "A"
+          "instant": true,
+          "legendFormat": "units",
+          "refId": "A"
         }
       ]
     },
@@ -410,26 +1123,73 @@
       "type": "stat",
       "title": "RAM used",
       "id": 25,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 12 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 16
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 80 }, { "color": "red", "value": 90 } ] },
-          "unit": "percent", "decimals": 0,
-          "links": [ { "title": "deby host errors", "url": "https://grafana.nerdsbythehour.com/d/deby-host-errors", "targetBlank": true } ]
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent",
+          "decimals": 0,
+          "links": [
+            {
+              "title": "deby host errors",
+              "url": "https://grafana.nerdsbythehour.com/d/deby-host-errors",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "(1 - avg(node_memory_MemAvailable_bytes{job=\"kubernetes-service-endpoints\"}) / avg(node_memory_MemTotal_bytes{job=\"kubernetes-service-endpoints\"})) * 100",
-          "instant": true, "legendFormat": "", "refId": "A"
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
         }
       ]
     },
@@ -437,212 +1197,189 @@
       "type": "stat",
       "title": "Root disk used",
       "id": 26,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 12 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 16
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 75 }, { "color": "red", "value": 90 } ] },
-          "unit": "percent", "decimals": 0,
-          "links": [ { "title": "deby host errors", "url": "https://grafana.nerdsbythehour.com/d/deby-host-errors", "targetBlank": true } ]
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent",
+          "decimals": 0,
+          "links": [
+            {
+              "title": "deby host errors",
+              "url": "https://grafana.nerdsbythehour.com/d/deby-host-errors",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "(1 - avg(node_filesystem_avail_bytes{mountpoint=\"/\",job=\"kubernetes-service-endpoints\"}) / avg(node_filesystem_size_bytes{mountpoint=\"/\",job=\"kubernetes-service-endpoints\"})) * 100",
-          "instant": true, "legendFormat": "", "refId": "A"
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
         }
       ]
     },
-
     {
       "type": "row",
       "title": "External Services",
       "id": 30,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
       "collapsed": false,
       "panels": []
     },
     {
       "type": "stat",
-      "title": "nerdsbythehour.com",
+      "title": "$service_instance",
+      "description": "One panel per blackbox-probed URL (apps/production/monitoring/prometheus/config/scrape-configs.blackbox.yaml). Add a URL there to opt a new public app in -- no dashboard edit needed.",
       "id": 31,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 3, "w": 4, "x": 0, "y": 17 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 0,
+        "y": 21
+      },
+      "repeat": "service_instance",
+      "repeatDirection": "h",
+      "maxPerRow": 6,
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] },
-          "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red", "index": 0 }, "1": { "text": "UP", "color": "green", "index": 1 } } } ],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ],
           "unit": "short",
-          "links": [ { "title": "Open", "url": "https://nerdsbythehour.com", "targetBlank": true } ]
+          "links": [
+            {
+              "title": "Open",
+              "url": "${service_instance}",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "probe_success{instance=\"https://nerdsbythehour.com\"}",
-          "instant": true, "legendFormat": "", "refId": "A"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "probe_success{instance=\"$service_instance\"}",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
         }
       ]
     },
-    {
-      "type": "stat",
-      "title": "cdn",
-      "id": 32,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 3, "w": 4, "x": 4, "y": 17 },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] },
-          "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red", "index": 0 }, "1": { "text": "UP", "color": "green", "index": 1 } } } ],
-          "unit": "short",
-          "links": [ { "title": "Open", "url": "https://cdn.nerdsbythehour.com", "targetBlank": true } ]
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "probe_success{instance=\"https://cdn.nerdsbythehour.com\"}",
-          "instant": true, "legendFormat": "", "refId": "A"
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Authentik (auth)",
-      "id": 33,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 3, "w": 4, "x": 8, "y": 17 },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] },
-          "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red", "index": 0 }, "1": { "text": "UP", "color": "green", "index": 1 } } } ],
-          "unit": "short",
-          "links": [ { "title": "Open", "url": "https://auth.nerdsbythehour.com", "targetBlank": true } ]
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "probe_success{instance=\"https://auth.nerdsbythehour.com\"}",
-          "instant": true, "legendFormat": "", "refId": "A"
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Grafana",
-      "id": 34,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 3, "w": 4, "x": 12, "y": 17 },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] },
-          "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red", "index": 0 }, "1": { "text": "UP", "color": "green", "index": 1 } } } ],
-          "unit": "short",
-          "links": [ { "title": "Open", "url": "https://grafana.nerdsbythehour.com", "targetBlank": true } ]
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "probe_success{instance=\"https://grafana.nerdsbythehour.com\"}",
-          "instant": true, "legendFormat": "", "refId": "A"
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Home Assistant",
-      "id": 35,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 3, "w": 4, "x": 16, "y": 17 },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] },
-          "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red", "index": 0 }, "1": { "text": "UP", "color": "green", "index": 1 } } } ],
-          "unit": "short",
-          "links": [ { "title": "Open", "url": "https://ha.nerdsbythehour.com", "targetBlank": true } ]
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "probe_success{instance=\"https://ha.nerdsbythehour.com\"}",
-          "instant": true, "legendFormat": "", "refId": "A"
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Teslamate",
-      "id": 36,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 3, "w": 4, "x": 20, "y": 17 },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] },
-          "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red", "index": 0 }, "1": { "text": "UP", "color": "green", "index": 1 } } } ],
-          "unit": "short",
-          "links": [ { "title": "Open", "url": "https://teslamate.nerdsbythehour.com", "targetBlank": true } ]
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "probe_success{instance=\"https://teslamate.nerdsbythehour.com\"}",
-          "instant": true, "legendFormat": "", "refId": "A"
-        }
-      ]
-    },
-
     {
       "type": "row",
       "title": "Network",
       "id": 40,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 20 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
       "collapsed": false,
       "panels": []
     },
@@ -651,26 +1388,73 @@
       "title": "Devices down",
       "description": "NetAlertX known devices currently unreachable.",
       "id": 41,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 21 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 28
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 3 } ] },
-          "unit": "short", "noValue": "0",
-          "links": [ { "title": "NetAlertX devices", "url": "https://netalertx.nerdsbythehour.com/devices.php", "targetBlank": true } ]
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 3
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0",
+          "links": [
+            {
+              "title": "NetAlertX devices",
+              "url": "https://netalertx.nerdsbythehour.com/devices.php",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "netalertx_down_devices",
-          "instant": true, "legendFormat": "down", "refId": "A"
+          "instant": true,
+          "legendFormat": "down",
+          "refId": "A"
         }
       ]
     },
@@ -679,26 +1463,69 @@
       "title": "New / unknown devices",
       "description": "NetAlertX devices seen on the LAN but not yet in the known list.",
       "id": 42,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 21 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 28
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 1 } ] },
-          "unit": "short", "noValue": "0",
-          "links": [ { "title": "NetAlertX devices", "url": "https://netalertx.nerdsbythehour.com/devices.php", "targetBlank": true } ]
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0",
+          "links": [
+            {
+              "title": "NetAlertX devices",
+              "url": "https://netalertx.nerdsbythehour.com/devices.php",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "netalertx_new_devices",
-          "instant": true, "legendFormat": "new", "refId": "A"
+          "instant": true,
+          "legendFormat": "new",
+          "refId": "A"
         }
       ]
     },
@@ -706,25 +1533,56 @@
       "type": "stat",
       "title": "Connected devices",
       "id": 43,
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 21 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 28
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto", "colorMode": "value", "graphMode": "none", "justifyMode": "center"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "fixed", "fixedColor": "text" },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
           "unit": "short",
-          "links": [ { "title": "NetAlertX devices", "url": "https://netalertx.nerdsbythehour.com/devices.php", "targetBlank": true } ]
+          "links": [
+            {
+              "title": "NetAlertX devices",
+              "url": "https://netalertx.nerdsbythehour.com/devices.php",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "netalertx_connected_devices",
-          "instant": true, "legendFormat": "connected", "refId": "A"
+          "instant": true,
+          "legendFormat": "connected",
+          "refId": "A"
         }
       ]
     }

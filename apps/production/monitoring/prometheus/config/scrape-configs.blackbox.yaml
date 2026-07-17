@@ -14,9 +14,20 @@ scrape_configs:
           - https://teslamate.nerdsbythehour.com
           - https://grafana.nerdsbythehour.com
           - https://ha.nerdsbythehour.com
+          - https://maps.nerdsbythehour.com
+          - https://owntracks.nerdsbythehour.com
+          - https://geohazardwatch.com
+          - https://netalertx.nerdsbythehour.com
           # Supporting services
           - https://cdn.nerdsbythehour.com
-          # Excluded: traefik (internal), jimsmcp (internal), amd (known broken)
+          # Excluded: traefik (internal), jimsmcp (internal — use the
+          # "noc-monitor" Deployment-label convention instead, see
+          # apps/production/monitoring/README.md), amd (known broken)
+          #
+          # Adding a new public app here is now the ONLY step needed for it
+          # to appear in the Grafana env-health-noc "External Services" row —
+          # that panel is a dynamic repeat over label_values(probe_success,
+          # instance), no dashboard JSON edit required.
     relabel_configs:
       # Pass the target URL to blackbox exporter
       - source_labels: [__address__]
