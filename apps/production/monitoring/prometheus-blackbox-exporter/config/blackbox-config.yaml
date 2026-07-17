@@ -21,6 +21,20 @@ modules:
       preferred_ip_protocol: ip4
       ip_protocol_fallback: true
 
+  # Same as http_2xx_3xx, plus 401 -- for services that correctly enforce
+  # HTTP Basic Auth (e.g. owntracks.nerdsbythehour.com) rather than
+  # redirecting to Authentik. A 401 here means "reachable and correctly
+  # enforcing auth", not "down".
+  http_2xx_3xx_401:
+    prober: http
+    timeout: 10s
+    http:
+      method: GET
+      valid_status_codes: [200, 201, 202, 204, 301, 302, 303, 307, 308, 401]
+      follow_redirects: false
+      preferred_ip_protocol: ip4
+      ip_protocol_fallback: true
+
   coinpoet_cache_updater:
     prober: http
 
