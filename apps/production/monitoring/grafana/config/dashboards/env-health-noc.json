@@ -15,7 +15,7 @@
   "title": "Environment Health",
   "uid": "env-health-noc",
   "schemaVersion": 39,
-  "version": 4,
+  "version": 5,
   "refresh": "30s",
   "time": {
     "from": "now-5m",
@@ -1350,7 +1350,7 @@
           "links": [
             {
               "title": "Open",
-              "url": "${service_instance}",
+              "url": "${service_instance:raw}",
               "targetBlank": true
             }
           ]
@@ -1363,7 +1363,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "probe_success{instance=\"$service_instance\"}",
+          "expr": "probe_success{instance=\"${service_instance:raw}\"}",
           "instant": true,
           "legendFormat": "",
           "refId": "A"
