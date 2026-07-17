@@ -15,7 +15,7 @@
   "title": "Environment Health",
   "uid": "env-health-noc",
   "schemaVersion": 39,
-  "version": 3,
+  "version": 4,
   "refresh": "30s",
   "time": {
     "from": "now-5m",
@@ -38,7 +38,7 @@
         "type": "query",
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "PBFA97CFB590B2093"
         },
         "query": {
           "query": "label_values(kube_deployment_labels{label_noc_monitor=\"true\"}, deployment)",
@@ -61,7 +61,7 @@
         "type": "query",
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "PBFA97CFB590B2093"
         },
         "query": {
           "query": "label_values(probe_success, instance)",
@@ -706,7 +706,7 @@
       "id": 16,
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "PBFA97CFB590B2093"
       },
       "gridPos": {
         "h": 4,
@@ -780,7 +780,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "PBFA97CFB590B2093"
           },
           "expr": "kube_deployment_status_replicas_available{deployment=\"$cluster_app\"}",
           "instant": true,
@@ -1287,7 +1287,7 @@
       "id": 31,
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "PBFA97CFB590B2093"
       },
       "gridPos": {
         "h": 3,
@@ -1361,7 +1361,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "PBFA97CFB590B2093"
           },
           "expr": "probe_success{instance=\"$service_instance\"}",
           "instant": true,
