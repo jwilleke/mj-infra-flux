@@ -4,11 +4,14 @@ global:
   # This has no impact on alerts from Prometheus, as they always include EndsAt.
   # default = 5m
   resolve_timeout: 5m
-  # Gmail SMTP configuration
-  smtp_smarthost: 'smtp.gmail.com:587'
-  smtp_from: 'jwilleke@gmail.com'
-  smtp_auth_username: 'jwilleke@gmail.com'
-  smtp_auth_password_file: '/config/secrets/gmail_app_password'
+  # Resend SMTP relay (port 587/STARTTLS — Alertmanager's SMTP client doesn't
+  # support implicit TLS on 465). Sends from nerdsbythehour.com, already a
+  # verified Resend domain (see send.nerdsbythehour.com / resend._domainkey
+  # DNS records).
+  smtp_smarthost: 'smtp.resend.com:587'
+  smtp_from: 'alerts@nerdsbythehour.com'
+  smtp_auth_username: 'resend'
+  smtp_auth_password_file: '/config/secrets/resend_api_key'
   smtp_require_tls: true
 
 route:
