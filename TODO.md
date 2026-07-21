@@ -25,3 +25,5 @@ _none yet — run `/status`_
 ## ⏸ Deferred
 
 ## ❓ Needs triage
+
+- [ ] Confirm `jwilleke/geohazardwatch` Renovate schedule change (every 6h → every 1h, commit `05ed4af`, 2026-07-20) is actually firing hourly and succeeding. No mj-infra-flux issue filed — the geohazardwatch→ngdpbase build pipeline (Renovate → auto-tag → publish-image → Flux ImagePolicy/ImageUpdateAutomation) was confirmed working end-to-end during investigation, this is just a follow-up sanity check on the faster cadence. Hand-added, not from `/status`.
