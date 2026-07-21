@@ -17,6 +17,15 @@ spec:
   # Exposes the Service on a cluster-internal IP. Choosing this value makes the Service only reachable from within the cluster
   # we don't expose this workload publicly, and the service really only is used to keep the IP more stable as pods bounce
   type: ClusterIP
+  # Pinned rather than auto-assigned: *.svc.cluster.local hostnames don't
+  # resolve from the deby host itself (no cluster DNS in its resolv.conf),
+  # and there's no ingress to the real Alertmanager (the external-url's
+  # grafana.nerdsbythehour.com/alerting/list path is Grafana's own
+  # login-gated UI, not this Service). Host-local watchers (mj-infra-flux#86)
+  # reach Alertmanager's webhook by hitting this ClusterIP directly, since
+  # the k3s node IS this host — pinning makes that a documented contract
+  # instead of an accident of auto-assignment.
+  clusterIP: 10.43.84.204
   ports:
     - name: api
       port: 9093
