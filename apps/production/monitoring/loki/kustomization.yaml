@@ -4,11 +4,19 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
-  - ./loki-config.yaml
   - ./loki-pvc.yaml
   - ./loki-deployment.yaml
-  - ./loki-rules.yaml
   - ./loki-service.yaml
+
+configMapGenerator:
+  # Content-hashed names auto-roll the Deployment on any change (see
+  # mj-infra-flux#137) — same pattern as prometheus-alertmanager/config.
+  - name: loki-config
+    files:
+      - ./config/loki.yaml
+  - name: loki-rules
+    files:
+      - ./rules/rules.yaml
 
 labels:
   - pairs:
