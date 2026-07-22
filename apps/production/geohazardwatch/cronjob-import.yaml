@@ -41,13 +41,13 @@ spec:
                   DATA_DIR=/app/data/ve-geology
                   mkdir -p "$DATA_DIR"
                   echo "Importing GVP volcanoes + eruptions + global activity..."
-                  node addons/ve-geology/import/import-volcanoes.js \
+                  node addons/geohazardwatch/import/import-volcanoes.js \
                     --eruptions --activity --data-dir "$DATA_DIR"
                   echo "Importing USGS earthquakes..."
-                  node addons/ve-geology/import/import-earthquakes.js \
+                  node addons/geohazardwatch/import/import-earthquakes.js \
                     --data-dir "$DATA_DIR"
                   echo "Importing USGS HANS volcano alerts..."
-                  node addons/ve-geology/import/import-hans.js \
+                  node addons/geohazardwatch/import/import-hans.js \
                     --data-dir "$DATA_DIR"
                   echo "Refresh complete."
               volumeMounts:
