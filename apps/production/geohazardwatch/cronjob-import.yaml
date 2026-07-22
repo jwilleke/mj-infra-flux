@@ -15,6 +15,11 @@ spec:
       template:
         spec:
           restartPolicy: OnFailure
+          # flannel's pod network is IPv4-only (geohazardwatch#134); borrow
+          # deby's own IPv6 (working since the Spectrum PD fix) so imports
+          # can reach IPv6-only sources like NASA COOLR.
+          hostNetwork: true
+          dnsPolicy: ClusterFirstWithHostNet
           securityContext:
             fsGroup: 1000
           # See deployment.yaml — Alpine musl needs ndots:1 so external
