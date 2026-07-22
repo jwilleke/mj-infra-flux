@@ -7,11 +7,13 @@ metadata:
     app: geohazardwatch
 spec:
   replicas: 1
+  # Recreate, not RollingUpdate: hostNetwork:true below means old/new pods
+  # would otherwise fight over binding port 3000 on the same single node
+  # (deby is the only node) during a rollout. Trades zero-downtime deploys
+  # for a working IPv6 route (geohazardwatch#134-class fix, this time for
+  # the always-on Deployment rather than the import CronJob).
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+    type: Recreate
   selector:
     matchLabels:
       app: geohazardwatch
@@ -22,6 +24,11 @@ spec:
     spec:
       securityContext:
         fsGroup: 1000
+      # flannel's pod network is IPv4-only; borrow deby's own IPv6 so the
+      # feeds addon can reach IPv6-only sources like NASA COOLR
+      # (maps.nccs.nasa.gov, landslide-events) from this always-on pod too.
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       # Alpine musl + k8s default ndots:5 breaks getaddrinfo for external
       # hostnames (search-list expansion misfires). Override ndots so the
       # resolver treats any name with at least one dot as absolute first.
