@@ -32,22 +32,27 @@ spec:
             - name: import
               image: ghcr.io/jwilleke/geohazardwatch:1.2.101 # {"$imagepolicy": "flux-system:geohazardwatch"}
               imagePullPolicy: IfNotPresent
-              workingDir: /opt/geohazardwatch
+              # geohazardwatch#152/#154 migrated to the packaged (npm) addon
+              # model — the addon (and its import/ scripts) now installs to
+              # node_modules under /app instead of being copied to
+              # /opt/geohazardwatch. Verified against the actual 1.2.101 image.
+              workingDir: /app
               command:
                 - /bin/sh
                 - -c
                 - |
                   set -eu
                   DATA_DIR=/app/data/ve-geology
+                  ADDON_DIR=node_modules/@jwilleke/geohazardwatch-addon
                   mkdir -p "$DATA_DIR"
                   echo "Importing GVP volcanoes + eruptions + global activity..."
-                  node addons/geohazardwatch/import/import-volcanoes.js \
+                  node "$ADDON_DIR/import/import-volcanoes.js" \
                     --eruptions --activity --data-dir "$DATA_DIR"
                   echo "Importing USGS earthquakes..."
-                  node addons/geohazardwatch/import/import-earthquakes.js \
+                  node "$ADDON_DIR/import/import-earthquakes.js" \
                     --data-dir "$DATA_DIR"
                   echo "Importing USGS HANS volcano alerts..."
-                  node addons/geohazardwatch/import/import-hans.js \
+                  node "$ADDON_DIR/import/import-hans.js" \
                     --data-dir "$DATA_DIR"
                   echo "Refresh complete."
               volumeMounts:
