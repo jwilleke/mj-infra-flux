@@ -22,9 +22,11 @@ modules:
       ip_protocol_fallback: true
 
   # Same as http_2xx_3xx, plus 401 -- for services that correctly enforce
-  # HTTP Basic Auth (e.g. owntracks.nerdsbythehour.com) rather than
-  # redirecting to Authentik. A 401 here means "reachable and correctly
-  # enforcing auth", not "down".
+  # HTTP Basic Auth rather than redirecting to Authentik. A 401 here means
+  # "reachable and correctly enforcing auth", not "down". Currently unused
+  # (its one consumer, owntracks.nerdsbythehour.com, was retired when
+  # OwnTracks Recorder was superseded by Dawarich/maps.nerdsbythehour.com)
+  # — kept defined for the next basic-auth-protected service.
   http_2xx_3xx_401:
     prober: http
     timeout: 10s

@@ -17,11 +17,18 @@ scrape_configs:
           - https://maps.nerdsbythehour.com
           - https://geohazardwatch.com
           - https://netalertx.nerdsbythehour.com
+          # YourPHR CMS demo (public, no Authentik) — mj-infra-flux#147
+          - https://demo.yourphr.org
+          - https://demo-relay.yourphr.org
           # Supporting services
           - https://cdn.nerdsbythehour.com
           # Excluded: traefik (internal), jimsmcp (internal — use the
           # "noc-monitor" Deployment-label convention instead, see
-          # apps/production/monitoring/README.md), amd (known broken)
+          # apps/production/monitoring/README.md), amd (known broken).
+          # Retired: owntracks.nerdsbythehour.com — OwnTracks Recorder was
+          # superseded by Dawarich (maps.nerdsbythehour.com, already above)
+          # for location history; the basicauth job below existed only for
+          # this one target and is removed along with it.
           #
           # Adding a new public app here is now the ONLY step needed for it
           # to appear in the Grafana env-health-noc "External Services" row —
@@ -34,37 +41,15 @@ scrape_configs:
       # Set instance label to the target URL
       - source_labels: [__param_target]
         target_label: instance
-      # Extract service name from URL for cleaner labeling
+      # Extract service name from URL for cleaner labeling. Matches both
+      # nerdsbythehour.com (internal/LAN apps) and yourphr.org (the public
+      # CMS demo, mj-infra-flux#147) — extend this alternation if a public
+      # app ever lands on a third domain.
       - source_labels: [__param_target]
-        regex: "https://([^.]+)\\.nerdsbythehour\\.com.*"
+        regex: "https://([^.]+)\\.(nerdsbythehour\\.com|yourphr\\.org).*"
         replacement: "${1}"
         target_label: service
       # Point to blackbox exporter
-      - target_label: __address__
-        replacement: blackbox-exporter.monitoring.svc:9115
-    scrape_interval: 60s
-    scrape_timeout: 15s
-
-  # Same as blackbox-http-services, but for targets that correctly enforce
-  # HTTP Basic Auth instead of redirecting to Authentik -- a 401 here means
-  # "reachable and correctly enforcing auth", not "down". See
-  # http_2xx_3xx_401 in prometheus-blackbox-exporter/config/blackbox-config.yaml.
-  - job_name: "blackbox-http-services-basicauth"
-    metrics_path: /probe
-    params:
-      module: [http_2xx_3xx_401]
-    static_configs:
-      - targets:
-          - https://owntracks.nerdsbythehour.com
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: __param_target
-      - source_labels: [__param_target]
-        target_label: instance
-      - source_labels: [__param_target]
-        regex: "https://([^.]+)\\.nerdsbythehour\\.com.*"
-        replacement: "${1}"
-        target_label: service
       - target_label: __address__
         replacement: blackbox-exporter.monitoring.svc:9115
     scrape_interval: 60s
