@@ -6,6 +6,7 @@ kind: Kustomization
 resources:
   - yourphr-policy.yaml
   - yourphr-relay-policy.yaml
+  - demo-yourphr-policy.yaml  # shares the yourphr/yourphr-relay ImageRepository+ImagePolicy above; separate ImageUpdateAutomation paths only (mj-infra-flux#147)
   - geohazardwatch-policy.yaml
   - owntracks-policy.yaml
   # geohazardwatch-ghcr.sops.yaml removed 2026-05-16 — ghcr package made

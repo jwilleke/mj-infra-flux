@@ -1,0 +1,61 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: demo-yourphr
+  namespace: flux-system
+spec:
+  # Shares the existing yourphr ImageRepository/ImagePolicy (flux-system:yourphr) — same GHCR scan,
+  # same release-gated semver policy. This is a SEPARATE ImageUpdateAutomation so the demo
+  # deployment.yaml's image bump commits independently of prod's (mj-infra-flux#147, Phase 5).
+  interval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump demo-yourphr to {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans deployment.yaml in the demo-yourphr dir for the
+    # `# {"$imagepolicy": "flux-system:yourphr"}` setter marker.
+    path: ./apps/production/demo-yourphr
+    strategy: Setters
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: demo-yourphr-relay
+  namespace: flux-system
+spec:
+  # Shares the existing yourphr-relay ImageRepository/ImagePolicy (flux-system:yourphr-relay) —
+  # same GHCR scan, same main-<N> numerical policy. Separate ImageUpdateAutomation so the demo
+  # relay's deployment.yaml bumps independently of prod's (mj-infra-flux#147, Phase 5).
+  interval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump demo-yourphr-relay to {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans deployment.yaml in the demo-yourphr-relay dir for the
+    # `# {"$imagepolicy": "flux-system:yourphr-relay"}` setter marker.
+    path: ./apps/production/demo-yourphr-relay
+    strategy: Setters
