@@ -19,3 +19,7 @@ data:
 
     log:
       level: INFO
+
+    backup:
+      allowed-roots:
+        - /nas-backup
