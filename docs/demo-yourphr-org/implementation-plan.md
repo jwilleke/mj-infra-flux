@@ -95,11 +95,11 @@ Verified: `kubectl kustomize apps/production/demo-yourphr` builds cleanly. Still
 
 Verified: `kubectl kustomize apps/production/demo-yourphr-relay` builds cleanly; decrypted the secret locally to confirm it round-trips correctly. Still not wired into `apps/production/kustomization.yaml` — Phase 5.
 
-### Phase 4 — Secrets (sandbox Blue Button credentials only — see Phase 3 correction above)
+### Phase 4 — Secrets (sandbox Blue Button credentials only — see Phase 3 correction above) — ✅ done 2026-07-31 (`7c06d28`)
 
 1. ~~Operator supplies: demo relay shared secret value~~ — done in Phase 3, self-generated.
-2. Operator supplies: sandbox Blue Button `client_id`/`client_secret`
-3. Infra SOPS-encrypts and commits as `apps/production/demo-yourphr/sandbox-credentials.sops.yaml`, mirroring `apps/production/yourphr/sandbox-credentials.sops.yaml` — never plaintext in git, never reuse prod values
+2. Operator supplied sandbox Blue Button `client_id`/`client_secret` (from `private/yphr.md`, gitignored, never committed).
+3. `apps/production/demo-yourphr/sandbox-credentials.sops.yaml` — SOPS-encrypted with the repo's standard age recipient + `encrypted_regex` convention, decrypt-verified locally to confirm it round-trips correctly. Distinct values from prod — never reused. Wired into `demo-yourphr`'s `kustomization.yaml`.
 
 ### Phase 5 — Wiring + image automation
 
