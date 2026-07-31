@@ -60,11 +60,13 @@ Storage: demo app pod → /opt/fasten/db (hostPath /mnt/local-k3s-data/demo-your
 
 ## Implementation phases
 
-### Phase 1 — Namespace + storage
+### Phase 1 — Namespace + storage — ✅ done 2026-07-31 (`e0aade0`)
 
 1. `apps/production/demo-yourphr/namespace.yaml` — new `demo-yourphr` namespace
-2. Confirm/create `/mnt/local-k3s-data/demo-yourphr/` on node `deby` (root-owned, matches sibling dirs under `/mnt/local-k3s-data/`)
-3. `apps/production/demo-yourphr/pv.yaml` + `pvc.yaml` — hostPath PV bound to that path, `Recreate` reclaim policy is irrelevant for a throwaway volume but keep `Retain` so a wipe is an explicit operator action, not an accidental PVC-delete side effect
+2. `/mnt/local-k3s-data/demo-yourphr/` created on node `deby` (root:root, 755 — matches sibling dirs)
+3. `apps/production/demo-yourphr/pv.yaml` + `pvc.yaml` — hostPath PV (1Gi, `Retain` reclaim policy, `storageClassName: ""`), mirrors the existing `owntracks-recorder` manual-hostPath-PV pattern rather than `local-path` dynamic provisioning (deliberate: a named, explicitly-bound PV keeps this volume distinct from the ops `yourphr-data` PVC with no chance of cross-binding)
+
+Verified: `kubectl kustomize apps/production/demo-yourphr` builds cleanly. **Not yet wired into `apps/production/kustomization.yaml`** — that's Phase 5, once the app + relay Deployments/Services exist too. Namespace + empty PV/PVC with no workloads is inert either way, so each phase stays independently reviewable.
 
 ### Phase 2 — Demo app
 
