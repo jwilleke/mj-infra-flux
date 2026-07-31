@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-yourphr
+  namespace: demo-yourphr
+  labels:
+    app: demo-yourphr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-yourphr
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: demo-yourphr
+    spec:
+      containers:
+        - name: demo-yourphr
+          # Public, throwaway CMS Blue Button demo instance — no real PHI, sandbox Medicare only.
+          # docs/demo-yourphr-org/implementation-plan.md (mj-infra-flux#147). Shares the ops yourphr
+          # ImagePolicy (flux-system:yourphr); a separate ImageUpdateAutomation path (Phase 5) bumps
+          # this file independently of apps/production/yourphr/deployment.yaml.
+          image: ghcr.io/jwilleke/yourphr:1.18.0 # {"$imagepolicy": "flux-system:yourphr"}
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            # In-cluster poll — never the public relay hostname. Same hairpin-avoidance rule as prod
+            # (yourphr#51): the backend runs inside the cluster, so it reaches the demo relay pod
+            # directly over the ClusterIP Service instead of round-tripping through Cloudflare.
+            - name: YOURPHR_RELAY_URL
+              value: "http://demo-yourphr-relay.demo-yourphr.svc.cluster.local:8080"
+            # Public origin the PROVIDER redirects the user's browser to — must be reachable from
+            # the internet, unlike YOURPHR_RELAY_URL above (backend/pkg/relay/relay.go: relay.public_url).
+            - name: YOURPHR_RELAY_PUBLIC_URL
+              value: "https://demo-relay.yourphr.org"
+            # Shared secret for polling the demo relay's /pending. From ./relay-secret.sops.yaml
+            # (Phase 3/4 — not created yet); optional so this Deployment can ship ahead of that.
+            - name: YOURPHR_RELAY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: demo-yourphr-relay
+                  key: YOURPHR_RELAY_SECRET
+                  optional: true
+            # Instance tag on backup filenames — harmless with no backup destination configured;
+            # kept for parity with prod in case a destination is ever added ad hoc via Admin -> Database.
+            - name: YOURPHR_BACKUP_LABEL
+              value: "demo"
+            # Patient-friendly medication names via the embedded (offline) RxTerms crosswalk. No
+            # external calls, so safe to enable on the public demo — improves what CMS reviewers see.
+            - name: YOURPHR_MEDICATIONS_RXTERMS_ENRICH
+              value: "true"
+            # Sandbox Blue Button only (yourphr#433's CMS demo script) — no production keys, no other
+            # sandbox providers. From ./sandbox-credentials.sops.yaml (Phase 3/4 — not created yet);
+            # optional so this Deployment can ship ahead of that, same as prod's pattern.
+            - name: YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: demo-yourphr-sandbox-credentials
+                  key: YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_ID
+                  optional: true
+            - name: YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: demo-yourphr-sandbox-credentials
+                  key: YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_SECRET
+                  optional: true
+          volumeMounts:
+            - name: demo-yourphr-data
+              mountPath: /opt/fasten/db
+            - name: demo-yourphr-config
+              mountPath: /opt/fasten/config
+              readOnly: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              # Matches prod's headroom rather than a demo-scaled-down limit — this instance only
+              # gets exercised live during the CMS Zoom demo, so reliability there matters more than
+              # trimming resources on a node with plenty to spare.
+              cpu: "1"
+              memory: 2Gi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+      volumes:
+        - name: demo-yourphr-data
+          persistentVolumeClaim:
+            claimName: demo-yourphr-data
+        - name: demo-yourphr-config
+          configMap:
+            name: demo-yourphr-config
