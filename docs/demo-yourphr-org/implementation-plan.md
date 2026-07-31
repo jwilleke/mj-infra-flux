@@ -68,19 +68,22 @@ Storage: demo app pod → /opt/fasten/db (hostPath /mnt/local-k3s-data/demo-your
 
 Verified: `kubectl kustomize apps/production/demo-yourphr` builds cleanly. **Not yet wired into `apps/production/kustomization.yaml`** — that's Phase 5, once the app + relay Deployments/Services exist too. Namespace + empty PV/PVC with no workloads is inert either way, so each phase stays independently reviewable.
 
-### Phase 2 — Demo app
+### Phase 2 — Demo app — ✅ done 2026-07-31 (`26f9304`)
 
 1. `apps/production/demo-yourphr/configmap.yaml` — mirrors `apps/production/yourphr/configmap.yaml`'s `config.yaml` (HTTP listen on 8080, DB/cache paths under the hostPath mount); no `backup.allowed-roots` needed since demo data is disposable and not backed up
 2. `apps/production/demo-yourphr/deployment.yaml` — mirrors `apps/production/yourphr/deployment.yaml` structurally, dropped down to just:
-   - Image `ghcr.io/jwilleke/yourphr:<semver>` with the `# {"$imagepolicy": ...}` setter marker
+   - Image `ghcr.io/jwilleke/yourphr:1.18.0` with the `# {"$imagepolicy": "flux-system:yourphr"}` setter marker (shares the prod ImagePolicy; Phase 5 adds a separate `ImageUpdateAutomation` path)
    - `YOURPHR_RELAY_URL` → in-cluster demo relay Service (not the public hostname)
-   - `YOURPHR_RELAY_PUBLIC_URL` (or whatever the equivalent env key is upstream) → `https://demo-relay.yourphr.org`, so the app advertises the correct OAuth callback
-   - `YOURPHR_RELAY_SECRET` from the demo relay's SOPS secret
+   - `YOURPHR_RELAY_PUBLIC_URL` → `https://demo-relay.yourphr.org` — **confirmed** (not guessed) against `backend/pkg/relay/relay.go`: `relay.public_url` is exactly the public browser-facing origin the provider redirects to, distinct from `relay.url` (the poll URL); env var derivation (`relay.public_url` → `YOURPHR_RELAY_PUBLIC_URL`) is mechanical per `backend/pkg/config`
+   - `YOURPHR_RELAY_SECRET` from the demo relay's SOPS secret — `secretKeyRef` with `optional: true`, so this Deployment ships ahead of Phase 3/4 without blocking, same as prod's pattern
    - `YOURPHR_BACKUP_LABEL=demo` (harmless even with no backup destination configured)
-   - Sandbox Blue Button client env vars only — no production Blue Button keys, no other sandbox providers unless the CMS demo script needs them
+   - `YOURPHR_MEDICATIONS_RXTERMS_ENRICH=true` — offline-only, no external calls, kept for demo data readability
+   - Sandbox Blue Button client env vars only (`demo-yourphr-sandbox-credentials` secret, also `optional: true` pending Phase 3/4) — no production Blue Button keys, no other sandbox providers
    - No CDA converter env vars (Phase-1 decision above)
    - No Authentik middleware, no Ingress
 3. `apps/production/demo-yourphr/service.yaml` — ClusterIP, port 8080 (tunnel origin)
+
+Verified: `kubectl kustomize apps/production/demo-yourphr` builds cleanly. Still not wired into `apps/production/kustomization.yaml` — Phase 5.
 
 ### Phase 3 — Demo relay
 
