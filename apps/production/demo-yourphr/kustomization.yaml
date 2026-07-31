@@ -12,6 +12,7 @@ resources:
   - ./configmap.yaml
   - ./deployment.yaml
   - ./service.yaml
+  - ./sandbox-credentials.sops.yaml
 
 labels:
   - pairs:
