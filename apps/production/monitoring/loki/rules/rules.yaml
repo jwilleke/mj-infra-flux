@@ -268,8 +268,10 @@ groups:
       # admin/test traffic. Catches the first disk/RAID/capacity event
       # whose exact wording we can't yet predict. Replace with
       # TankStorageDegraded / TankCapacityWarning once observed.
+      # Excluded 2026-07-31: scheduled "Backup Created" (routine, confirmed
+      # via Loki — the only hit in the prior 7d).
       - alert: TankNonRoutineEvent
-        expr: 'sum(count_over_time({source="tank"} != "Test Syslog" !~ "Admin (Accessed UniFi OS|Made Config Changes)"[10m])) > 0'
+        expr: 'sum(count_over_time({source="tank"} != "Test Syslog" !~ "Admin (Accessed UniFi OS|Made Config Changes)" !~ "Backup Created"[10m])) > 0'
         for: 1m
         labels:
           severity: warning
@@ -289,8 +291,18 @@ groups:
       # (access/timeline-view), cameraConnected, applicationUpdate.
       # Soak finding 2026-06-02: "Accessed UniFi OS" is wrong pattern;
       # Protect uses "Accessed UniFi Protect" — fixed to category exclusion.
+      # Soak finding 2026-07-31: this stream also carries the NVR's own
+      # UniFi-OS-layer CEF events (no UNIFIcategory= field at all, so the
+      # category exclusion above never catches them) — "Admin Accessed
+      # UniFi OS", "Backup Created", "Application Update Available" — plus
+      # Protect-app siteActivity (userArrived/userLeft geofence pings) and
+      # per-camera firmware-update completions ("<cam> has been updated to
+      # x.y.z"). 32 of 39 hits over the prior 7d were these, all routine —
+      # excluded. Deliberately KEPT alerting: poorConnection (Garage camera
+      # recurring HQ-recording loss, 5x/7d — real) and lowMemory (transient
+      # during firmware rollout that week, but a real resource signal).
       - alert: ProtectNonRoutineEvent
-        expr: 'sum(count_over_time({source="protect"} != "Test Syslog" !~ "UNIFIcategory=(detection|adminActivity)" !~ "(cameraConnected|applicationUpdate|Application Updated)"[10m])) > 0'
+        expr: 'sum(count_over_time({source="protect"} != "Test Syslog" !~ "UNIFIcategory=(detection|adminActivity|siteActivity)" !~ "(cameraConnected|applicationUpdate|applicationUpdatable|Application Updated|Application Update Available|has been updated to)" !~ "Admin (Accessed UniFi OS|Made Config Changes)" !~ "Backup Created"[10m])) > 0'
         for: 1m
         labels:
           severity: warning
