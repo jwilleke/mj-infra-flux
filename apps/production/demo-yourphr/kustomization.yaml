@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Public, throwaway demo of YourPHR for the CMS Blue Button 2.0 production application process
+# (yourphr#438, yourphr#433). Empty DB, sandbox Medicare only, no Authentik, no real PHI — never
+# bind the ops yourphr-data PVC. Plan: docs/demo-yourphr-org/implementation-plan.md (mj-infra-flux#147).
+
+resources:
+  - ./namespace.yaml
+  - ./pv.yaml
+  - ./pvc.yaml
+
+labels:
+  - pairs:
+      app.jimwilleke.com/name: demo-yourphr
