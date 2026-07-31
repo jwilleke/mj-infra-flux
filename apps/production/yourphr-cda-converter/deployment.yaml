@@ -25,6 +25,18 @@ spec:
           # Image is public (ghcr.io/jwilleke); no imagePullSecret needed.
           # Pinned to immutable SHA; no Flux image-automation (no numerical tag scheme).
           image: ghcr.io/jwilleke/yourphr-cda-converter:c6751a33ac5dc7aae18a041dca42e14a5a482111
+          # The image's own docker-entrypoint.sh sizes --max-old-space-size off the HOST's free memory
+          # (/proc/meminfo, not the cgroup limit) and routes.js sizes the worker pool off os.cpus().length
+          # (20, this node's full core count) — both ignore the resources block below entirely, and
+          # neither is configurable via env var (hardcoded, no override hook upstream). Observed at 386Mi/512Mi
+          # (~75%) at idle with zero conversion load — see thishost docs/apps/yourphr.md. Bypassing the
+          # entrypoint script's own NODE_OPTIONS calc (which would otherwise clobber ours) so the heap
+          # ceiling matches this container's real memory limit instead of the host's ~64GB.
+          command: ["npm", "start"]
+          workingDir: /app
+          env:
+            - name: NODE_OPTIONS
+              value: "--max-old-space-size=768"
           ports:
             - containerPort: 8080
               name: http
@@ -45,6 +57,12 @@ spec:
           resources:
             requests:
               cpu: 50m
-              memory: 128Mi
+              memory: 256Mi
             limits:
-              memory: 512Mi
+              # Worker pool (os.cpus().length = 20 on this node, hardcoded, not configurable) still
+              # inherits NODE_OPTIONS as EACH worker thread's own default old-space ceiling — the
+              # WorkerPool doesn't pass per-worker resourceLimits, so there's no aggregate cap besides
+              # this cgroup limit. Sized well above the observed 386Mi idle baseline; watch actual usage
+              # under a real C-CDA import and raise further if it's still tight.
+              cpu: "2"
+              memory: 1Gi
