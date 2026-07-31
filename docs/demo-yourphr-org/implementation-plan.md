@@ -85,16 +85,21 @@ Verified: `kubectl kustomize apps/production/demo-yourphr` builds cleanly. **Not
 
 Verified: `kubectl kustomize apps/production/demo-yourphr` builds cleanly. Still not wired into `apps/production/kustomization.yaml` — Phase 5.
 
-### Phase 3 — Demo relay
+### Phase 3 — Demo relay — ✅ done 2026-07-31 (`eb5f3be`)
 
 1. `apps/production/demo-yourphr-relay/deployment.yaml` — mirrors `apps/production/yourphr-relay/deployment.yaml` exactly; same image, same `X-Yourphr-Token`-gated `/pending` design, distinct shared secret from prod
 2. `apps/production/demo-yourphr-relay/service.yaml` — ClusterIP, port 8080
-3. `apps/production/demo-yourphr-relay/relay-secret.sops.yaml` — new shared secret, SOPS-encrypted, distinct value from the prod relay's
+3. `apps/production/demo-yourphr-relay/relay-secret.sops.yaml` — freshly generated (`openssl rand -base64 32`), SOPS-encrypted with the repo's standard age recipient + `encrypted_regex: ^(data|stringData)$` convention, decrypt-verified locally before committing. Distinct value, never shared with the prod relay's.
 
-### Phase 4 — Secrets
+**Scope correction to Phase 4 below:** this relay secret didn't need operator input — it's a shared secret between two of our own in-cluster services, safe to self-generate like the ops relay's already is. Phase 4 narrows to just the sandbox Blue Button credentials, which genuinely do need operator-supplied (CMS-registered) values.
 
-1. Operator supplies: demo relay shared secret value, sandbox Blue Button `client_id`/`client_secret`
-2. Infra SOPS-encrypts and commits both — never plaintext in git, never reuse prod values
+Verified: `kubectl kustomize apps/production/demo-yourphr-relay` builds cleanly; decrypted the secret locally to confirm it round-trips correctly. Still not wired into `apps/production/kustomization.yaml` — Phase 5.
+
+### Phase 4 — Secrets (sandbox Blue Button credentials only — see Phase 3 correction above)
+
+1. ~~Operator supplies: demo relay shared secret value~~ — done in Phase 3, self-generated.
+2. Operator supplies: sandbox Blue Button `client_id`/`client_secret`
+3. Infra SOPS-encrypts and commits as `apps/production/demo-yourphr/sandbox-credentials.sops.yaml`, mirroring `apps/production/yourphr/sandbox-credentials.sops.yaml` — never plaintext in git, never reuse prod values
 
 ### Phase 5 — Wiring + image automation
 
