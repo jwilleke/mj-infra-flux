@@ -125,22 +125,26 @@ curl -o /dev/null -w "%{http_code}\n" https://demo-relay.yourphr.org/  # 502 —
 
 Both hostnames resolve through Cloudflare and reach the tunnel correctly; the `502`s are expected until Phases 2/3 (the Services) exist.
 
-### Phase 7 — README + verification
+### Phase 7 — README + verification — ✅ done 2026-07-31 (`2422057`)
 
-1. `apps/production/demo-yourphr/README.md` — mirror `yourphr-relay/README.md`'s structure: architecture diagram, Cloudflare dashboard step, wipe procedure, status/verify commands
-2. Verify against the issue's acceptance criteria (below) before calling this done
+1. `apps/production/demo-yourphr/README.md` — mirrors `yourphr-relay/README.md`'s structure: architecture diagram, Cloudflare dashboard step (with the TLS cert-scope naming note), secrets summary, wipe procedure, status/verify commands
+2. Verified against the acceptance criteria below rather than assumed — see per-item status
 
 ## Verification / acceptance criteria
 
 Copied from the issue — this plan doesn't change them, just tracks against them:
 
-- [ ] `https://demo.yourphr.org` serves YourPHR via the tunnel, no Authentik login wall
-- [ ] `https://demo-relay.yourphr.org/callback` reachable without Authentik
-- [ ] ClusterIP Services exist for both app and relay (required tunnel origins)
-- [ ] App data lives under `/mnt/local-k3s-data/demo-yourphr/`, empty of PHI at first boot
-- [ ] Demo app polls the relay in-cluster; the public relay URL is used only for the browser OAuth callback
-- [ ] Ops `yourphr` namespace/PVC completely unchanged by this work
-- [ ] README documents the wipe procedure, hostnames, and secret keys
+- [x] `https://demo.yourphr.org` serves YourPHR via the tunnel, no Authentik login wall — confirmed live (`200`, no `Location` header to Authentik)
+- [x] `https://demo-relay.yourphr.org/callback` reachable without Authentik — confirmed live (`400`, not an auth-wall redirect; expected without a real `state`/`code`)
+- [x] ClusterIP Services exist for both app and relay (required tunnel origins) — confirmed via `kubectl get svc -n demo-yourphr`
+- [x] App data lives under `/mnt/local-k3s-data/demo-yourphr/`, empty of PHI at first boot — confirmed: `demo-yourphr-data` PVC bound to its dedicated PV, real files on disk (`fasten.db`, `.jwt_issuer_key`), sandbox-only data
+- [x] Demo app polls the relay in-cluster; the public relay URL is used only for the browser OAuth callback — confirmed via env vars + no relay errors in pod logs
+- [x] Ops `yourphr` namespace/PVC completely unchanged by this work — confirmed: `yourphr-data` still bound to its own 5Gi `local-path` PVC, all three ops pods (`yourphr`, `yourphr-relay`, `yourphr-cda-converter`) unaffected
+- [x] README documents the wipe procedure, hostnames, and secret keys — done
+- [ ] Sandbox Medicare connect flow completes end-to-end — **not curl-verifiable**, needs an operator to actually click through the app in a browser
+- [ ] CMS sandbox app's registered callback URL matches `https://demo-relay.yourphr.org/callback` — **operator/CMS-portal action**, tracked in [yourphr#433](https://github.com/jwilleke/yourphr/issues/433), not infra work
+
+All infra-side acceptance criteria are met. The two remaining items are outside what Flux/Kubernetes work can verify — they're the operator's next step, not blocked on anything here.
 
 ## Risks (from the issue, plus what's already de-risked)
 
