@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-yourphr-relay
+  namespace: demo-yourphr
+spec:
+  selector:
+    app: demo-yourphr-relay
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+    - name: metrics
+      port: 9090
+      targetPort: 9090

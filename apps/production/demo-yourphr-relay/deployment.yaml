@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-yourphr-relay
+  namespace: demo-yourphr
+  labels:
+    app: demo-yourphr-relay
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-yourphr-relay
+  template:
+    metadata:
+      labels:
+        app: demo-yourphr-relay
+    spec:
+      containers:
+        - name: relay
+          # Demo instance of the SMART on FHIR store-and-poll relay (EPIC #20, yourphr#50) — mirrors
+          # apps/production/yourphr-relay exactly. docs/demo-yourphr-org/implementation-plan.md
+          # (mj-infra-flux#147). Shares the ops yourphr-relay ImagePolicy; Phase 5 adds a separate
+          # ImageUpdateAutomation path so this bumps independently.
+          image: ghcr.io/jwilleke/yourphr-relay:main-44 # {"$imagepolicy": "flux-system:yourphr-relay"}
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 9090
+              name: metrics # in-cluster Prometheus scrape only; NOT routed via the public tunnel
+          envFrom:
+            # YOURPHR_RELAY_SECRET — gates /pending. Distinct value from the prod relay's secret
+            # (never shared across ops/demo). See relay-secret.sops.yaml.
+            - secretRef:
+                name: demo-yourphr-relay
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            timeoutSeconds: 5
