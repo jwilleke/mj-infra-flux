@@ -28,6 +28,20 @@ spec:
             - containerPort: 8080
               name: http
           env:
+            # Instance data root (yourphr#451). Everything the instance owns and must not lose:
+            # the DB, the generated JWT signing key, backups, and — as of yourphr#452 — the
+            # instance custom config store at <root>/config/app-custom-config.json (operator
+            # contact, theme).
+            #
+            # MUST equal the demo-yourphr-data PVC mountPath below. Before this key existed the
+            # root was derived from database.location's parent, which resolves to the same
+            # /opt/fasten/db — so this is explicit documentation of current behaviour, not a
+            # move. Point it anywhere outside the PVC and the config store lands on the
+            # container filesystem and is silently lost on every pod restart. The demo PV is a
+            # hostPath (/mnt/local-k3s-data/demo-yourphr), so "outside the PVC" here means
+            # outside that directory on the node.
+            - name: YOURPHR_STORAGE_DATA_DIR
+              value: "/opt/fasten/db"
             # In-cluster poll — never the public relay hostname. Same hairpin-avoidance rule as prod
             # (yourphr#51): the backend runs inside the cluster, so it reaches the demo relay pod
             # directly over the ClusterIP Service instead of round-tripping through Cloudflare.
