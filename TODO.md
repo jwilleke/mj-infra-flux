@@ -16,9 +16,11 @@
 
 ## 🔴 P0 — Security & Critical
 
-_none yet — run `/status`_
+None open.
 
 ## 🟠 P1
+
+None open.
 
 ## 🟡 P2
 
