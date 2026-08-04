@@ -49,6 +49,19 @@ spec:
             # Redundant while the ConfigMap remains — deliberately, so this step changes nothing.
             - name: YOURPHR_CACHE_LOCATION
               value: "/opt/fasten/db/fasten.cache.db"
+            # Pinned ahead of yourphr#470: the image's baked config.yaml (which set
+            # database.encryption.enabled: true) is being removed, and the shipped default flips
+            # to true to preserve behaviour for stock Docker installs that already have encrypted
+            # databases. This instance runs UNENCRYPTED — it relied on that value being shadowed
+            # by the ConfigMap — so pin it explicitly before the default changes.
+            # Note: enabling encryption also disables backup and restore (yourphr#367).
+            - name: YOURPHR_DATABASE_ENCRYPTION_ENABLED
+              value: "false"
+            # Demo has no cda-converter sidecar, and the shipped default is flipping to enabled
+            # with a compose-network URL. Pin it off so XML upload fails clearly rather than
+            # timing out against a host that does not resolve here.
+            - name: YOURPHR_CDA_CONVERTER_ENABLED
+              value: "false"
             # In-cluster poll — never the public relay hostname. Same hairpin-avoidance rule as prod
             # (yourphr#51): the backend runs inside the cluster, so it reaches the demo relay pod
             # directly over the ClusterIP Service instead of round-tripping through Cloudflare.
