@@ -105,9 +105,6 @@ spec:
           volumeMounts:
             - name: demo-yourphr-data
               mountPath: /opt/fasten/db
-            - name: demo-yourphr-config
-              mountPath: /opt/fasten/config
-              readOnly: true
           resources:
             requests:
               cpu: 100m
@@ -137,6 +134,3 @@ spec:
         - name: demo-yourphr-data
           persistentVolumeClaim:
             claimName: demo-yourphr-data
-        - name: demo-yourphr-config
-          configMap:
-            name: demo-yourphr-config

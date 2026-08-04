@@ -143,9 +143,6 @@ spec:
           volumeMounts:
             - name: yourphr-data
               mountPath: /opt/fasten/db
-            - name: yourphr-config
-              mountPath: /opt/fasten/config
-              readOnly: true
             # NAS archive (tank, 192.168.68.41) so the in-app backup (Admin -> Database) can write to
             # the OS/NAS filesystem instead of only the node-local PVC. Choose /nas-backup as the
             # destination in the card. yourphr#361.
@@ -181,9 +178,6 @@ spec:
         - name: yourphr-data
           persistentVolumeClaim:
             claimName: yourphr-data
-        - name: yourphr-config
-          configMap:
-            name: yourphr-config
         # Same NAS share the backup CronJob uses (192.168.68.41:/var/nfs/shared/jims mounted on the
         # node at /mnt/tank/jims), pointed at data/archive/yourphr-backup. The app pod is already pinned
         # to this node by the local-path PVC + Recreate strategy, so the hostPath resolves consistently.
