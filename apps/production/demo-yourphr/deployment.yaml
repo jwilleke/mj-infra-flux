@@ -42,6 +42,13 @@ spec:
             # outside that directory on the node.
             - name: YOURPHR_STORAGE_DATA_DIR
               value: "/opt/fasten/db"
+            # Explicit ahead of retiring the config.yaml ConfigMap (yourphr#470). The ConfigMap
+            # currently sets cache.location to this same value; the shipped default is
+            # /opt/fasten/cache/, which is NOT on the yourphr-data volume. Removing the ConfigMap
+            # without this would silently relocate the cache onto the container filesystem.
+            # Redundant while the ConfigMap remains — deliberately, so this step changes nothing.
+            - name: YOURPHR_CACHE_LOCATION
+              value: "/opt/fasten/db/fasten.cache.db"
             # In-cluster poll — never the public relay hostname. Same hairpin-avoidance rule as prod
             # (yourphr#51): the backend runs inside the cluster, so it reaches the demo relay pod
             # directly over the ClusterIP Service instead of round-tripping through Cloudflare.

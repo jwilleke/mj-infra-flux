@@ -40,6 +40,13 @@ spec:
             # container filesystem and is silently lost on every pod restart.
             - name: YOURPHR_STORAGE_DATA_DIR
               value: "/opt/fasten/db"
+            # Explicit ahead of retiring the config.yaml ConfigMap (yourphr#470). The ConfigMap
+            # currently sets cache.location to this same value; the shipped default is
+            # /opt/fasten/cache/, which is NOT on the yourphr-data volume. Removing the ConfigMap
+            # without this would silently relocate the cache onto the container filesystem.
+            # Redundant while the ConfigMap remains — deliberately, so this step changes nothing.
+            - name: YOURPHR_CACHE_LOCATION
+              value: "/opt/fasten/db/fasten.cache.db"
             # Poll the relay over the in-cluster Service, NOT its public Cloudflare URL.
             # The backend runs inside the cluster; hitting https://relay.nerdsbythehour.com
             # from here hairpins out to Cloudflare and back through the tunnel and times out
