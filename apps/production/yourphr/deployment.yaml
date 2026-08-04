@@ -55,6 +55,18 @@ spec:
             # Note: enabling encryption also disables backup and restore (yourphr#367).
             - name: YOURPHR_DATABASE_ENCRYPTION_ENABLED
               value: "false"
+            # Pinned ahead of yourphr#470 step 3, for the same reason as YOURPHR_CACHE_LOCATION
+            # above. This is the ONLY key in the ConfigMap that is both live and not already
+            # covered by an env var or matched by the shipped default (which is an empty list):
+            # the four web.listen_* / jwt_expiry_hours keys do not exist, database.location and
+            # log.level are byte-identical to the defaults, and cache.location is pinned above.
+            #
+            # In practice the NAS path also survives via .backup_settings.json, whose persisted
+            # destination AllowedBackupRoots adds as a root (yourphr#434) — but that depends on
+            # the Admin card having been used, which is not something this file should assume.
+            # Redundant while the ConfigMap remains, deliberately, so this step changes nothing.
+            - name: YOURPHR_BACKUP_ALLOWED_ROOTS
+              value: "/nas-backup"
             # Poll the relay over the in-cluster Service, NOT its public Cloudflare URL.
             # The backend runs inside the cluster; hitting https://relay.nerdsbythehour.com
             # from here hairpins out to Cloudflare and back through the tunnel and times out
