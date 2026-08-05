@@ -23,7 +23,7 @@ spec:
           # docs/demo-yourphr-org/implementation-plan.md (mj-infra-flux#147). Shares the ops yourphr
           # ImagePolicy (flux-system:yourphr); a separate ImageUpdateAutomation path (Phase 5) bumps
           # this file independently of apps/production/yourphr/deployment.yaml.
-          image: ghcr.io/jwilleke/yourphr:2.0.0 # {"$imagepolicy": "flux-system:yourphr"}
+          image: ghcr.io/jwilleke/yourphr:2.1.0 # {"$imagepolicy": "flux-system:yourphr"}
           ports:
             - containerPort: 8080
               name: http
