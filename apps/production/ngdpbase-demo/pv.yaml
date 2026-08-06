@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ngdpbase-demo-data-pv
+  labels:
+    app: ngdpbase-demo
+    type: data
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  # Retain, not Delete — this is a throwaway demo volume, but wiping it should
+  # be an explicit operator action (see README), never a side effect of the PVC
+  # being deleted or recreated.
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  # Node-local, exactly like demo-yourphr. Deliberately NOT under
+  # /mnt/tank/jims/data/systems/ where the real instances live — a public demo
+  # holding anonymous strangers' page edits has no business sharing a tree with
+  # ops data, and the wipe runbook deletes everything in this directory.
+  hostPath:
+    path: /mnt/local-k3s-data/ngdpbase-demo
+    type: DirectoryOrCreate

@@ -1,0 +1,53 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: ngdpbase-demo
+  namespace: flux-system
+spec:
+  image: ghcr.io/jwilleke/ngdpbase
+  interval: 10m
+  # GHCR package is PUBLIC — scanned anonymously, no pull secret needed, same
+  # as the geohazardwatch repository above.
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: ngdpbase-demo
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: ngdpbase-demo
+  policy:
+    semver:
+      # Auto-update minor and patch within the current major. A major bump
+      # requires widening this range by hand.
+      range: ">=4.0.0 <5.0.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: ngdpbase-demo
+  namespace: flux-system
+spec:
+  interval: 10m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump ngdpbase-demo to {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans the app dir for the `# {"$imagepolicy": "flux-system:ngdpbase-demo"}`
+    # marker. Scoped to this directory so bumping the demo never touches
+    # geohazardwatch, which layers its own image on the same base.
+    path: ./apps/production/ngdpbase-demo
+    strategy: Setters

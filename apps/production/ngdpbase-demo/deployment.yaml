@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ngdpbase-demo
+  namespace: ngdpbase-demo
+  labels:
+    app: ngdpbase-demo
+spec:
+  replicas: 1
+  # Recreate, not RollingUpdate: a single ReadWriteOnce hostPath volume cannot
+  # be held by an old and a new pod at once.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ngdpbase-demo
+  template:
+    metadata:
+      labels:
+        app: ngdpbase-demo
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: ngdpbase-demo
+          # Public, throwaway demo of stock ngdpbase — no addons, no real data.
+          # Unlike geohazardwatch this runs the base image directly, so it
+          # tracks ngdpbase releases with no intermediate build.
+          image: ghcr.io/jwilleke/ngdpbase:4.4.0 # {"$imagepolicy": "flux-system:ngdpbase-demo"}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: "production"
+            # Seed required-pages/ on first boot instead of running the
+            # interactive install wizard.
+            - name: HEADLESS_INSTALL
+              value: "true"
+            # Must equal the PVC mountPath below — pages, users, sessions, the
+            # search index and the custom config store all live under it.
+            - name: INSTANCE_DATA_FOLDER
+              value: "/app/data"
+            # NGDPBASE_SESSION_SECRET, not SESSION_SECRET — only the six keys
+            # listed in ConfigurationManager.getProperty() have env overrides,
+            # and this is the name it looks for.
+            - name: NGDPBASE_SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ngdpbase-demo-secrets
+                  key: session-secret
+                  optional: true
+            # Consumed by the `$NGDPBASE_SMTP_PASS` / `$NGDPBASE_MAIL_FROM`
+            # env-refs in the ConfigMap above, not by any env override of their
+            # own. NOT optional: an unset ref throws at startup naming the key,
+            # which is the behaviour we want — magic link is the only way to
+            # sign in here, so silently having no mail would leave the demo
+            # permanently unauthenticatable with nothing in the logs saying why.
+            - name: NGDPBASE_SMTP_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: ngdpbase-demo-resend
+                  key: api-key
+            - name: NGDPBASE_MAIL_FROM
+              valueFrom:
+                secretKeyRef:
+                  name: ngdpbase-demo-resend
+                  key: from
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: config
+              mountPath: /app/data/config/app-custom-config.json
+              subPath: app-custom-config.json
+              readOnly: true
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 45
+            periodSeconds: 10
+            timeoutSeconds: 15
+            failureThreshold: 3
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: ngdpbase-demo-data
+        - name: config
+          configMap:
+            name: ngdpbase-demo-config
+            items:
+              - key: app-custom-config.json
+                path: app-custom-config.json
+      restartPolicy: Always

@@ -1,0 +1,94 @@
+# ngdpbase-demo
+
+Public, throwaway demo of [ngdpbase](https://github.com/jwilleke/ngdpbase) at `https://ngdpbase-demo.nerdsbythehour.com`. Anyone evaluating the project can click rather than clone. Source issue: [ngdpbase#1026](https://github.com/jwilleke/ngdpbase/issues/1026).
+
+Runs the **stock base image** — no addons, no domain config. `geohazardwatch` layers its own image on the same base but tracks its own tag, so the two never move together.
+
+**Never contains anything worth keeping.** The volume is wiped between demos and anything a visitor writes goes with it.
+
+## How it's exposed publicly — Cloudflare Tunnel (not Traefik)
+
+Same pattern as `demo-yourphr` and `geohazardwatch.com`: no Traefik Ingress, no cert-manager TLS. Cloudflare terminates TLS at the edge and the existing `tunnel-infra-flux` tunnel (`apps/production/cloudflared`) reaches the Service directly over plain in-cluster HTTP — which is what bypasses Authentik by design, since the whole point is that strangers can read it without an account.
+
+```text
+Internet → Cloudflare Edge (TLS terminated here)
+        → Tunnel → cloudflared (shared with nerdsbythehour.com + geohazardwatch.com)
+        → Service ngdpbase-demo.ngdpbase-demo.svc.cluster.local:80 → pod :3000
+
+Storage: hostPath /mnt/local-k3s-data/ngdpbase-demo → /app/data
+         Deliberately NOT under /mnt/tank/jims/data/systems/ where the real
+         instances live.
+```
+
+### Cloudflare dashboard step (manual, not in git)
+
+Zero Trust → existing tunnel (`tunnel-infra-flux`) → **Published application routes** → add:
+
+| Subdomain | Domain | Type | Service |
+|---|---|---|---|
+| `ngdpbase-demo` | `nerdsbythehour.com` | `HTTP` | `ngdpbase-demo.ngdpbase-demo.svc.cluster.local:80` |
+
+Saving auto-creates the proxied CNAME — no manual DNS entry, no firewall port.
+
+> **Keep the hostname single-level.** `demo-yourphr`'s README records a TLS handshake failure at the Cloudflare edge from a two-level subdomain, because the zone's Universal SSL cert covers one wildcard level only.
+
+## Access model
+
+| Who | Can |
+|---|---|
+| Anonymous | Read every page, and nothing else |
+| Signed in | Read, edit, create, upload — **not** delete or rename |
+
+Accounts come from **magic link only** (ngdpbase#1026). The password `/register` form is off (`application.registration.password: false`), and accounts created by a magic link are `isExternal` — they hold an empty password hash that no password input can match, so there is no password to guess or leak.
+
+`admin` still has a password and `/login` still accepts it. **Change it from the install default before the Cloudflare route is created**, not after.
+
+## Secrets
+
+Two, both distinct from every other instance:
+
+- `ngdpbase-demo-resend` — `api-key` (Resend send-only API key) and `from` (a sender on a Resend-verified domain). Consumed by the `$NGDPBASE_SMTP_PASS` / `$NGDPBASE_MAIL_FROM` env-refs in `configmap.yaml`. **Not optional**: an unset ref throws at startup naming the key, which is what we want — magic link is the only way in, so silently having no mail would leave the demo unauthenticatable with nothing in the logs explaining why.
+- `ngdpbase-demo-secrets` — `session-secret`, optional.
+
+```bash
+kubectl -n ngdpbase-demo create secret generic ngdpbase-demo-resend \
+  --from-literal=api-key='re_...' \
+  --from-literal=from='ngdpbase demo <demo@nerdsbythehour.com>'
+
+kubectl -n ngdpbase-demo create secret generic ngdpbase-demo-secrets \
+  --from-literal=session-secret="$(openssl rand -base64 32)"
+```
+
+Resend's free tier is roughly **100 sends/day** and every sign-in request spends one. The per-IP budget in `ngdpbase.mail.rate-limit.*` is enabled in the ConfigMap for exactly that reason — do not turn it off here.
+
+## Wiping the demo
+
+```bash
+kubectl scale deploy/ngdpbase-demo -n ngdpbase-demo --replicas=0
+# on deby:
+sudo rm -rf /mnt/local-k3s-data/ngdpbase-demo/*
+kubectl scale deploy/ngdpbase-demo -n ngdpbase-demo --replicas=1
+```
+
+The pod reseeds `required-pages/` on next boot (`HEADLESS_INSTALL=true`), so the Welcome / Sandbox / Feature Tour pages come back automatically. Visitor accounts and edits do not.
+
+## Auto-update
+
+`../image-automation/ngdpbase-demo-policy.yaml` scans `ghcr.io/jwilleke/ngdpbase` every 10m and rewrites the `# {"$imagepolicy": …}`-marked line in `deployment.yaml` for any `>=4.0.0 <5.0.0` tag. Scoped to this directory, so a demo bump never touches geohazardwatch.
+
+## Known behaviour
+
+- **Magic-link tokens are held in memory.** A pod restart — including an image bump — invalidates every outstanding link. Not a bug; request another.
+- **The ConfigMap mount is read-only.** Admin UI screens that write back to `app-custom-config.json` will fail here. Change config in this repo instead.
+
+## Verify
+
+```bash
+kubectl -n ngdpbase-demo get pods                                                        # 1/1 Running
+kubectl -n ngdpbase-demo logs deploy/ngdpbase-demo | head -50                            # seeded pages, no config errors
+curl -o /dev/null -w "%{http_code}\n" https://ngdpbase-demo.nerdsbythehour.com/          # 200
+curl -sI https://ngdpbase-demo.nerdsbythehour.com/ | grep -i location                    # empty — no Authentik redirect
+curl -o /dev/null -w "%{http_code}\n" https://ngdpbase-demo.nerdsbythehour.com/register  # 404 — password signup off
+```
+
+Then, in a browser with a real mailbox: request a link for an address with no account, confirm it arrives, click it, confirm you can edit but not delete.
