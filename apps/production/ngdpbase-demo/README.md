@@ -41,14 +41,22 @@ Saving auto-creates the proxied CNAME — no manual DNS entry, no firewall port.
 
 Accounts come from **magic link only** (ngdpbase#1026). The password `/register` form is off (`application.registration.password: false`), and accounts created by a magic link are `isExternal` — they hold an empty password hash that no password input can match, so there is no password to guess or leak.
 
-`admin` still has a password and `/login` still accepts it. **Change it from the install default before the Cloudflare route is created**, not after.
+`admin` still has a password and `/login` still accepts it — but it is **never** the shipped `admin123`. `ngdpbase.user.security.defaultpassword` is fed from the `admin-password` Secret key, and that is what the account is created with on first boot.
+
+This matters most **after a wipe**. `createDefaultAdmin()` only runs when no admin exists, so resetting the volume recreates the account from that config value. Without this wiring, every reset would put `admin`/`admin123` back on a permanently-live public URL — and unlike a private install there is no window in which to fix it before the internet can reach it.
+
+### `/admin/configuration` cannot save here
+
+The dashboard itself works normally — users, roles, trash, backup, logs, required-pages and the rest. The one exception is **saving** on `/admin/configuration`: `ConfigurationManager.saveCustomConfiguration()` writes `app-custom-config.json`, which on this instance is a read-only `subPath` ConfigMap mount, so the write throws. Viewing is fine.
+
+That is the intended trade — config belongs in this repo, not in a volume that gets wiped. Change settings by editing `configmap.yaml` here and letting Flux roll the pod.
 
 ## Secrets
 
-Two, both distinct from every other instance:
+Two, both distinct from every other instance. Create them **before** this app first reconciles: `ngdpbase-demo-resend` and the `admin-password` key are deliberately not `optional`, so the pod will not start without them.
 
 - `ngdpbase-demo-resend` — `api-key` (Resend send-only API key) and `from` (a sender on a Resend-verified domain). Consumed by the `$NGDPBASE_SMTP_PASS` / `$NGDPBASE_MAIL_FROM` env-refs in `configmap.yaml`. **Not optional**: an unset ref throws at startup naming the key, which is what we want — magic link is the only way in, so silently having no mail would leave the demo unauthenticatable with nothing in the logs explaining why.
-- `ngdpbase-demo-secrets` — `session-secret`, optional.
+- `ngdpbase-demo-secrets` — `admin-password` (required, see above) and `session-secret` (optional).
 
 ```bash
 kubectl -n ngdpbase-demo create secret generic ngdpbase-demo-resend \
@@ -56,7 +64,14 @@ kubectl -n ngdpbase-demo create secret generic ngdpbase-demo-resend \
   --from-literal=from='ngdpbase demo <demo@nerdsbythehour.com>'
 
 kubectl -n ngdpbase-demo create secret generic ngdpbase-demo-secrets \
+  --from-literal=admin-password="$(openssl rand -base64 24)" \
   --from-literal=session-secret="$(openssl rand -base64 32)"
+```
+
+Read the admin password back when you need it:
+
+```bash
+kubectl -n ngdpbase-demo get secret ngdpbase-demo-secrets -o jsonpath='{.data.admin-password}' | base64 -d; echo
 ```
 
 Resend's free tier is roughly **100 sends/day** and every sign-in request spends one. The per-IP budget in `ngdpbase.mail.rate-limit.*` is enabled in the ConfigMap for exactly that reason — do not turn it off here.
