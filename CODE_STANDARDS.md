@@ -181,10 +181,23 @@ It does two things:
 
 Markdown that is mechanically fixable is fixed and re-staged automatically. Anything left is a real violation and blocks the commit. Bypass a single commit with `git commit --no-verify`.
 
-Two rules are enabled here that many projects disable, and they are the ones hand-written prose trips most often:
+### What actually fails
 
+From a real CI run with 597 violations (2026-06-21), four rules account for 97% of them — and **all four are auto-fixable**, which is the whole argument for fixing at commit time rather than expecting anyone to memorise the ruleset:
+
+| Rule | Count | What it wants |
+|---|---|---|
+| MD032 | 195 | A blank line before and after every list |
+| MD031 | 159 | A blank line before and after every fenced code block |
+| MD022 | 113 | A blank line before and after every heading |
+| MD034 | 112 | No bare URLs — use `[text](url)` or `<url>` |
+
+The pattern is *blank lines around block elements*, plus pasted URLs. It concentrates in long hand-written docs — `apps/production/monitoring/README.md`, `AGENTS.md` and `security/SECURITY.md` were the worst offenders in that run.
+
+Two more need human judgment, because `--fix` cannot infer intent. Both are enabled here and disabled in many projects, so they are easy to trip:
+
+- **MD036** — bold used as a heading. Use a real `###` heading.
 - **MD033** — inline HTML. A bare `<placeholder>` in prose parses as a tag; wrap it in backticks.
-- **MD036** — bold used as a heading. Use a real `###` heading instead of a bold line.
 
 ## Package Standards
 
