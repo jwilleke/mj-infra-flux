@@ -166,13 +166,25 @@ Closes #123
 
 ## Pre-commit Hooks
 
-Husky is configured to run linting before commits. Commits with linting errors will be rejected.
+This repo has **no `package.json` and no husky** — it is YAML and shell, not a Node project. Enforcement is a plain git hook instead: `scripts/git-hook-commit.sh`.
 
-Run the pre-commit hook manually:
+It does two things:
+
+1. `kubectl kustomize` over `apps/production` and `infrastructure/prod/configs` — catches a manifest that will not build before Flux tries it
+2. `markdownlint-cli2 --fix` over staged `*.md`, against `.markdownlint.jsonc` — the same rulebook CI uses
+
+**Install it once per clone.** Git hooks live in `.git/hooks/`, which is not version controlled, so a hook committed to `scripts/` does nothing until it is wired up:
 
 ```bash
-npm run lint
+./scripts/install-git-hooks.sh
 ```
+
+Markdown that is mechanically fixable is fixed and re-staged automatically. Anything left is a real violation and blocks the commit. Bypass a single commit with `git commit --no-verify`.
+
+Two rules are enabled here that many projects disable, and they are the ones hand-written prose trips most often:
+
+- **MD033** — inline HTML. A bare `<placeholder>` in prose parses as a tag; wrap it in backticks.
+- **MD036** — bold used as a heading. Use a real `###` heading instead of a bold line.
 
 ## Package Standards
 
