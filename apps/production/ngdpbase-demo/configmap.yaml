@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ngdpbase-demo-config
+  namespace: ngdpbase-demo
+data:
+  # Mounted at /app/data/config/app-custom-config.json via subPath.
+  # ConfigurationManager reads instance overrides from
+  # INSTANCE_DATA_FOLDER/config/app-custom-config.json and deep-merges them over
+  # config/app-default-config.json shipped in the image.
+  #
+  # `$VAR` values are env-refs resolved at read time (ngdpbase #775): the config
+  # stays readable in git while the credential itself arrives from the Secret as
+  # an environment variable. A `$VAR` whose env var is unset throws at startup
+  # with the key named, so a missing secret fails loudly instead of silently
+  # sending no mail.
+  app-custom-config.json: |
+    {
+      "ngdpbase.application.base-url": "https://ngdpbase-demo.nerdsbythehour.com",
+
+      "ngdpbase.application.registration": true,
+      "ngdpbase.application.registration.password": false,
+
+      "ngdpbase.auth.magic-link.enabled": true,
+      "ngdpbase.auth.magic-link.auto-provision": true,
+      "ngdpbase.auth.magic-link.registration.default-role": "contributor",
+      "ngdpbase.auth.magic-link.ttl-minutes": 15,
+
+      "ngdpbase.mail.enabled": true,
+      "ngdpbase.mail.provider": "smtp",
+      "ngdpbase.mail.provider.smtp.host": "smtp.resend.com",
+      "ngdpbase.mail.provider.smtp.port": 587,
+      "ngdpbase.mail.provider.smtp.secure": false,
+      "ngdpbase.mail.provider.smtp.user": "resend",
+      "ngdpbase.mail.provider.smtp.pass": "$NGDPBASE_SMTP_PASS",
+      "ngdpbase.mail.provider.smtp.from": "$NGDPBASE_MAIL_FROM",
+
+      "ngdpbase.mail.rate-limit.enabled": true,
+      "ngdpbase.mail.rate-limit.max-submissions": 5,
+      "ngdpbase.mail.rate-limit.window-minutes": 15,
+      "ngdpbase.mail.honeypot.enabled": true
+    }

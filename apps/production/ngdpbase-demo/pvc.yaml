@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ngdpbase-demo-data
+  namespace: ngdpbase-demo
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: ""
+  # Bound by name so this can never drift onto a dynamically provisioned volume
+  # or, worse, an existing ops PVC.
+  volumeName: ngdpbase-demo-data-pv
