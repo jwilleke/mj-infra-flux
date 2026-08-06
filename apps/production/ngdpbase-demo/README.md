@@ -4,7 +4,9 @@ Public, throwaway demo of [ngdpbase](https://github.com/jwilleke/ngdpbase) at `h
 
 Runs the **stock base image** — no addons, no domain config. `geohazardwatch` layers its own image on the same base but tracks its own tag, so the two never move together.
 
-**Never contains anything worth keeping.** The volume is wiped between demos and anything a visitor writes goes with it.
+**Never contains anything worth keeping.** Anything a visitor writes here is disposable and is not backed up.
+
+There is **no scheduled wipe** — no CronJob, nothing automatic. The volume is only ever reset by an operator deliberately running the commands under [Resetting the demo](#resetting-the-demo).
 
 ## How it's exposed publicly — Cloudflare Tunnel (not Traefik)
 
@@ -76,7 +78,9 @@ kubectl -n ngdpbase-demo get secret ngdpbase-demo-secrets -o jsonpath='{.data.ad
 
 Resend's free tier is roughly **100 sends/day** and every sign-in request spends one. The per-IP budget in `ngdpbase.mail.rate-limit.*` is enabled in the ConfigMap for exactly that reason — do not turn it off here.
 
-## Wiping the demo
+## Resetting the demo
+
+**Manual only, and not on any schedule.** Nothing resets this instance automatically — no CronJob, no timer. Run this when you actually want a clean slate (accumulated spam, a mangled demo, or testing the reseed path), not as routine maintenance.
 
 ```bash
 kubectl scale deploy/ngdpbase-demo -n ngdpbase-demo --replicas=0
@@ -85,7 +89,9 @@ sudo rm -rf /mnt/local-k3s-data/ngdpbase-demo/*
 kubectl scale deploy/ngdpbase-demo -n ngdpbase-demo --replicas=1
 ```
 
-The pod reseeds `required-pages/` on next boot (`HEADLESS_INSTALL=true`), so the Welcome / Sandbox / Feature Tour pages come back automatically. Visitor accounts and edits do not.
+Deletes all 16 directories on the volume: `pages`, `users`, `sessions`, `attachments`, `comments`, `footnotes`, `shares`, `tokens`, `notifications`, `persons`, `roles`, `organizations`, `backups`, `logs`, `search-index`, `config`.
+
+The pod reseeds `required-pages/` from the image on next boot (`HEADLESS_INSTALL=true`), so the shipped documentation plus the Welcome / Sandbox / Feature Tour pages come back automatically. Visitor accounts and edits do not — and neither does any admin password set through the UI, which is why `admin-password` in the Secret is what governs the account after a reset.
 
 ## Auto-update
 
