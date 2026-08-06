@@ -16,7 +16,10 @@ data:
   # sending no mail.
   app-custom-config.json: |
     {
+      "ngdpbase.application-name": "Demo ngdpbase",
       "ngdpbase.application.base-url": "https://ngdpbase-demo.nerdsbythehour.com",
+
+      "ngdpbase.user.security.defaultpassword": "$NGDPBASE_ADMIN_PASSWORD",
 
       "ngdpbase.application.registration": true,
       "ngdpbase.application.registration.password": false,

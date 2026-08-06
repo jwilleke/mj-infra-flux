@@ -52,6 +52,21 @@ spec:
                   name: ngdpbase-demo-secrets
                   key: session-secret
                   optional: true
+            # Consumed by the `$NGDPBASE_ADMIN_PASSWORD` env-ref in the
+            # ConfigMap. The admin account is created with THIS password on
+            # first boot, so a wiped demo never comes back up reachable with
+            # the shipped admin/admin123 default. That matters because the
+            # Cloudflare route is permanently live — after a wipe there is no
+            # private window in which to change a default before the internet
+            # can reach it.
+            #
+            # NOT optional: refusing to start is the correct behaviour when the
+            # alternative is a public instance with a known password.
+            - name: NGDPBASE_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ngdpbase-demo-secrets
+                  key: admin-password
             # Consumed by the `$NGDPBASE_SMTP_PASS` / `$NGDPBASE_MAIL_FROM`
             # env-refs in the ConfigMap above, not by any env override of their
             # own. NOT optional: an unset ref throws at startup naming the key,
