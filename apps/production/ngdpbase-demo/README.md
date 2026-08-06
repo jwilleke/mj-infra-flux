@@ -55,6 +55,12 @@ That is the intended trade — config belongs in this repo, not in a volume that
 
 ## Secrets
 
+> **Not in git.** Unlike `demo-yourphr` and `geohazardwatch`, this app ships **no SOPS-encrypted secret file**. Both Secrets below were created by hand with `kubectl` and exist only in the cluster.
+>
+> They survive pod restarts, image bumps and node reboots — ordinary Kubernetes state. They do **not** survive deleting the namespace or rebuilding the cluster, and `flux bootstrap` alone will not restore them: the pod fails to start until they are recreated by hand.
+>
+> That is a deliberate trade for a disposable demo — recovery is the two commands below — but it means this app is **not** self-contained in git the way its neighbours are. If that stops being acceptable, encrypt them into `resend-smtp.sops.yaml` and `secrets.sops.yaml` here and list both in `kustomization.yaml`, matching `../demo-yourphr/sandbox-credentials.sops.yaml`.
+
 Two, both distinct from every other instance. Create them **before** this app first reconciles: `ngdpbase-demo-resend` and the `admin-password` key are deliberately not `optional`, so the pod will not start without them.
 
 - `ngdpbase-demo-resend` — `api-key` (Resend send-only API key) and `from` (a sender on a Resend-verified domain). Consumed by the `$NGDPBASE_SMTP_PASS` / `$NGDPBASE_MAIL_FROM` env-refs in `configmap.yaml`. **Not optional**: an unset ref throws at startup naming the key, which is what we want — magic link is the only way in, so silently having no mail would leave the demo unauthenticatable with nothing in the logs explaining why.
