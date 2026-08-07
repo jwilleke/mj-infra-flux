@@ -88,10 +88,6 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /app/data
-            - name: org
-              mountPath: /app/data/organizations/geohazardwatch.json
-              subPath: geohazardwatch.json
-              readOnly: true
           resources:
             requests:
               cpu: "100m"
@@ -120,10 +116,4 @@ spec:
           hostPath:
             path: /mnt/tank/jims/data/systems/geohazardwatch
             type: DirectoryOrCreate
-        - name: org
-          configMap:
-            name: geohazardwatch-config
-            items:
-              - key: geohazardwatch.json
-                path: geohazardwatch.json
       restartPolicy: Always
