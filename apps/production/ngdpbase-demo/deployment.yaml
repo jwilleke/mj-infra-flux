@@ -90,6 +90,16 @@ spec:
               mountPath: /app/data/config/app-custom-config.json
               subPath: app-custom-config.json
               readOnly: true
+            # The anchor Organization (ngdpbase#1027). Named by
+            # ngdpbase.application.organization.file in the ConfigMap and read
+            # from the organizations storage directory. Without it every role
+            # assignment silently no-ops and nobody — including admin — has any
+            # permissions. Mounted rather than written to the PVC so it survives
+            # the reset in README "Resetting the demo".
+            - name: config
+              mountPath: /app/data/organizations/ngdpbase-demo-nerdsbythehour-com.json
+              subPath: ngdpbase-demo-nerdsbythehour-com.json
+              readOnly: true
           resources:
             requests:
               cpu: "100m"
@@ -123,4 +133,9 @@ spec:
             items:
               - key: app-custom-config.json
                 path: app-custom-config.json
+              # Must be listed here as well as mounted above — an `items` list
+              # projects ONLY the keys it names, so omitting this would leave
+              # the subPath mount pointing at a file the volume does not carry.
+              - key: ngdpbase-demo-nerdsbythehour-com.json
+                path: ngdpbase-demo-nerdsbythehour-com.json
       restartPolicy: Always

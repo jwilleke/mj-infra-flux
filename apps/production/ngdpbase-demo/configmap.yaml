@@ -19,6 +19,8 @@ data:
       "ngdpbase.application-name": "Demo ngdpbase",
       "ngdpbase.application.base-url": "https://ngdpbase-demo.nerdsbythehour.com",
 
+      "ngdpbase.application.organization.file": "ngdpbase-demo-nerdsbythehour-com.json",
+
       "ngdpbase.user.security.defaultpassword": "$NGDPBASE_ADMIN_PASSWORD",
 
       "ngdpbase.application.registration": true,
@@ -42,4 +44,29 @@ data:
       "ngdpbase.mail.rate-limit.max-submissions": 5,
       "ngdpbase.mail.rate-limit.window-minutes": 15,
       "ngdpbase.mail.honeypot.enabled": true
+    }
+
+  # The install's anchor Organization (ngdpbase#1027).
+  #
+  # NOT optional infrastructure decoration: UserManager.syncRoleAdd resolves
+  # Person → Role membership through OrganizationManager.getInstallOrg(), and
+  # returns early when there is no anchor org. Without this file NO role is ever
+  # assigned to ANY user — the default admin never receives `admin`, magic-link
+  # signups never receive `contributor`, and nobody can edit or reach /admin.
+  # Headless installs do not seed this (InstallService.processHeadlessInstallation
+  # says so explicitly); it must be pre-supplied, which the first version of this
+  # app failed to do.
+  #
+  # Deliberately MINIMAL. The ops instance's org record carries a postal address,
+  # telephone and personal email; this one is public and renders through the org
+  # UI and schema.org markup, so it carries none of that.
+  ngdpbase-demo-nerdsbythehour-com.json: |
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": "https://ngdpbase-demo.nerdsbythehour.com/",
+      "name": "Demo ngdpbase",
+      "url": "https://ngdpbase-demo.nerdsbythehour.com/",
+      "description": "Public demo instance of ngdpbase. Content is disposable and not backed up.",
+      "alternateName": "https://github.com/jwilleke/ngdpbase"
     }
