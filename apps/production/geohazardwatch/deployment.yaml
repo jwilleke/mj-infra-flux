@@ -52,7 +52,7 @@ spec:
               mountPath: /app/data
       containers:
         - name: geohazardwatch
-          image: ghcr.io/jwilleke/geohazardwatch:1.2.151 # {"$imagepolicy": "flux-system:geohazardwatch"}
+          image: ghcr.io/jwilleke/geohazardwatch:1.2.152 # {"$imagepolicy": "flux-system:geohazardwatch"}
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
