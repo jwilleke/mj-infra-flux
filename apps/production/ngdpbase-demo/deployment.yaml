@@ -52,8 +52,10 @@ spec:
                   name: ngdpbase-demo-secrets
                   key: session-secret
                   optional: true
-            # Consumed by the `$NGDPBASE_ADMIN_PASSWORD` env-ref in the
-            # ConfigMap. The admin account is created with THIS password on
+            # Consumed by the `$NGDPBASE_ADMIN_PASSWORD` env-ref in
+            # app-custom-config.json on the volume (moved there in #162, no
+            # longer in this app's ConfigMap). The admin account is created
+            # with THIS password on
             # first boot, so a wiped demo never comes back up reachable with
             # the shipped admin/admin123 default. That matters because the
             # Cloudflare route is permanently live — after a wipe there is no
