@@ -23,7 +23,7 @@ spec:
         - name: ghcr-jimsmcp
       containers:
       - name: jimsmcp
-        image: ghcr.io/jwilleke/jimsmcp:2026-05-05
+        image: ghcr.io/jwilleke/jimsmcp:sha-c6ab9cb
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9210
