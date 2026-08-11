@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: relay-ha
+  namespace: relay-ha
+  labels:
+    app: relay-ha
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: relay-ha
+  template:
+    metadata:
+      labels:
+        app: relay-ha
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: nginx
+          image: nginxinc/nginx-unprivileged:1.29-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: keys
+              mountPath: /srv/keys
+              readOnly: true
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+              readOnly: true
+            - name: cache
+              mountPath: /var/cache/nginx
+            - name: run
+              mountPath: /tmp
+          resources:
+            requests:
+              memory: "16Mi"
+              cpu: "10m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /.well-known/appspecific/com.tesla.3p.public-key.pem
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 15
+      volumes:
+        - name: keys
+          configMap:
+            name: relay-ha-content
+            items:
+              - key: com.tesla.3p.public-key.pem
+                path: com.tesla.3p.public-key.pem
+        - name: nginx-config
+          configMap:
+            name: relay-ha-nginx-config
+        - name: cache
+          emptyDir: {}
+        - name: run
+          emptyDir: {}

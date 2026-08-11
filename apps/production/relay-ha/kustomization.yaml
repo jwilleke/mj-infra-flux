@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: relay-ha
+# Public relay for Home Assistant. Currently serves one file: the Tesla Fleet
+# API third-party application public key.
+#
+# Public exposure is via the Cloudflare Tunnel (dashboard-managed), NOT a
+# Traefik ingress — this network has no public inbound to Traefik, and Tesla
+# must be able to reach the key from the internet. See README.md.
+resources:
+  - ./namespace.yaml
+  - ./configmap.yaml
+  - ./deployment.yaml
+  - ./service.yaml
+
+labels:
+  - pairs:
+      app.jimwilleke.com/name: relay-ha
