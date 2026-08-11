@@ -59,7 +59,10 @@
       "Bash(flux -n flux-system get image update geohazardwatch)",
       "Bash(kubectl -n flux-system describe kustomization apps)",
       "Bash(kubectl -n flux-system get secret sops-age)",
-      "Read(//home/jim/.config/sops/age/**)"
+      "Read(//home/jim/.config/sops/age/**)",
+      "Bash(docker version *)",
+      "Bash(docker pull *)",
+      "Bash(DOCKER_BUILDKIT=1 docker build --target addon-installer -t geohazardwatch-verify:addon-installer .)"
     ],
     "deny": [],
     "ask": []
