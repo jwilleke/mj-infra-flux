@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: relay-ha-content
+  namespace: relay-ha
+data:
+  # Tesla Fleet API third-party application public key.
+  #
+  # This is a PUBLIC key. Publishing it is the entire point — Tesla fetches it
+  # from the internet to verify the application during virtual-key pairing.
+  # There is nothing secret here. The matching PRIVATE key is held on the Home
+  # Assistant side and must never appear in this repository.
+  #
+  # EC prime256v1 (P-256), generated 2026-08-11.
+  com.tesla.3p.public-key.pem: |
+    -----BEGIN PUBLIC KEY-----
+    MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE4mE98pBcUKyBBl8JK8ObT0rTAqr5
+    IZTNwCoyKOGBtkQnmW176PerCpWwZO3LMO+Qjl6EtxtOSCJMgAMkVspPvw==
+    -----END PUBLIC KEY-----
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: relay-ha-nginx-config
+  namespace: relay-ha
+data:
+  default.conf: |
+    server {
+        listen 8080;
+        server_name _;
+
+        # Deny everything by default. This host exists to serve exactly one
+        # file to Tesla and nothing else — no directory listing, no fallback.
+        location / {
+            return 404;
+        }
+
+        # Tesla fetches this exact path during virtual-key pairing. It must be
+        # a 200 with no redirect and no authentication in front of it.
+        location = /.well-known/appspecific/com.tesla.3p.public-key.pem {
+            alias /srv/keys/com.tesla.3p.public-key.pem;
+            default_type application/x-pem-file;
+            add_header Cache-Control "public, max-age=3600";
+        }
+
+        # Unauthenticated liveness probe target, kept off the public route.
+        location = /healthz {
+            access_log off;
+            return 200 "ok\n";
+            default_type text/plain;
+        }
+    }

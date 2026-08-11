@@ -37,6 +37,7 @@ resources:
   - ./geohazardwatch # ngdpbase + ve-geology addon at geohazardwatch.com
   - ./ngdpbase-demo  # Public, throwaway demo of stock ngdpbase; no Authentik, magic-link signup only, disposable volume (ngdpbase#1026)
   - ./owntracks      # OwnTracks Recorder; phones publish via cloudflared, republishes owntracks/# to MQTT for HA
+  - ./relay-ha       # Public relay for HA; serves the Tesla Fleet API public key via cloudflared (mj-infra-flux#165)
   - ./maps           # Dawarich (self-hosted location history) at maps.nerdsbythehour.com; public, app-auth (same tier as owntracks)
 
   # Cluster-level Flux image automation (ImageRepository / ImagePolicy /

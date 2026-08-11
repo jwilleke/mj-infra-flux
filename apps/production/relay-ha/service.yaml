@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: relay-ha
+  namespace: relay-ha
+spec:
+  selector:
+    app: relay-ha
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
