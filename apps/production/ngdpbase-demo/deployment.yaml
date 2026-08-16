@@ -26,7 +26,7 @@ spec:
           # Public, throwaway demo of stock ngdpbase — no addons, no real data.
           # Unlike geohazardwatch this runs the base image directly, so it
           # tracks ngdpbase releases with no intermediate build.
-          image: ghcr.io/jwilleke/ngdpbase:4.9.1 # {"$imagepolicy": "flux-system:ngdpbase-demo"}
+          image: ghcr.io/jwilleke/ngdpbase:4.10.0 # {"$imagepolicy": "flux-system:ngdpbase-demo"}
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
