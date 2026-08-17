@@ -1,6 +1,6 @@
 # demo-yourphr
 
-Public, throwaway demo of [YourPHR](https://github.com/jwilleke/yourphr) at `https://demo.yourphr.org`, built for the CMS Blue Button 2.0 production application process ([yourphr#433](https://github.com/jwilleke/yourphr/issues/433), epic [yourphr#438](https://github.com/jwilleke/yourphr/issues/438)). CMS reviewers need a live, Zoom-demoable URL they can reach without authenticating through Authentik — this is a completely separate namespace, database, and PVC from the family/ops `yourphr` install. **Never contains real PHI.**
+Public, throwaway demo of [YourPHR](https://github.com/jwilleke/yourphr) at `https://demo.yourphr.org`, built for the CMS Blue Button 2.0 production application process ([yourphr#433](https://github.com/jwilleke/yourphr/issues/433), epic [yourphr#438](https://github.com/jwilleke/yourphr/issues/438)). CMS reviewers need a live, Zoom-demoable URL they can reach without authenticating through Authentik — this is a completely separate namespace, database, and PVC from the family/ops `yourphr` install. __Never contains real PHI.__
 
 Full implementation plan (why each decision was made, phase-by-phase build log): [`docs/demo-yourphr-org/implementation-plan.md`](../../../docs/demo-yourphr-org/implementation-plan.md). Source issue: [mj-infra-flux#147](https://github.com/jwilleke/mj-infra-flux/issues/147).
 
@@ -23,14 +23,14 @@ Storage: demo-yourphr pod → /opt/fasten/db (hostPath /mnt/local-k3s-data/demo-
 
 ### Cloudflare dashboard step (manual, not in git) — done 2026-07-31
 
-Zero Trust → existing tunnel (`tunnel-infra-flux`) → **Published application routes** → added:
+Zero Trust → existing tunnel (`tunnel-infra-flux`) → __Published application routes__ → added:
 
 | Subdomain | Domain | Type | Service |
 |---|---|---|---|
 | `demo` | `yourphr.org` | `HTTP` | `demo-yourphr.demo-yourphr.svc.cluster.local:8080` |
 | `demo-relay` | `yourphr.org` | `HTTP` | `demo-yourphr-relay.demo-yourphr.svc.cluster.local:8080` |
 
-> **Naming note:** the relay hostname is `demo-relay.yourphr.org`, a single-level subdomain — **not** `relay.demo.yourphr.org`. That two-level form failed the TLS handshake at the Cloudflare edge because this zone's Universal SSL cert only covers `yourphr.org` + `*.yourphr.org` (one wildcard level), confirmed via `openssl s_client`. If either route is ever recreated, keep it single-level or the same certificate-scope failure recurs.
+> __Naming note:__ the relay hostname is `demo-relay.yourphr.org`, a single-level subdomain — __not__ `relay.demo.yourphr.org`. That two-level form failed the TLS handshake at the Cloudflare edge because this zone's Universal SSL cert only covers `yourphr.org` + `*.yourphr.org` (one wildcard level), confirmed via `openssl s_client`. If either route is ever recreated, keep it single-level or the same certificate-scope failure recurs.
 
 Saving these hostnames auto-creates the DNS records (proxied CNAMEs to the tunnel) — no manual DNS entry needed, no firewall port opened. `yourphr.org` is confirmed on the same Cloudflare account as the tunnel.
 
@@ -39,7 +39,7 @@ Saving these hostnames auto-creates the DNS records (proxied CNAMEs to the tunne
 Two SOPS-encrypted secrets, both distinct from and never shared with the ops `yourphr`/`yourphr-relay` values:
 
 - `relay-secret.sops.yaml` (in `../demo-yourphr-relay/`) — `YOURPHR_RELAY_SECRET`, gates the relay's `/pending` endpoint. Self-generated (`openssl rand -base64 32`) — purely internal, no operator/CMS involvement needed.
-- `sandbox-credentials.sops.yaml` — `YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_ID` / `YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_SECRET`. Operator-supplied, CMS-registered sandbox app credentials — **sandbox only, never production Blue Button keys**.
+- `sandbox-credentials.sops.yaml` — `YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_ID` / `YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_SECRET`. Operator-supplied, CMS-registered sandbox app credentials — __sandbox only, never production Blue Button keys__.
 
 ## Wiping the demo database
 

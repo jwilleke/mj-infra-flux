@@ -4,61 +4,61 @@ This guide walks you through configuring Authentik to work with Home Assistant.
 
 ## Status
 
-✅ **Technical Setup Complete**
+✅ __Technical Setup Complete__
 
 - Traefik ingress configured with ForwardAuth middleware
 - External service proxy configured (192.168.68.20:8123)
 - Let's Encrypt certificate issued
 
-⏳ **Authentik Configuration Required**
+⏳ __Authentik Configuration Required__
 
 - Create Proxy Provider application in Authentik
 - Configure Home Assistant trusted proxies
 
 ## Step 1: Create Authentik Proxy Provider
 
-1. **Log into Authentik**
+1. __Log into Authentik__
    - URL: <https://auth.nerdsbythehour.com>
    - Login as administrator
 
-2. **Navigate to Applications**
-   - Click **Applications** in the sidebar
-   - Then click **Applications** again
+2. __Navigate to Applications__
+   - Click __Applications__ in the sidebar
+   - Then click __Applications__ again
 
-3. **Create Application with Provider**
-   - Click **Create with Provider** button
-   - Select **Proxy** as the provider type
+3. __Create Application with Provider__
+   - Click __Create with Provider__ button
+   - Select __Proxy__ as the provider type
 
-4. **Configure Provider Settings**
+4. __Configure Provider Settings__
 
-   **Basic Settings:**
-   - **Name:** `Home Assistant`
-   - **Slug:** `homeassistant` (auto-generated)
-   - **Group:** Leave empty or create "Smart Home" group
+   __Basic Settings:__
+   - __Name:__ `Home Assistant`
+   - __Slug:__ `homeassistant` (auto-generated)
+   - __Group:__ Leave empty or create "Smart Home" group
 
-   **Provider Settings:**
-   - **Type:** `Proxy`
-   - **Authorization flow:** Select your default authorization flow (usually `default-provider-authorization-implicit-consent`)
-   - **External host:** `https://ha.nerdsbythehour.com`
-   - **Internal host:** `https://192.168.68.20:8123`
-   - **Internal host SSL validation:** ❌ **Unchecked** (Home Assistant uses self-signed cert)
-   - **Forward auth (domain level):** ✅ **Checked**
+   __Provider Settings:__
+   - __Type:__ `Proxy`
+   - __Authorization flow:__ Select your default authorization flow (usually `default-provider-authorization-implicit-consent`)
+   - __External host:__ `https://ha.nerdsbythehour.com`
+   - __Internal host:__ `https://192.168.68.20:8123`
+   - __Internal host SSL validation:__ ❌ __Unchecked__ (Home Assistant uses self-signed cert)
+   - __Forward auth (domain level):__ ✅ __Checked__
 
-   **Advanced Settings (leave as defaults):**
+   __Advanced Settings (leave as defaults):__
    - Token validity: `hours=24`
    - Mode: `Forward single application`
 
-5. **Configure Application**
-   - **UI Settings (optional):**
+5. __Configure Application__
+   - __UI Settings (optional):__
      - Icon: Upload or use URL (e.g., Home Assistant logo)
      - Description: "Smart home automation and IoT device control"
 
-   - **Policy / Group / User Bindings:**
+   - __Policy / Group / User Bindings:__
      - Add users or groups that should have access
-     - Click **Create binding** to add authorized users
+     - Click __Create binding__ to add authorized users
 
-6. **Create the Application**
-   - Click **Create** button at the bottom
+6. __Create the Application__
+   - Click __Create__ button at the bottom
    - Verify it appears in the Applications list
 
 ## Step 2: Configure Home Assistant
@@ -67,14 +67,14 @@ Home Assistant needs to trust the reverse proxy headers from Traefik/Authentik.
 
 ### Edit configuration.yaml
 
-1. **SSH to Home Assistant host:**
+1. __SSH to Home Assistant host:__
 
    ```bash
    ssh 192.168.68.20
    # or access the Home Assistant terminal
    ```
 
-2. **Edit `/homeassistant/configuration.yaml`:**
+2. __Edit `/homeassistant/configuration.yaml`:__
 
    ```yaml
    http:
@@ -85,25 +85,25 @@ Home Assistant needs to trust the reverse proxy headers from Traefik/Authentik.
        - 192.168.68.71  # k3s host (deby)
    ```
 
-3. **Restart Home Assistant:**
+3. __Restart Home Assistant:__
    - In Home Assistant UI: Settings → System → Restart
    - Or via command line: `ha core restart`
 
 ## Step 3: Test Access
 
-1. **Open browser in private/incognito mode**
+1. __Open browser in private/incognito mode__
    - Navigate to: <https://ha.nerdsbythehour.com>
 
-2. **Expected Flow:**
+2. __Expected Flow:__
    - You should be redirected to Authentik login
    - After successful login, you'll be redirected to Home Assistant
    - Home Assistant may still require its own login (see below)
 
-3. **Troubleshooting:**
-   - **404 "Not Found" from Authentik:** Application not created yet (go back to Step 1)
-   - **502 Bad Gateway:** Home Assistant not running or not accessible from k3s host
-   - **400 Bad Request from Home Assistant:** `trusted_proxies` not configured (go back to Step 2)
-   - **Certificate error:** Wait a few minutes for Let's Encrypt cert to be issued
+3. __Troubleshooting:__
+   - __404 "Not Found" from Authentik:__ Application not created yet (go back to Step 1)
+   - __502 Bad Gateway:__ Home Assistant not running or not accessible from k3s host
+   - __400 Bad Request from Home Assistant:__ `trusted_proxies` not configured (go back to Step 2)
+   - __Certificate error:__ Wait a few minutes for Let's Encrypt cert to be issued
 
 ## Optional: Single Sign-On (SSO) Integration
 
@@ -111,11 +111,11 @@ By default, Home Assistant still requires its own authentication after passing t
 
 ### Option A: Use hass-auth-header Component (Recommended)
 
-1. **Install the custom component:**
+1. __Install the custom component:__
    - Add via HACS or manually install `hass-auth-header`
    - Reference: <https://github.com/BeryJu/hass-auth-header>
 
-2. **Configure in Home Assistant:**
+2. __Configure in Home Assistant:__
 
    ```yaml
    # configuration.yaml
@@ -123,7 +123,7 @@ By default, Home Assistant still requires its own authentication after passing t
      username_header: X-authentik-username
    ```
 
-3. **User Matching:**
+3. __User Matching:__
    - Home Assistant usernames must match Authentik usernames
    - Users will automatically login if username matches
    - Users still need to exist in Home Assistant first
@@ -144,7 +144,7 @@ homeassistant:
       allow_bypass_login: true
 ```
 
-**⚠️ Warning:** This bypasses Home Assistant authentication entirely. Only use if you trust the network.
+__⚠️ Warning:__ This bypasses Home Assistant authentication entirely. Only use if you trust the network.
 
 ## Verification
 

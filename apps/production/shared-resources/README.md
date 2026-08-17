@@ -6,7 +6,7 @@ Static file server (nginx) that serves shared resources like icons, logos, and o
 
 ## URL
 
-**Production**: <https://cdn.nerdsbythehour.com>
+__Production__: <https://cdn.nerdsbythehour.com>
 
 ## Purpose
 
@@ -17,7 +17,7 @@ Static file server (nginx) that serves shared resources like icons, logos, and o
 
 ## Data Paths
 
-**Source Data** (NFS mount, backed up):
+__Source Data__ (NFS mount, backed up):
 
 ```
 /home/jim/docs/data/systems/shared-resources/
@@ -27,13 +27,13 @@ Static file server (nginx) that serves shared resources like icons, logos, and o
 └── README.md
 ```
 
-**Served via nginx at**: <https://cdn.nerdsbythehour.com>
+__Served via nginx at__: <https://cdn.nerdsbythehour.com>
 
 ## Architecture
 
-- **Deployment**: nginx:alpine container
-- **Volume**: hostPath mount to `/home/jim/docs/data/systems/shared-resources`
-- **Features**:
+- __Deployment__: nginx:alpine container
+- __Volume__: hostPath mount to `/home/jim/docs/data/systems/shared-resources`
+- __Features__:
   - Directory listing (autoindex on)
   - 30-day caching for static assets
   - Security headers (X-Content-Type-Options, X-Frame-Options)
@@ -90,9 +90,9 @@ Reference assets directly by URL:
 
 ## Dependencies
 
-- **Traefik**: Ingress controller
-- **cert-manager**: Let's Encrypt TLS certificate
-- **NFS mount**: Data persistence at `/home/jim/docs/data/systems/shared-resources`
+- __Traefik__: Ingress controller
+- __cert-manager__: Let's Encrypt TLS certificate
+- __NFS mount__: Data persistence at `/home/jim/docs/data/systems/shared-resources`
 
 ## Secrets
 
@@ -147,16 +147,16 @@ kubectl get certificate -n shared-resources
 
 ## Security
 
-- **Authentication**: None (public read-only access)
-- **Container**: Runs as nginx user (101:101)
-- **Filesystem**: Read-only root filesystem
-- **Volume**: hostPath mounted read-only
-- **Headers**: Security headers applied via nginx config
+- __Authentication__: None (public read-only access)
+- __Container__: Runs as nginx user (101:101)
+- __Filesystem__: Read-only root filesystem
+- __Volume__: hostPath mounted read-only
+- __Headers__: Security headers applied via nginx config
 
 ## Resource Limits
 
-- **Requests**: 32Mi RAM, 50m CPU
-- **Limits**: 128Mi RAM, 200m CPU
+- __Requests__: 32Mi RAM, 50m CPU
+- __Limits__: 128Mi RAM, 200m CPU
 
 ## DNS Configuration
 

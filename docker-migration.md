@@ -28,7 +28,7 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 
 ### ✅ Phase 1 Complete: Stateless Applications
 
-**C. Landing Page** ✅ COMPLETE
+__C. Landing Page__ ✅ COMPLETE
 
 - Status: Deployed to k3s
 - Namespace: `landingpage`
@@ -44,7 +44,7 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
   - Security: Runs as apps:apps (3003:3003)
 - Commit: 2ac59b8
 
-**B. whoami** ✅ COMPLETE
+__B. whoami__ ✅ COMPLETE
 
 - Status: Migrated from default namespace to GitOps
 - Namespace: `guest-services`
@@ -56,7 +56,7 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
   - Security: Runs as apps:apps (3003:3003)
 - Commit: 237dea6
 
-**A. openspeedtest** ✅ COMPLETE
+__A. openspeedtest__ ✅ COMPLETE
 
 - Status: Deployed to k3s
 - Namespace: `guest-services`
@@ -70,7 +70,7 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 
 ### ✅ Phase 2 Complete: Shared Infrastructure & TeslaMate
 
-**PostgreSQL** (Shared Instance) ✅ COMPLETE
+__PostgreSQL__ (Shared Instance) ✅ COMPLETE
 
 - Status: Deployed to k3s
 - Namespace: `database`
@@ -79,7 +79,7 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 - Databases: teslamate (+ future apps)
 - Commit: 6d1dd39
 
-**Mosquitto MQTT** (Shared Broker) ✅ COMPLETE
+__Mosquitto MQTT__ (Shared Broker) ✅ COMPLETE
 
 - Status: Deployed to k3s
 - Namespace: `messaging`
@@ -88,7 +88,7 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 - Topics: teslamate/* (+ future apps)
 - Commit: 6d1dd39
 
-**Grafana** (Shared Dashboards) ✅ COMPLETE
+__Grafana__ (Shared Dashboards) ✅ COMPLETE
 
 - Status: Deployed to k3s
 - Namespace: `monitoring`
@@ -97,7 +97,7 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 - Ready for TeslaMate datasource
 - Commit: 3db228c
 
-**TeslaMate** ✅ COMPLETE
+__TeslaMate__ ✅ COMPLETE
 
 - Status: Deployed to k3s
 - Namespace: `teslamate`
@@ -108,7 +108,7 @@ I would like if all k3s would be owned by apps:apps (uid 3003) (gid 3003)
 
 ### ✅ Phase 3 Complete: jimswiki
 
-**jimswiki** ✅ COMPLETE
+__jimswiki__ ✅ COMPLETE
 
 - Status: Deployed to k3s
 - Namespace: `jimswiki`
@@ -134,19 +134,19 @@ After all migrations complete:
 
 ### 📝 Current Status
 
-**Migration Status**: Phase 3 COMPLETE ✅ - ALL MIGRATIONS DONE!
+__Migration Status__: Phase 3 COMPLETE ✅ - ALL MIGRATIONS DONE!
 
 - ✅ Phase 1: Stateless apps (landingpage, openspeedtest, whoami)
 - ✅ Phase 2: Shared infrastructure (PostgreSQL, Mosquitto, Grafana) + TeslaMate
 - ✅ Phase 3: jimswiki (38,004 pages migrated)
 
-**Docker Services**: All stopped
+__Docker Services__: All stopped
 
 - Running on same host with same IP (192.168.68.71)
 - k3s Traefik ingress handling all traffic
 - No DNS changes needed - seamless cutover
 
-**Verification**:
+__Verification__:
 
 ```bash
 docker ps -a  # Shows all containers exited
@@ -156,28 +156,28 @@ sudo kubectl get pods -A  # Shows all k3s services running
 
 ### 📝 Next Steps
 
-1. **TeslaMate Data Migration** ✅ COMPLETE:
+1. __TeslaMate Data Migration__ ✅ COMPLETE:
    - Exported 409MB database from Docker PostgreSQL
    - Imported to k3s PostgreSQL: 1,002 drives, 51,816 charges, 2,976,634 positions
    - TeslaMate running with historical data
 
-2. **Grafana Configuration** ✅ COMPLETE:
+2. __Grafana Configuration__ ✅ COMPLETE:
    - TeslaMate PostgreSQL datasource configured in Grafana
    - All 19 TeslaMate dashboards imported and working
    - Historical data visible in dashboards
    - Setup guide: `apps/production/monitoring/GRAFANA-TESLAMATE-SETUP.md`
 
-3. **jimswiki Migration** ✅ COMPLETE:
+3. __jimswiki Migration__ ✅ COMPLETE:
    - Deployed to k3s with all 38,004 pages
    - Running at <https://nerdsbythehour.com/jimswiki/>
    - All data paths preserved
    - Details: `apps/production/jimswiki/README.md`
 
-4. **Authentik ForwardAuth** (Optional):
+4. __Authentik ForwardAuth__ (Optional):
    - Configure Authentik middleware for protected routes
    - Enable on: /members, teslamate, grafana, jimswiki
 
-5. **Final Cleanup** (Ready to execute):
+5. __Final Cleanup__ (Ready to execute):
    - Test all services thoroughly
    - Remove Docker containers: `docker rm $(docker ps -aq)`
    - Remove unused Docker images

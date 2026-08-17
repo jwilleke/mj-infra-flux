@@ -21,27 +21,27 @@ Thank you for your interest in contributing to this project! This document provi
 
 ### Initial Setup
 
-1. **Clone the repository**
+1. __Clone the repository__
 
    ```bash
    git clone <repository-url>
    cd <project-name>
    ```
 
-2. **Install dependencies**
+2. __Install dependencies__
 
    ```bash
    npm install
    ```
 
-3. **Set up environment variables**
+3. __Set up environment variables__
 
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
-4. **Verify setup**
+4. __Verify setup__
 
    ```bash
    npm run lint
@@ -114,9 +114,9 @@ body
 footer
 ```
 
-**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
+__Types:__ `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
 
-**Example:**
+__Example:__
 
 ```
 feat(auth): add JWT token refresh

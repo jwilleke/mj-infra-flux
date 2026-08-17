@@ -13,33 +13,33 @@ jimsmcp complements the official Kubernetes MCP server with custom features spec
 - Get real-time stock quotes
 - Execute custom infrastructure workflows
 
-**For standard Kubernetes operations** (pods, deployments, services, logs, ingresses), use the official [Kubernetes MCP Server](https://github.com/containers/kubernetes-mcp-server).
+__For standard Kubernetes operations__ (pods, deployments, services, logs, ingresses), use the official [Kubernetes MCP Server](https://github.com/containers/kubernetes-mcp-server).
 
 ## Features
 
 ### Flux GitOps
 
-- **flux_get_status** - Check status of all Flux resources
-- **flux_reconcile** - Force reconciliation of kustomizations, helm releases, or git repositories
+- __flux_get_status__ - Check status of all Flux resources
+- __flux_reconcile__ - Force reconciliation of kustomizations, helm releases, or git repositories
 
 ### Application Management
 
-- **app_health_check** - Comprehensive health check for a specific app (pods + service + ingress)
-- **app_health_check_all** - Check health of all applications in the cluster (auto-discovers via ingresses)
-- **app_get_urls** - List all application URLs and ingress endpoints
-- **authentik_get_info** - Get Authentik API and admin URLs
+- __app_health_check__ - Comprehensive health check for a specific app (pods + service + ingress)
+- __app_health_check_all__ - Check health of all applications in the cluster (auto-discovers via ingresses)
+- __app_get_urls__ - List all application URLs and ingress endpoints
+- __authentik_get_info__ - Get Authentik API and admin URLs
 
 ### Authentik Management
 
-- **authentik_create_homeassistant_app** - Create complete Home Assistant Authentik setup
-- **authentik_list_applications** - List all Authentik applications
-- **authentik_list_providers** - List all Authentik providers
-- **authentik_list_outposts** - List all Authentik outposts
-- **authentik_bind_provider_to_outpost** - Bind a provider to an outpost (enables ForwardAuth)
+- __authentik_create_homeassistant_app__ - Create complete Home Assistant Authentik setup
+- __authentik_list_applications__ - List all Authentik applications
+- __authentik_list_providers__ - List all Authentik providers
+- __authentik_list_outposts__ - List all Authentik outposts
+- __authentik_bind_provider_to_outpost__ - Bind a provider to an outpost (enables ForwardAuth)
 
 ### Financial Data
 
-- **stocks_get_price** - Get real-time stock quotes from Alpha Vantage (requires API key)
+- __stocks_get_price__ - Get real-time stock quotes from Alpha Vantage (requires API key)
 
 ## Installation
 
@@ -154,10 +154,10 @@ jimsmcp runs as a standalone Node.js process that:
 3. Interacts with Authentik API for SSO management
 4. Communicates via stdio using the MCP protocol
 
-**Separation of Concerns:**
+__Separation of Concerns:__
 
-- **Kubernetes MCP Server**: Handles standard K8s queries and operations
-- **jimsmcp**: Handles infrastructure-specific features (Flux, Authentik, custom health checks)
+- __Kubernetes MCP Server__: Handles standard K8s queries and operations
+- __jimsmcp__: Handles infrastructure-specific features (Flux, Authentik, custom health checks)
 
 ## Requirements
 

@@ -4,14 +4,14 @@ Proxy for external Home Assistant instance with Authentik authentication.
 
 ## Overview
 
-- **URL:** <https://ha.nerdsbythehour.com>
-- **Backend:** 192.168.68.20:8123 (external host on local network)
-- **Type:** External Service Proxy (Home Assistant runs outside k3s)
-- **Security:** Protected by Authentik ForwardAuth (to be enabled)
+- __URL:__ <https://ha.nerdsbythehour.com>
+- __Backend:__ 192.168.68.20:8123 (external host on local network)
+- __Type:__ External Service Proxy (Home Assistant runs outside k3s)
+- __Security:__ Protected by Authentik ForwardAuth (to be enabled)
 
 ## Architecture
 
-This is a **proxy configuration** for an external Home Assistant instance:
+This is a __proxy configuration__ for an external Home Assistant instance:
 
 1. Home Assistant runs on separate host at `192.168.68.20:8123`
 2. k3s Traefik ingress proxies `ha.nerdsbythehour.com` → `192.168.68.20:8123`
@@ -30,11 +30,11 @@ port: 8123 (HTTPS)
 
 ### Ingress
 
-- **Host:** ha.nerdsbythehour.com
-- **Path:** / (all paths)
-- **Backend:** home-assistant-external:8123
-- **TLS:** Let's Encrypt certificate
-- **Authentication:** Authentik (commented out, ready to enable)
+- __Host:__ ha.nerdsbythehour.com
+- __Path:__ / (all paths)
+- __Backend:__ home-assistant-external:8123
+- __TLS:__ Let's Encrypt certificate
+- __Authentication:__ Authentik (commented out, ready to enable)
 
 ## Deployment
 
@@ -69,7 +69,7 @@ curl -I https://ha.nerdsbythehour.com
 
 ## Authentik Integration
 
-**Current Status:** Authentik ForwardAuth is ENABLED
+__Current Status:__ Authentik ForwardAuth is ENABLED
 
 ### Architecture
 
@@ -87,14 +87,14 @@ This setup uses Authentik as a forward authentication proxy:
 Create a Proxy Provider application in Authentik:
 
 1. Log into Authentik at <https://auth.nerdsbythehour.com>
-2. Navigate to **Applications > Applications**
-3. Click **Create with Provider**
-4. Select **Proxy** as provider type
+2. Navigate to __Applications > Applications__
+3. Click __Create with Provider__
+4. Select __Proxy__ as provider type
 5. Configure:
-   - **Name:** Home Assistant
-   - **External host:** `https://ha.nerdsbythehour.com`
-   - **Internal host:** `http://home-assistant-external.home-assistant-proxy.svc.cluster.local:8123`
-   - **Authorization flow:** Default (implicit consent)
+   - __Name:__ Home Assistant
+   - __External host:__ `https://ha.nerdsbythehour.com`
+   - __Internal host:__ `http://home-assistant-external.home-assistant-proxy.svc.cluster.local:8123`
+   - __Authorization flow:__ Default (implicit consent)
 6. Create the application
 
 #### 2. Configure Home Assistant
@@ -125,13 +125,13 @@ For automatic user matching based on Authentik username:
 
 Reference: <https://integrations.goauthentik.io/miscellaneous/home-assistant/>
 
-**Important:** Home Assistant will still require its own user accounts. Authentik provides SSO layer, but users must exist in HA.
+__Important:__ Home Assistant will still require its own user accounts. Authentik provides SSO layer, but users must exist in HA.
 
 ## Home Assistant Configuration
 
 The actual Home Assistant instance runs on `192.168.68.20` (separate host).
 
-**Configuration location:** `apps/production/home-assistant/config-home-assistant/`
+__Configuration location:__ `apps/production/home-assistant/config-home-assistant/`
 
 This directory contains the Home Assistant configuration files that sync to the external host.
 

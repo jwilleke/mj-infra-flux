@@ -17,25 +17,25 @@ This guide walks through configuring Grafana to visualize TeslaMate data.
 
 ## Step 2: Add TeslaMate PostgreSQL Data Source
 
-1. In Grafana, click **Configuration** (gear icon) → **Data Sources**
-2. Click **Add data source**
-3. Select **PostgreSQL**
+1. In Grafana, click __Configuration__ (gear icon) → __Data Sources__
+2. Click __Add data source__
+3. Select __PostgreSQL__
 4. Configure the data source:
 
    | Field | Value |
    |-------|-------|
-   | **Name** | `TeslaMate` |
-   | **Host** | `10.43.136.252:5432` (PostgreSQL ClusterIP) |
-   | **Database** | `teslamate` |
-   | **User** | `teslamate` |
-   | **Password** | `teslamate_db_password_changeme` |
-   | **TLS/SSL Mode** | `disable` (internal cluster traffic) |
-   | **Version** | `15.0` (or highest available) |
+   | __Name__ | `TeslaMate` |
+   | __Host__ | `10.43.136.252:5432` (PostgreSQL ClusterIP) |
+   | __Database__ | `teslamate` |
+   | __User__ | `teslamate` |
+   | __Password__ | `teslamate_db_password_changeme` |
+   | __TLS/SSL Mode__ | `disable` (internal cluster traffic) |
+   | __Version__ | `15.0` (or highest available) |
 
-   **Note**: We use the ClusterIP directly due to DNS resolution issues in the Grafana container.
+   __Note__: We use the ClusterIP directly due to DNS resolution issues in the Grafana container.
    To find the current ClusterIP: `kubectl get svc -n database postgresql -o jsonpath='{.spec.clusterIP}'`
 
-5. Click **Save & Test** - you should see "Database Connection OK"
+5. Click __Save & Test__ - you should see "Database Connection OK"
 
 ## Step 3: Import TeslaMate Dashboards
 
@@ -43,38 +43,38 @@ TeslaMate provides pre-built dashboards. You can import them individually or use
 
 ### Option A: Manual Import via Grafana UI
 
-1. In Grafana, click **Dashboards** → **Import**
+1. In Grafana, click __Dashboards__ → __Import__
 2. Import each dashboard from the official TeslaMate repository:
 
-**Available Dashboards**:
+__Available Dashboards__:
 
-- **Overview**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/overview.json>
-- **Drives**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/drives.json>
-- **Charges**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charges.json>
-- **Charging Stats**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charging-stats.json>
-- **Charge Level**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charge-level.json>
-- **Battery Health**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/battery-health.json>
-- **Drive Stats**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/drive-stats.json>
-- **Updates**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/updates.json>
-- **Efficiency**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/efficiency.json>
-- **Vampire Drain**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/vampire-drain.json>
-- **Visited**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/visited.json>
-- **Drive Details**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/drive-details.json>
-- **Charge Details**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charge-details.json>
-- **Projected Range**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/projected-range.json>
-- **States**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/states.json>
-- **Trip**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/trip.json>
-- **Timeline**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/timeline.json>
-- **Locations**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/locations.json>
-- **Degradation**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/degradation.json>
-- **Drive Mileage**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/mileage.json>
-- **Database Info**: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/database-info.json>
+- __Overview__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/overview.json>
+- __Drives__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/drives.json>
+- __Charges__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charges.json>
+- __Charging Stats__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charging-stats.json>
+- __Charge Level__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charge-level.json>
+- __Battery Health__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/battery-health.json>
+- __Drive Stats__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/drive-stats.json>
+- __Updates__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/updates.json>
+- __Efficiency__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/efficiency.json>
+- __Vampire Drain__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/vampire-drain.json>
+- __Visited__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/visited.json>
+- __Drive Details__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/drive-details.json>
+- __Charge Details__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/charge-details.json>
+- __Projected Range__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/projected-range.json>
+- __States__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/states.json>
+- __Trip__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/trip.json>
+- __Timeline__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/timeline.json>
+- __Locations__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/locations.json>
+- __Degradation__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/degradation.json>
+- __Drive Mileage__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/mileage.json>
+- __Database Info__: <https://raw.githubusercontent.com/teslamate-org/teslamate/main/grafana/dashboards/database-info.json>
 
 1. For each dashboard:
    - Paste the URL in the "Import via grafana.com" field
-   - Click **Load**
-   - Select the **TeslaMate** data source you created
-   - Click **Import**
+   - Click __Load__
+   - Select the __TeslaMate__ data source you created
+   - Click __Import__
 
 ### Option B: Download All Dashboards
 
@@ -108,9 +108,9 @@ This allows TeslaMate to provide direct links to relevant Grafana dashboards.
 2. Sign in with your Tesla credentials
 3. Once vehicles are logging data, check Grafana dashboards
 4. Recommended starting dashboards:
-   - **Overview**: High-level view of all vehicles
-   - **Drives**: Recent trip history
-   - **Charges**: Charging session history
+   - __Overview__: High-level view of all vehicles
+   - __Drives__: Recent trip history
+   - __Charges__: Charging session history
 
 ## Data Migration Confirmation
 
@@ -130,9 +130,9 @@ If dashboards show data from before the migration, it worked! 🎉
 
 ### Data Source Connection Failed
 
-**Error**: "dial tcp: lookup postgresql.database.svc.cluster.local"
+__Error__: "dial tcp: lookup postgresql.database.svc.cluster.local"
 
-**Solution**: Ensure PostgreSQL service exists and is running:
+__Solution__: Ensure PostgreSQL service exists and is running:
 
 ```bash
 sudo kubectl get svc -n database postgresql
@@ -141,19 +141,19 @@ sudo kubectl get pods -n database
 
 ### No Data in Dashboards
 
-1. **Check TeslaMate is signed in**:
+1. __Check TeslaMate is signed in__:
    - Visit <https://teslamate.nerdsbythehour.com>
    - Sign in with Tesla credentials
    - Verify vehicles appear and are logging
 
-2. **Check data exists in database**:
+2. __Check data exists in database__:
 
    ```bash
    sudo kubectl exec -n database postgresql-0 -- psql -U teslamate -d teslamate -c \
      "SELECT COUNT(*) FROM positions;"
    ```
 
-3. **Check data source in Grafana**:
+3. __Check data source in Grafana__:
    - Configuration → Data Sources → TeslaMate
    - Click "Test" - should show green success
 
@@ -162,7 +162,7 @@ sudo kubectl get pods -n database
 If you imported dashboards before creating the data source:
 
 1. Go to each dashboard settings (gear icon)
-2. Click **JSON Model**
+2. Click __JSON Model__
 3. Find `"datasource"` entries
 4. Change to `"datasource": "TeslaMate"`
 5. Save
@@ -171,15 +171,15 @@ Or re-import the dashboard and select the correct data source.
 
 ## Security Recommendations
 
-1. **Change Grafana admin password** immediately after first login
-2. **Restrict Grafana access** with Authentik ForwardAuth:
+1. __Change Grafana admin password__ immediately after first login
+2. __Restrict Grafana access__ with Authentik ForwardAuth:
 
    ```yaml
    # In grafana-ingress.yaml, uncomment:
    traefik.ingress.kubernetes.io/router.middlewares: authentik-authentik-forwardauth@kubernetescrd
    ```
 
-3. **Change PostgreSQL password**:
+3. __Change PostgreSQL password__:
 
    ```bash
    # Update teslamate-secret.yaml with new password
@@ -190,11 +190,11 @@ Or re-import the dashboard and select the correct data source.
 
 ## Useful Grafana Features
 
-- **Favorites**: Star your most-used dashboards
-- **Playlists**: Auto-rotate through dashboards on a display
-- **Alerts**: Set up notifications for battery level, charging issues, etc.
-- **Annotations**: Mark special events on timelines
-- **Variables**: Filter dashboards by vehicle, date range, etc.
+- __Favorites__: Star your most-used dashboards
+- __Playlists__: Auto-rotate through dashboards on a display
+- __Alerts__: Set up notifications for battery level, charging issues, etc.
+- __Annotations__: Mark special events on timelines
+- __Variables__: Filter dashboards by vehicle, date range, etc.
 
 ## Resources
 

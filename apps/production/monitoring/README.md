@@ -4,10 +4,10 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
 
 ## Overview
 
-- **Namespace**: `monitoring`
-- **Prometheus URL**: <https://prometheus.nerdsbythehour.com> (with basic auth)
-- **Grafana URL**: <https://grafana.nerdsbythehour.com>
-- **Components**:
+- __Namespace__: `monitoring`
+- __Prometheus URL__: <https://prometheus.nerdsbythehour.com> (with basic auth)
+- __Grafana URL__: <https://grafana.nerdsbythehour.com>
+- __Components__:
   - Prometheus - Metrics collection and storage
   - Grafana - Visualization and dashboards
   - Alertmanager - Alert routing and notifications
@@ -41,13 +41,13 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
 
 ### Prometheus
 
-- **Version**: 3.0.1
-- **Service**: `prometheus-service.monitoring.svc.cluster.local:80`
-- **Storage**: PVC `prometheus-storage-volume-prometheus-0` (60Gi, local-path provisioner); mounted at `/prometheus` in the pod
-- **Retention**: 30 days or 100GB (whichever comes first)
-- **Resources**: 1 CPU / 2Gi RAM
-- **Security**: Runs as UID/GID 4030:4030
-- **Features**:
+- __Version__: 3.0.1
+- __Service__: `prometheus-service.monitoring.svc.cluster.local:80`
+- __Storage__: PVC `prometheus-storage-volume-prometheus-0` (60Gi, local-path provisioner); mounted at `/prometheus` in the pod
+- __Retention__: 30 days or 100GB (whichever comes first)
+- __Resources__: 1 CPU / 2Gi RAM
+- __Security__: Runs as UID/GID 4030:4030
+- __Features__:
   - Service discovery (Kubernetes pods/services)
   - Custom scrape configs
   - Recording rules
@@ -55,12 +55,12 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
 
 ### Grafana
 
-- **Version**: 10.1.6
-- **Service**: `grafana-service.monitoring.svc.cluster.local:80`
-- **Storage**: `/mnt/local-k3s-data/grafana`
-- **Resources**: 250m-1 CPU / 750Mi-2Gi RAM
-- **Security**: Runs as UID/GID 4020:4020
-- **Features**:
+- __Version__: 10.1.6
+- __Service__: `grafana-service.monitoring.svc.cluster.local:80`
+- __Storage__: `/mnt/local-k3s-data/grafana`
+- __Resources__: 250m-1 CPU / 750Mi-2Gi RAM
+- __Security__: Runs as UID/GID 4020:4020
+- __Features__:
   - Prometheus datasource (pre-configured)
   - Dashboard provisioning
   - User authentication
@@ -68,38 +68,38 @@ Comprehensive monitoring solution for the k3s cluster with metrics collection, s
 
 ### Alertmanager
 
-- **Version**: Latest
-- **Service**: `alertmanager.monitoring.svc.cluster.local:9093`
-- **Purpose**: Routes and manages alerts from Prometheus
-- **Features**:
+- __Version__: Latest
+- __Service__: `alertmanager.monitoring.svc.cluster.local:9093`
+- __Purpose__: Routes and manages alerts from Prometheus
+- __Features__:
   - Grouping, deduplication
   - Silencing
   - Notification routing (email, Slack, webhook)
 
 ### Blackbox Exporter
 
-- **Version**: 0.25.0
-- **Service**: `blackbox-exporter.monitoring.svc.cluster.local:9115`
-- **DNS**: Uses local DNS (192.168.68.1) for external domain resolution
-- **Purpose**: Probes external HTTP/HTTPS endpoints
-- **Monitored Services**:
+- __Version__: 0.25.0
+- __Service__: `blackbox-exporter.monitoring.svc.cluster.local:9115`
+- __DNS__: Uses local DNS (192.168.68.1) for external domain resolution
+- __Purpose__: Probes external HTTP/HTTPS endpoints
+- __Monitored Services__:
   - <https://nerdsbythehour.com> (landing page)
   - <https://auth.nerdsbythehour.com> (Authentik SSO)
   - <https://teslamate.nerdsbythehour.com>
   - <https://grafana.nerdsbythehour.com>
   - <https://ha.nerdsbythehour.com> (Home Assistant)
   - <https://cdn.nerdsbythehour.com>
-- **Excluded**: traefik (internal), jimsmcp (internal), amd (known broken)
+- __Excluded__: traefik (internal), jimsmcp (internal), amd (known broken)
 
 ## Checking Service Health Probes
 
 ### Web UI
 
-- **<https://prometheus.nerdsbythehour.com/alerts>** - View all alert rules and current state (firing/pending/inactive)
-- **<https://prometheus.nerdsbythehour.com/targets>** - View all scrape targets including blackbox probes
-- **<https://prometheus.nerdsbythehour.com/graph>** - Query metrics directly with PromQL
+- __<https://prometheus.nerdsbythehour.com/alerts>__ - View all alert rules and current state (firing/pending/inactive)
+- __<https://prometheus.nerdsbythehour.com/targets>__ - View all scrape targets including blackbox probes
+- __<https://prometheus.nerdsbythehour.com/graph>__ - Query metrics directly with PromQL
 
-**Alertmanager UI** (cluster internal):
+__Alertmanager UI__ (cluster internal):
 
 ```bash
 kubectl port-forward -n monitoring svc/alertmanager 9093:9093
@@ -199,7 +199,7 @@ Dashboard ID: 3662
 Dashboard ID: 893
 ```
 
-**To import:**
+__To import:__
 
 1. Grafana → Dashboards → Import
 2. Enter dashboard ID
@@ -212,7 +212,7 @@ Dashboard ID: 893
 
 Located in: `apps/production/monitoring/prometheus/config/`
 
-**Current scrape configs:**
+__Current scrape configs:__
 
 - `scrape-configs.prometheus.yaml` - Prometheus self-monitoring
 - `scrape-configs.coinpoet.yaml` - Custom application scraping
@@ -230,7 +230,7 @@ metadata:
     prometheus.io/path: "/metrics"  # Default: /metrics
 ```
 
-**Example:**
+__Example:__
 
 ```yaml
 apiVersion: apps/v1
@@ -271,7 +271,7 @@ datasources:
 
 Instrument your application to expose Prometheus metrics:
 
-**Go (with prometheus/client_golang):**
+__Go (with prometheus/client_golang):__
 
 ```go
 import "github.com/prometheus/client_golang/prometheus/promhttp"
@@ -279,7 +279,7 @@ import "github.com/prometheus/client_golang/prometheus/promhttp"
 http.Handle("/metrics", promhttp.Handler())
 ```
 
-**Python (with prometheus-client):**
+__Python (with prometheus-client):__
 
 ```python
 from prometheus_client import start_http_server, Counter
@@ -289,7 +289,7 @@ requests_total = Counter('app_requests_total', 'Total requests')
 start_http_server(8080)  # Exposes /metrics on port 8080
 ```
 
-**Node.js (with prom-client):**
+__Node.js (with prom-client):__
 
 ```javascript
 const client = require('prom-client');
@@ -307,21 +307,21 @@ Then add the annotation to your deployment as shown above.
 
 Install exporters for services that don't natively expose metrics:
 
-**PostgreSQL Exporter:**
+__PostgreSQL Exporter:__
 
 ```bash
 # Deploy postgres_exporter as a sidecar or separate deployment
 # Configure to connect to postgresql.database.svc.cluster.local
 ```
 
-**MQTT Exporter:**
+__MQTT Exporter:__
 
 ```bash
 # Deploy mosquitto_exporter
 # Configure to connect to mosquitto.messaging.svc.cluster.local
 ```
 
-**Node Exporter (System Metrics):**
+__Node Exporter (System Metrics):__
 
 ```bash
 # Deploy node-exporter as DaemonSet
@@ -375,12 +375,12 @@ histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
 
 Located in: `apps/production/monitoring/prometheus/config/`
 
-**Active alert rule files:**
+__Active alert rule files:__
 
 - `alerting-rules.prometheus.yaml` - Prometheus TSDB health (WAL, compaction, restarts, memory)
 - `alerting-rules.service-health.yaml` - Service failure alerts (added 2026-01-22)
 
-**Service Health Alerts (alerting-rules.service-health.yaml):**
+__Service Health Alerts (alerting-rules.service-health.yaml):__
 
 | Alert | Severity | Trigger |
 |-------|----------|---------|
@@ -398,7 +398,7 @@ Located in: `apps/production/monitoring/prometheus/config/`
 | NodeDiskSpaceCritical | critical | Disk <5% free for 2min |
 | PostgreSQLDown | critical | PostgreSQL pod down for 2min |
 
-**Prometheus TSDB Alerts (alerting-rules.prometheus.yaml):**
+__Prometheus TSDB Alerts (alerting-rules.prometheus.yaml):__
 
 | Alert | Severity | Trigger |
 |-------|----------|---------|
@@ -413,14 +413,14 @@ Configure notification routing in:
 
 - `apps/production/monitoring/prometheus-alertmanager/config/alertmanager.yaml`
 
-**Current configuration:**
+__Current configuration:__
 
-- **Receiver**: Telegram (chat_id: 510755639)
-- **Group wait**: 30s
-- **Group interval**: 5m
-- **Repeat interval**: 4h
+- __Receiver__: Telegram (chat_id: 510755639)
+- __Group wait__: 30s
+- __Group interval__: 5m
+- __Repeat interval__: 4h
 
-**Supported receivers:**
+__Supported receivers:__
 
 - Email (SMTP)
 - Slack webhooks
@@ -567,7 +567,7 @@ Prometheus memory usage grows with:
 - Scrape frequency
 - Retention period
 
-**Solutions:**
+__Solutions:__
 
 - Reduce retention time (default: 30d)
 - Reduce scrape frequency
@@ -602,7 +602,7 @@ TeslaMate has built-in Prometheus metrics at `:4000/metrics`:
 - API call rates
 - Database connection pool
 
-**Enable scraping:**
+__Enable scraping:__
 
 ```yaml
 # In apps/production/teslamate/teslamate-deployment.yaml
@@ -631,10 +631,10 @@ Authentik exposes metrics at `:9300/metrics`:
 
 ### Getting a new app onto the "Environment Health" NOC dashboard
 
-`grafana/config/dashboards/env-health-noc.json` (`https://grafana.nerdsbythehour.com/d/env-health-noc/`) has two rows that auto-populate — adding a new app to either takes **zero dashboard edits**:
+`grafana/config/dashboards/env-health-noc.json` (`https://grafana.nerdsbythehour.com/d/env-health-noc/`) has two rows that auto-populate — adding a new app to either takes __zero dashboard edits__:
 
-- **"External Services" row** (public, browser-facing apps): add the app's URL to `prometheus/config/scrape-configs.blackbox.yaml`'s target list. The row is a single panel that repeats over `label_values(probe_success, instance)` — one tile per probed URL appears automatically, titled with the full URL.
-- **"Cluster" row** (internal apps with no public URL, health = "is the Deployment's replica available"): add the label `noc-monitor: "true"` to the Deployment's `metadata.labels`. The row repeats over `label_values(kube_deployment_labels{label_noc_monitor="true"}, deployment)`. Requires `kube-state-metrics` to have this label allowlisted (already configured in `apps/base/monitoring/kube-state-metrics/kustomization.yaml` — `--metric-labels-allowlist=deployments=[noc-monitor]`; if you ever add a *different* label for this purpose, extend that allowlist too, or it silently won't show up as a Prometheus label).
+- __"External Services" row__ (public, browser-facing apps): add the app's URL to `prometheus/config/scrape-configs.blackbox.yaml`'s target list. The row is a single panel that repeats over `label_values(probe_success, instance)` — one tile per probed URL appears automatically, titled with the full URL.
+- __"Cluster" row__ (internal apps with no public URL, health = "is the Deployment's replica available"): add the label `noc-monitor: "true"` to the Deployment's `metadata.labels`. The row repeats over `label_values(kube_deployment_labels{label_noc_monitor="true"}, deployment)`. Requires `kube-state-metrics` to have this label allowlisted (already configured in `apps/base/monitoring/kube-state-metrics/kustomization.yaml` — `--metric-labels-allowlist=deployments=[noc-monitor]`; if you ever add a *different* label for this purpose, extend that allowlist too, or it silently won't show up as a Prometheus label).
 
 Neither convention covers apps that are internal-only *and* have no Kubernetes Deployment of their own (e.g. `netalertx-proxy`, which is just an Ingress + ExternalName Service pointing at a Docker container running directly on `deby`, outside k3s) — those still need ad-hoc handling; `netalertx-proxy` specifically is instead covered by adding `netalertx.nerdsbythehour.com` to the blackbox list, since blackbox-exporter runs in-cluster and can reach it via Traefik regardless of public exposure.
 

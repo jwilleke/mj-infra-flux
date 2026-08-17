@@ -6,10 +6,10 @@ Shared PostgreSQL instance for multiple applications.
 
 Single PostgreSQL 17 instance serving multiple applications with isolated databases.
 
-- **Namespace**: `database`
-- **Service**: `postgresql.database.svc.cluster.local:5432`
-- **Data Location**: `/home/jim/docs/data/systems/mj-infra-flux/postgresql/data`
-- **Security**: Runs as apps:apps (3003:3003)
+- __Namespace__: `database`
+- __Service__: `postgresql.database.svc.cluster.local:5432`
+- __Data Location__: `/home/jim/docs/data/systems/mj-infra-flux/postgresql/data`
+- __Security__: Runs as apps:apps (3003:3003)
 
 ## Databases
 
@@ -56,13 +56,13 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO teslamate;
 
 Applications connect using Kubernetes service DNS:
 
-**Connection String Format**:
+__Connection String Format__:
 
 ```
 postgresql://username:password@postgresql.database.svc.cluster.local:5432/dbname
 ```
 
-**Example (TeslaMate)**:
+__Example (TeslaMate)__:
 
 ```yaml
 env:
@@ -132,10 +132,10 @@ sudo kubectl exec -n database postgresql-0 -- psql -U postgres -c "SELECT datnam
 
 ## Security Notes
 
-- **Password Management**: Update passwords in `postgresql-secret.yaml`
-- **User Isolation**: Each app has its own database user
-- **Network Isolation**: Only accessible within cluster (ClusterIP)
-- **Data Persistence**: PersistentVolume with Retain policy
+- __Password Management__: Update passwords in `postgresql-secret.yaml`
+- __User Isolation__: Each app has its own database user
+- __Network Isolation__: Only accessible within cluster (ClusterIP)
+- __Data Persistence__: PersistentVolume with Retain policy
 
 ## Scaling Considerations
 

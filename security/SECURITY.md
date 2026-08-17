@@ -1,14 +1,14 @@
 # Security Vulnerabilities Report
 
-**nerdsbythehour.com** - ZeroThreat Scan (December 11, 2025)
+__nerdsbythehour.com__ - ZeroThreat Scan (December 11, 2025)
 
 ---
 
 ## Summary
 
-- **Overall Risk Level**: Medium
-- **Total Vulnerabilities**: 46 (39 Medium, 3 Low, 3 Information)
-- **Compliance Status**: OWASP Top 10 (Fail), HIPAA (Fail), PCI DSS (Fail), ISO 27001-A (Fail), GDPR (Pass)
+- __Overall Risk Level__: Medium
+- __Total Vulnerabilities__: 46 (39 Medium, 3 Low, 3 Information)
+- __Compliance Status__: OWASP Top 10 (Fail), HIPAA (Fail), PCI DSS (Fail), ISO 27001-A (Fail), GDPR (Pass)
 
 ---
 
@@ -18,10 +18,10 @@
 
 #### 1. Content Security Policy Not Implemented (24 instances)
 
-**Risk Factor**: Medium | **CVSS Score**: 3.1
-**Impact**: Allows XSS attacks, data injection, and clickjacking
+__Risk Factor__: Medium | __CVSS Score__: 3.1
+__Impact__: Allows XSS attacks, data injection, and clickjacking
 
-**Recommendation**:
+__Recommendation__:
 
 - Implement a robust Content Security Policy header on all responses
 - Start with a restrictive policy and gradually relax as needed:
@@ -38,10 +38,10 @@
 
 #### 2. ClickJacking / Improper Restriction of Rendered UI Layers (15 instances)
 
-**Risk Factor**: Medium | **CVSS Score**: 5.4
-**Impact**: Allows framing attacks to trick users into unwanted actions
+__Risk Factor__: Medium | __CVSS Score__: 5.4
+__Impact__: Allows framing attacks to trick users into unwanted actions
 
-**Recommendation**:
+__Recommendation__:
 
 - Add X-Frame-Options header to prevent clickjacking:
 
@@ -58,12 +58,12 @@
 
 #### 3. Insecure Access-Control-Allow-Origin Header (7 instances)
 
-**Risk Factor**: Medium | **CVSS Score**: 3.1
-**Impact**: Allows unauthorized cross-origin access to sensitive data
+__Risk Factor__: Medium | __CVSS Score__: 3.1
+__Impact__: Allows unauthorized cross-origin access to sensitive data
 
-**Recommendation**:
+__Recommendation__:
 
-- **CRITICAL**: Never use wildcard (`*`) in Access-Control-Allow-Origin for authenticated endpoints
+- __CRITICAL__: Never use wildcard (`*`) in Access-Control-Allow-Origin for authenticated endpoints
 - Define explicit trusted domains:
 
   ```
@@ -87,10 +87,10 @@
 
 #### 4. Strict Transport Security Not Enforced (15 instances)
 
-**Risk Factor**: Low | **CVSS Score**: 6.5
-**Impact**: Vulnerability to man-in-the-middle attacks and eavesdropping
+__Risk Factor__: Low | __CVSS Score__: 6.5
+__Impact__: Vulnerability to man-in-the-middle attacks and eavesdropping
 
-**Recommendation**:
+__Recommendation__:
 
 - Enable HSTS with appropriate max-age:
 
@@ -107,10 +107,10 @@
 
 #### 5. X-Content-Type-Options Header Missing (24 instances)
 
-**Risk Factor**: Low | **CVSS Score**: 3.1
-**Impact**: Browser MIME-type sniffing can lead to XSS attacks
+__Risk Factor__: Low | __CVSS Score__: 3.1
+__Impact__: Browser MIME-type sniffing can lead to XSS attacks
 
-**Recommendation**:
+__Recommendation__:
 
 - Add X-Content-Type-Options header to all responses:
 
@@ -129,10 +129,10 @@
 
 #### 6. Email Address Disclosed (2 instances)
 
-**Risk Factor**: Information | **Location**: `/speed` and `/speed/assets/js/app-2.5.4.min.js`
-**Impact**: Exposed emails vulnerable to spam and phishing
+__Risk Factor__: Information | __Location__: `/speed` and `/speed/assets/js/app-2.5.4.min.js`
+__Impact__: Exposed emails vulnerable to spam and phishing
 
-**Recommendation**:
+__Recommendation__:
 
 - Remove email addresses from source code and minified JS files
 - Check the `/speed` page and `app-2.5.4.min.js` for exposed email addresses
@@ -145,10 +145,10 @@
 
 #### 7. TRACE/TRACK Method Detected (1 instance)
 
-**Risk Factor**: Information | **CVSS Score**: 5.3
-**Impact**: Exposes headers and session data for reconnaissance
+__Risk Factor__: Information | __CVSS Score__: 5.3
+__Impact__: Exposes headers and session data for reconnaissance
 
-**Recommendation**:
+__Recommendation__:
 
 - Disable HTTP TRACE and TRACK methods on web server
 - For Apache, add to configuration:
@@ -173,10 +173,10 @@
 
 ### Mail Configuration Status
 
-- **2 Failures** (SMTP Reverse DNS Mismatch, SMTP Transaction Time)
-- **6 Passes** (DKIM, DMARC, SPF, TLS, Anti-spoofing)
+- __2 Failures__ (SMTP Reverse DNS Mismatch, SMTP Transaction Time)
+- __6 Passes__ (DKIM, DMARC, SPF, TLS, Anti-spoofing)
 
-**Recommendation**:
+__Recommendation__:
 
 - Investigate SMTP reverse DNS mismatch
 - Test mail server connectivity
@@ -184,16 +184,16 @@
 
 ### SSL Certificate
 
-- **Status**: A (Excellent)
-- **Valid Until**: 2026-02-15
-- **Protocols**: TLS 1.2, TLS 1.3
-- **Action**: None needed; certificate is well-configured
+- __Status__: A (Excellent)
+- __Valid Until__: 2026-02-15
+- __Protocols__: TLS 1.2, TLS 1.3
+- __Action__: None needed; certificate is well-configured
 
 ### JavaScript Packages
 
 - React-Dom: 19.2.0 
 - React Router: 7.9.5 
-- **Status**: No known vulnerabilities detected
+- __Status__: No known vulnerabilities detected
 
 ---
 
@@ -201,11 +201,11 @@
 
 | Standard | Status | Issues |
 |----------|--------|--------|
-| OWASP Top 10 | **FAIL** | A1 (Access Control), A4 (Insecure Design), A5 (Security Misconfiguration), A7 (Auth Failure) |
-| HIPAA | **FAIL** | Missing encryption/protection controls |
-| GDPR | **PASS** |  |
-| PCI DSS | **FAIL** | Requirement 4.1 (Strong Cryptography) |
-| ISO 27001-A | **FAIL** | Missing security headers and controls |
+| OWASP Top 10 | __FAIL__ | A1 (Access Control), A4 (Insecure Design), A5 (Security Misconfiguration), A7 (Auth Failure) |
+| HIPAA | __FAIL__ | Missing encryption/protection controls |
+| GDPR | __PASS__ |  |
+| PCI DSS | __FAIL__ | Requirement 4.1 (Strong Cryptography) |
+| ISO 27001-A | __FAIL__ | Missing security headers and controls |
 
 ---
 

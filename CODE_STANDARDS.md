@@ -4,13 +4,13 @@ This document outlines the coding standards and best practices for this project.
 
 ## Overview
 
-We follow the **DRY (Don't Repeat Yourself) principle** - every piece of knowledge should have a single, unambiguous, authoritative representation. If you see repeated logic more than twice, refactor it into reusable components.
+We follow the __DRY (Don't Repeat Yourself) principle__ - every piece of knowledge should have a single, unambiguous, authoritative representation. If you see repeated logic more than twice, refactor it into reusable components.
 
 ## Language & Environment
 
-- **Language:** English (US) for all code and documentation
-- **Runtime:** Node.js with TypeScript
-- **Target:** ES2020
+- __Language:__ English (US) for all code and documentation
+- __Runtime:__ Node.js with TypeScript
+- __Target:__ ES2020
 
 ## TypeScript Configuration
 
@@ -30,7 +30,7 @@ See `tsconfig.json` for full configuration.
 
 Automatic code formatting using Prettier ensures consistency across the codebase.
 
-**Key settings:**
+__Key settings:__
 
 - Single quotes for strings
 - 2-space indentation
@@ -54,7 +54,7 @@ EditorConfig settings (`.editorconfig`) ensure consistent editor behavior across
 
 We use ESLint with TypeScript support to catch code quality issues.
 
-**Key rules:**
+__Key rules:__
 
 - Prefer `const` over `let` and `var`
 - Unused variables must be prefixed with `_`
@@ -79,11 +79,11 @@ npm run lint:fix
 
 ## Naming Conventions
 
-- **Files:** Use kebab-case for file names (e.g., `user-service.ts`, `auth-controller.ts`)
-- **Classes:** Use PascalCase (e.g., `UserService`, `AuthController`)
-- **Functions/Variables:** Use camelCase (e.g., `getUserById`, `isActive`)
-- **Constants:** Use UPPER_SNAKE_CASE (e.g., `MAX_RETRIES`, `DEFAULT_TIMEOUT`)
-- **Private members:** Prefix with underscore (e.g., `_internalState`, `_validateInput()`)
+- __Files:__ Use kebab-case for file names (e.g., `user-service.ts`, `auth-controller.ts`)
+- __Classes:__ Use PascalCase (e.g., `UserService`, `AuthController`)
+- __Functions/Variables:__ Use camelCase (e.g., `getUserById`, `isActive`)
+- __Constants:__ Use UPPER_SNAKE_CASE (e.g., `MAX_RETRIES`, `DEFAULT_TIMEOUT`)
+- __Private members:__ Prefix with underscore (e.g., `_internalState`, `_validateInput()`)
 
 ## Code Organization
 
@@ -151,7 +151,7 @@ type(scope): description
 [optional footer]
 ```
 
-**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
+__Types:__ `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
 
 Example:
 
@@ -166,14 +166,14 @@ Closes #123
 
 ## Pre-commit Hooks
 
-This repo has **no `package.json` and no husky** — it is YAML and shell, not a Node project. Enforcement is a plain git hook instead: `scripts/git-hook-commit.sh`.
+This repo has __no `package.json` and no husky__ — it is YAML and shell, not a Node project. Enforcement is a plain git hook instead: `scripts/git-hook-commit.sh`.
 
 It does two things:
 
 1. `kubectl kustomize` over `apps/production` and `infrastructure/prod/configs` — catches a manifest that will not build before Flux tries it
 2. `markdownlint-cli2 --fix` over staged `*.md`, against `.markdownlint.jsonc` — the same rulebook CI uses
 
-**Install it once per clone.** Git hooks live in `.git/hooks/`, which is not version controlled, so a hook committed to `scripts/` does nothing until it is wired up:
+__Install it once per clone.__ Git hooks live in `.git/hooks/`, which is not version controlled, so a hook committed to `scripts/` does nothing until it is wired up:
 
 ```bash
 ./scripts/install-git-hooks.sh
@@ -183,7 +183,7 @@ Markdown that is mechanically fixable is fixed and re-staged automatically. Anyt
 
 ### What actually fails
 
-From a real CI run with 597 violations (2026-06-21), four rules account for 97% of them — and **all four are auto-fixable**, which is the whole argument for fixing at commit time rather than expecting anyone to memorise the ruleset:
+From a real CI run with 597 violations (2026-06-21), four rules account for 97% of them — and __all four are auto-fixable__, which is the whole argument for fixing at commit time rather than expecting anyone to memorise the ruleset:
 
 | Rule | Count | What it wants |
 |---|---|---|
@@ -196,8 +196,8 @@ The pattern is *blank lines around block elements*, plus pasted URLs. It concent
 
 Two more need human judgment, because `--fix` cannot infer intent. Both are enabled here and disabled in many projects, so they are easy to trip:
 
-- **MD036** — bold used as a heading. Use a real `###` heading.
-- **MD033** — inline HTML. A bare `<placeholder>` in prose parses as a tag; wrap it in backticks.
+- __MD036__ — bold used as a heading. Use a real `###` heading.
+- __MD033__ — inline HTML. A bare `<placeholder>` in prose parses as a tag; wrap it in backticks.
 
 ## Package Standards
 

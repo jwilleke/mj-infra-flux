@@ -6,10 +6,10 @@ Built on the [`ngdpbase`](https://github.com/jwilleke/ngdpbase) wiki engine with
 
 ## Architecture
 
-- **Image**: `ghcr.io/jwilleke/geohazardwatch:X.Y.Z` — built and published from the `jwilleke/geohazardwatch` repo. Layered on `ghcr.io/jwilleke/ngdpbase`.
-- **Data volume**: `hostPath /mnt/tank/jims/data/systems/geohazardwatch` mounted at `/app/data`. Holds wiki pages, users, sessions, search index, and the imported geology data.
-- **Public path**: Cloudflare Tunnel → cluster Service direct (bypasses Traefik). Wired up separately — see geohazardwatch issues #14-18.
-- **Internal path**: Traefik IngressRoute on `geohazardwatch.nerdsbythehour.com` with a cert-manager Let's Encrypt cert. Used to verify the pod independently of the tunnel.
+- __Image__: `ghcr.io/jwilleke/geohazardwatch:X.Y.Z` — built and published from the `jwilleke/geohazardwatch` repo. Layered on `ghcr.io/jwilleke/ngdpbase`.
+- __Data volume__: `hostPath /mnt/tank/jims/data/systems/geohazardwatch` mounted at `/app/data`. Holds wiki pages, users, sessions, search index, and the imported geology data.
+- __Public path__: Cloudflare Tunnel → cluster Service direct (bypasses Traefik). Wired up separately — see geohazardwatch issues #14-18.
+- __Internal path__: Traefik IngressRoute on `geohazardwatch.nerdsbythehour.com` with a cert-manager Let's Encrypt cert. Used to verify the pod independently of the tunnel.
 
 ## Auto-update flow
 

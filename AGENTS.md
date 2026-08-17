@@ -1,30 +1,38 @@
-<!-- KIT:START v1.0.0-12-g1fa177f — managed by mjs-project-template; edit below the KIT:END marker -->
-# Agent Context & Protocols
+<!-- KIT:START v1.8.1-0-gf013faa — managed by mjs-project-template; edit below the KIT:END marker -->
+## Agent Kit Protocols
 
-This section is **managed by the kit** (`install-kit.sh`) — it is identical across repos. Put repo-specific context **below the `KIT:END` marker**; do not edit here.
+This section is __managed by the kit__ (`install-kit.sh`) — it is identical across repos. Put repo-specific context __below the `KIT:END` marker__; do not edit here.
 
-## Session continuity
+The heading above names the kit on purpose. It used to read `Agent Context & Protocols`, which is the
+same wording a repo naturally picks for its own agent section below `KIT:END` — two identical `##`
+headings in one file, and `markdownlint` MD024 fails on it. The kit owns one heading string in every
+repo that installs it, so that string says whose it is.
+
+### Session continuity
 
 - Before starting, read the `▶ Resume here` block at the top of `TODO.md` (committed, so it syncs across machines) and recent `git log`. That is where the last session left off — repeating finished work is the most common avoidable mistake.
 - Commit a chunk of work with `/session-commit`: commits code + `TODO.md`, appends a journal entry to `private/project_log.md` (the log is never committed).
-- Run `/status` often (after every `/session-commit`): it ranks open work and recommends the next step.
+- Run `/pstatus` often (after every `/session-commit`): it ranks open work and recommends the next step.
 - End a session with `/wrap`: commits anything outstanding, refreshes the `▶ Resume here` pointer, and reports whether it is safe to shut down the editor.
 
-## Priorities — GitHub labels are the source of truth
+### Priorities — GitHub labels are the source of truth
 
 Priority labels are mutually exclusive and mean:
 
-- `P0` — **Broken. Stop all work and fix it.** (production down / blocked / security breach)
-- `P1` — **Delivers value to the mission.**
-- `P2` — **Nice to have.**
+- `P0` — __Broken. Stop all work and fix it.__ (production down / blocked / security breach)
+- `P1` — __Delivers value to the mission.__
+- `P2` — __Nice to have.__
 - `deferred` — consciously postponed; `needs-triage` — awaiting a priority decision.
 
 Then:
 
 - Security comes first. Scanner alerts (Dependabot / code-scanning / GitGuardian) become issues labeled `security` + a graded priority: critical/high → `P0`, medium → `P1`, low → `P2`.
-- `TODO.md` = a `▶ Resume here` block (maintained by `/wrap`) on top, then priority bands that `/status` regenerates from the labels. Do not hand-edit the bands.
+- `TODO.md` = a `▶ Resume here` block (maintained by `/wrap`) on top, then priority bands that `/pstatus` regenerates from the labels. Do not hand-edit the bands.
+- The two halves have one writer each and a deliberate handover: `/wrap` writes the resume pointer at session end, `/context` reads it at session open, and the first `/pstatus` of the session __removes__ it — by then you have already resumed, so it has served its purpose. A bands-only `TODO.md` mid-session is expected, not a loss.
+- Kit files are overwritten wholesale on every sync — `.claude/commands/*.md`, `utility/sync-labels.sh`, `.markdownlint-cli2.jsonc`. Never add a rule to one of them: it is destroyed at the next sync (the installer now warns, but the rule still goes). A __generic__ rule belongs upstream in [mjs-project-template](https://github.com/jwilleke/mjs-project-template) so every repo gets it. A __repo-specific__ note about a command — a package manager the kit does not name, a scanner only this repo has — goes in `.claude/commands/<command>.local.md`, which the kit never writes, reads, or deletes. Read that file, if present, as part of the command; commit it, so it travels with the repo.
+- `TODO.md` holds __no history__ — only what is open right now. Never add "merged since last run", closed/merged counts, a session narrative, a dated changelog, or work from other repos. A closed item just stops appearing; that disappearance is the whole record. Session history goes in `private/project_log.md` via `/session-commit` and `/wrap`, and nowhere else.
 
-## Working agreement
+### Working agreement
 
 - Think before coding: state assumptions, surface trade-offs, ask when scope is ambiguous.
 - Simplicity first: the minimum that solves the problem; nothing speculative.
@@ -32,13 +40,24 @@ Then:
 - Issue decomposition — NEVER put "Steps", "Phases", or numbered sequences inside a single GitHub issue. Break each step into its own issue and link them using GitHub relationships: `closes #N` / `fixes #N` (resolves another), `blocked by #N` (dependency), `relates to #N` (context link). Example: a 3-phase migration = 3 issues with "blocked by" chains, not one issue with Phase headings.
 - Issue/PR links — Never use a bare `#N` reference alone. Always pair it with the full GitHub URL: `[#333](https://github.com/owner/repo/issues/333)`. This applies in commit messages, PR descriptions, comments, and any agent output. Use `/issues/N` for issues and `/pull/N` for PRs.
 - Awaiting approval — When work is complete but requires human sign-off before closing, apply the `in-review` label and leave a comment on the issue/PR that states: what was done, what the human needs to verify, and what action closes it. Never self-close an issue or PR.
+- Closing issues — __Always remove the `in-review` label when closing__ an issue or PR (`gh issue edit N --remove-label in-review` before or with the close). Closed items must not keep `in-review`, or the label stops meaning "awaiting a decision" and the queue it drives can no longer be trusted.
 - Commits — always use the `/session-commit` skill. Never run a bare `git commit` directly. `/session-commit` enforces the session log update, conventional commit format, and co-author trailer.
+- Direct commits by default — commit to the default branch; do not open a pull request unless someone other than you will actually look at it before it lands. On a single-maintainer repo a self-opened, self-merged PR reviews nothing: it just splits one explanation across a commit message and a near-identical PR body. Put the reasoning in the commit message. A change touching a "risky" path, closing an issue, or feeling significant is __not__ a reason to open one — CI runs on `push` as well as `pull_request`, so a direct commit is still tested. Where a PR does exist, its body points at the commit message rather than restating it.
 
-## Markdown conventions
+### Markdown conventions
 
-- Dash (`-`) bullets; no bare numbered lists. ATX (`#`) headings. Spaced tables (`| a | b |`).
-- Inline HTML is **not** allowed. Long lines are fine.
-- Rules live in `.markdownlint.jsonc`; the editor, CLI, CI and agents all read that one file.
+__Read `.markdownlint-cli2.jsonc` before writing markdown.__ It is the control file — rules, globs
+and ignores in one place, read by the editor, the CLI, CI and you, and identical in every repo the
+kit installs into. Do not rely on a summary: this section deliberately does not restate the rules,
+because a second copy drifts from the first the moment someone changes one.
+
+Most markdown here is written by agents, so these are writing rules, not review rules — conform on
+the first draft rather than relying on `--fix`. There is no exemption mechanism and none is wanted;
+a disabled check is a check nobody revisits. Verify with `npm run lint:md`, or `npx markdownlint-cli2`
+where there is no `package.json`.
+
+Only committed files are linted: anything `.gitignore`d is generated or vendored, so its source is
+linted instead.
 <!-- KIT:END -->
 
 ## Project Context for AI Agents
@@ -47,19 +66,19 @@ This file serves as the single source of truth for project context and state. Al
 
 ## Team Role & Cross-Project Scope
 
-You (Claude, and any other AI agent) operate as a **senior member of a development–deployment team**, not a one-off assistant. Act with that ownership: anticipate cluster/downstream impact, surface risk and contradictions instead of rubber-stamping, and keep shared context current for the agents who follow you.
+You (Claude, and any other AI agent) operate as a __senior member of a development–deployment team__, not a one-off assistant. Act with that ownership: anticipate cluster/downstream impact, surface risk and contradictions instead of rubber-stamping, and keep shared context current for the agents who follow you.
 
-This team runs **three coupled projects on the same `deby` host (192.168.68.71)**, treated as one effort:
+This team runs __three coupled projects on the same `deby` host (192.168.68.71)__, treated as one effort:
 
-- **`/home/jim/Documents/mj-infra-flux`** (this repo) — the Flux GitOps source of truth for the k3s cluster (the *deployment* side).
-- **`/home/jim/thishost`** — the `deby` host operations workspace (the *host/infra* side: networking, storage/ZFS, systemd, alerting). Its conventions live in that workspace's own `AGENTS.md`.
-- **`/home/jim/Documents/mjs-network`** — the network domain (LAN, UniFi gear, Protect cameras, internal DNS). Its conventions live in that repo's own `AGENTS.md`.
+- __`/home/jim/Documents/mj-infra-flux`__ (this repo) — the Flux GitOps source of truth for the k3s cluster (the *deployment* side).
+- __`/home/jim/thishost`__ — the `deby` host operations workspace (the *host/infra* side: networking, storage/ZFS, systemd, alerting). Its conventions live in that workspace's own `AGENTS.md`.
+- __`/home/jim/Documents/mjs-network`__ — the network domain (LAN, UniFi gear, Protect cameras, internal DNS). Its conventions live in that repo's own `AGENTS.md`.
 
 Implications:
 
-- The **one curated TODO digest** covers all three repos: `~/thishost/TODO.md` (spans `jwilleke/mj-infra-flux` + `jwilleke/deby` + `jwilleke/mjs-network`). Do **not** recreate a repo-root `TODO.md` here.
-- The **one operational session log** lives at `~/thishost/docs/project_log.md` (consolidated 2026-05-22) and covers session work touching *any* of the three repos.
-- **Do not add session-shaped entries to this repo's `docs/project_log.md` or the "Completed Work" section below** — both are frozen historical archives (entries up to 2026-05-22); see freeze headers at the top of each.
+- The __one curated TODO digest__ covers all three repos: `~/thishost/TODO.md` (spans `jwilleke/mj-infra-flux` + `jwilleke/deby` + `jwilleke/mjs-network`). Do __not__ recreate a repo-root `TODO.md` here.
+- The __one operational session log__ lives at `~/thishost/docs/project_log.md` (consolidated 2026-05-22) and covers session work touching *any* of the three repos.
+- __Do not add session-shaped entries to this repo's `docs/project_log.md` or the "Completed Work" section below__ — both are frozen historical archives (entries up to 2026-05-22); see freeze headers at the top of each.
 - New work referencing this repo records `mj-infra-flux@<sha>` in the canonical log over in `jwilleke/deby`.
 - Code-side conventions still live here: `CHANGELOG.md`, ADRs, build/release notes, this `AGENTS.md` (excluding the frozen "Completed Work" section). The consolidation is operational history only.
 - Live source of truth for work items is the GitHub issue trackers (`jwilleke/mj-infra-flux`, `jwilleke/deby`, `jwilleke/mjs-network`).
@@ -80,13 +99,13 @@ In all interactions and commit messages
 
 ## Project Overview
 
-**Project Name:** mj-infra-flux
+__Project Name:__ mj-infra-flux
 
-**Description:** Production Kubernetes (k3s) GitOps infrastructure running on 192.168.68.71 (deby) with Flux CD. Hosts 16+ production services including TeslaMate, JimsWiki (38,004 pages), Home Assistant, Grafana, Authentik SSO, and more. All services are managed through Git and automatically deployed via Flux.
+__Description:__ Production Kubernetes (k3s) GitOps infrastructure running on 192.168.68.71 (deby) with Flux CD. Hosts 16+ production services including TeslaMate, JimsWiki (38,004 pages), Home Assistant, Grafana, Authentik SSO, and more. All services are managed through Git and automatically deployed via Flux.
 
-**Primary Domain:** nerdsbythehour.com
+__Primary Domain:__ nerdsbythehour.com
 
-**Goals:**
+__Goals:__
 
 - Maintain a production-grade Kubernetes infrastructure using GitOps principles
 - Ensure all services are highly available and properly secured
@@ -128,21 +147,21 @@ mj-infra-flux/
 
 ## Key Documentation Files (READ THESE)
 
-**Essential Reading:**
+__Essential Reading:__
 
-1. **ARCHITECTURE.md** - Complete architecture, service inventory, URLs, authentication flow
-2. **DEPLOYMENT-GUIDELINES.md** - Deployment best practices, Kustomize patterns
-3. **CODE_STANDARDS.md** - Coding standards and best practices
-4. **CONTRIBUTING.md** - Contribution gelines
-5. **SETUP.md** - Initial setup and bootstrapping instructions
+1. __ARCHITECTURE.md__ - Complete architecture, service inventory, URLs, authentication flow
+2. __DEPLOYMENT-GUIDELINES.md__ - Deployment best practices, Kustomize patterns
+3. __CODE_STANDARDS.md__ - Coding standards and best practices
+4. __CONTRIBUTING.md__ - Contribution gelines
+5. __SETUP.md__ - Initial setup and bootstrapping instructions
 
-**Reference Documentation:**
+__Reference Documentation:__
 
-- **README.md** - Quick start, common commands, usage
-- **SECURITY-INCIDENT.md** - Real security incident and lessons learned
-- **docker-migration.md** - Migration strategy from Docker to Kubernetes
+- __README.md__ - Quick start, common commands, usage
+- __SECURITY-INCIDENT.md__ - Real security incident and lessons learned
+- __docker-migration.md__ - Migration strategy from Docker to Kubernetes
 
-**Application READMEs:**
+__Application READMEs:__
 
 - Each app in `apps/production/*/README.md` has detailed documentation
 
@@ -150,13 +169,13 @@ mj-infra-flux/
 
 ### 1. Deployment Philosophy
 
-**ALWAYS use Kustomize. NEVER use Helm unless absolutely necessary.**
+__ALWAYS use Kustomize. NEVER use Helm unless absolutely necessary.__
 
 - ✅ Use plain Kubernetes YAML + Kustomize for all new applications
 - ✅ Helm is acceptable ONLY for existing third-party charts with active maintenance
 - ❌ Must justify why Kustomize won't work before considering Helm
 
-**Good Kustomize Examples:**
+__Good Kustomize Examples:__
 
 - `apps/production/jimswiki/` - Complex app with 38K+ files
 - `apps/production/teslamate/` - Multi-component application
@@ -165,11 +184,11 @@ mj-infra-flux/
 
 ### 2. Secret Management
 
-**NEVER commit secrets in plaintext to git. This is non-negotiable.**
+__NEVER commit secrets in plaintext to git. This is non-negotiable.__
 
-**Approved methods (in priority order):**
+__Approved methods (in priority order):__
 
-1. **SOPS + Age encryption** (PREFERRED)
+1. __SOPS + Age encryption__ (PREFERRED)
 
    ```bash
    # Store secrets in .env files
@@ -177,7 +196,7 @@ mj-infra-flux/
    # Only commit .env*.encrypted files to git
    ```
 
-2. **Cluster-only Kubernetes Secrets**
+2. __Cluster-only Kubernetes Secrets__
 
    ```bash
    # Create directly in cluster (NOT in git)
@@ -185,9 +204,9 @@ mj-infra-flux/
    # Document in README how to recreate it
    ```
 
-3. **Helm valuesFrom** (only if using Helm)
+3. __Helm valuesFrom__ (only if using Helm)
 
-**Reference:** `SECURITY-INCIDENT.md` documents a real security incident caused by improper secret handling.
+__Reference:__ `SECURITY-INCIDENT.md` documents a real security incident caused by improper secret handling.
 
 ### 3. Documentation Requirements
 
@@ -202,11 +221,11 @@ Every application MUST have a README.md with:
 7. Deployment - How to deploy/update
 8. Troubleshooting - Common issues
 
-**Example:** `apps/production/jimswiki/README.md`
+__Example:__ `apps/production/jimswiki/README.md`
 
 ### 4. Testing Before Commit
 
-**Always validate before committing:**
+__Always validate before committing:__
 
 ```bash
 # 1. Validate Kustomize
@@ -229,29 +248,29 @@ kubectl logs -n namespace -l app=myapp
 
 ### Core Infrastructure
 
-- **Traefik** (kube-system) - Ingress controller
-- **cert-manager** (cert-manager) - Let's Encrypt certificates
-- **Flux** (flux-system) - GitOps automation
+- __Traefik__ (kube-system) - Ingress controller
+- __cert-manager__ (cert-manager) - Let's Encrypt certificates
+- __Flux__ (flux-system) - GitOps automation
 
 ### Shared Services
 
-- **PostgreSQL** (database) - Shared database for multiple apps
-- **Mosquitto** (messaging) - MQTT broker for IoT
-- **Grafana** (monitoring) - Dashboards and monitoring
-- **Authentik** (authentik) - SSO/IdP for all protected services
+- __PostgreSQL__ (database) - Shared database for multiple apps
+- __Mosquitto__ (messaging) - MQTT broker for IoT
+- __Grafana__ (monitoring) - Dashboards and monitoring
+- __Authentik__ (authentik) - SSO/IdP for all protected services
 
 ### Applications
 
-- **Landing Page** - Public landing page at nerdsbythehour.com
-- **JimsWiki** - 38,004 pages wiki (JSPWiki)
-- **TeslaMate** - Vehicle tracking
-- **Home Assistant** - Home automation
-- **Hoarder** - Bookmark and content management
-- **Guest Services** - Public services (OpenSpeedTest, whoami)
-- **jimsmcp** - MCP server for managing infrastructure
-- **Shared Resources** - CDN for static assets
+- __Landing Page__ - Public landing page at nerdsbythehour.com
+- __JimsWiki__ - 38,004 pages wiki (JSPWiki)
+- __TeslaMate__ - Vehicle tracking
+- __Home Assistant__ - Home automation
+- __Hoarder__ - Bookmark and content management
+- __Guest Services__ - Public services (OpenSpeedTest, whoami)
+- __jimsmcp__ - MCP server for managing infrastructure
+- __Shared Resources__ - CDN for static assets
 
-**Full inventory:** See `ARCHITECTURE.md`
+__Full inventory:__ See `ARCHITECTURE.md`
 
 ## Data Organization
 
@@ -342,34 +361,34 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 
 ### Migration to Kubernetes
 
-- **Decision:** Migrate all Docker Compose services to k3s
-- **Status:** Phase 3 Complete - All services migrated
-- **Rationale:** Better orchestration, scaling, and GitOps integration
-- **Documentation:** `docker-migration.md`
+- __Decision:__ Migrate all Docker Compose services to k3s
+- __Status:__ Phase 3 Complete - All services migrated
+- __Rationale:__ Better orchestration, scaling, and GitOps integration
+- __Documentation:__ `docker-migration.md`
 
 ### Kustomize Over Helm
 
-- **Decision:** Use Kustomize for all new deployments
-- **Rationale:** Transparency, simplicity, better GitOps integration
-- **Exception:** Existing Helm charts (e.g., Authentik) acceptable
-- **Documentation:** `DEPLOYMENT-GUIDELINES.md`
+- __Decision:__ Use Kustomize for all new deployments
+- __Rationale:__ Transparency, simplicity, better GitOps integration
+- __Exception:__ Existing Helm charts (e.g., Authentik) acceptable
+- __Documentation:__ `DEPLOYMENT-GUIDELINES.md`
 
 ### SOPS + Age for Secrets
 
-- **Decision:** Use SOPS + Age encryption for all secrets in git
-- **Rationale:** Security, audit trail, GitOps compatibility
-- **Alternative:** Cluster-only secrets for highly sensitive data
-- **Documentation:** `SECURITY-INCIDENT.md` (lessons learned)
+- __Decision:__ Use SOPS + Age encryption for all secrets in git
+- __Rationale:__ Security, audit trail, GitOps compatibility
+- __Alternative:__ Cluster-only secrets for highly sensitive data
+- __Documentation:__ `SECURITY-INCIDENT.md` (lessons learned)
 
 ### Port Range for Applications
 
-- **Decision:** Run apps within ports 9200-9299 when possible
-- **User/Group:** Run as apps:apps (3003:3003) when possible
-- **Rationale:** Consistency, security, easy firewall rules
+- __Decision:__ Run apps within ports 9200-9299 when possible
+- __User/Group:__ Run as apps:apps (3003:3003) when possible
+- __Rationale:__ Consistency, security, easy firewall rules
 
 ## Completed Work
 
-> **Frozen as of 2026-05-22.** Operational history is consolidated at [`jwilleke/deby:docs/project_log.md`](https://github.com/jwilleke/deby/blob/master/docs/project_log.md). The entries below are preserved as historical record; do not add new session-shaped entries here.
+> __Frozen as of 2026-05-22.__ Operational history is consolidated at [`jwilleke/deby:docs/project_log.md`](https://github.com/jwilleke/deby/blob/master/docs/project_log.md). The entries below are preserved as historical record; do not add new session-shaped entries here.
 
 ### Session: 2025-12-01 (Morning)
 
@@ -460,15 +479,15 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 
 ### Active Issue: Home Assistant Proxy WebSocket Connection
 
-**Status:** In Progress - WebSocket failing due to HTTP/2 limitation
+__Status:__ In Progress - WebSocket failing due to HTTP/2 limitation
 
-**Problem:**
+__Problem:__
 
 - Home Assistant accessible at ha.nerdsbythehour.com but frontend shows "Unable to connect"
 - Root cause: Traefik's standard Ingress uses HTTP/2, but WebSocket requires HTTP/1.1
 - Traefik's HTTP/2 doesn't support the Upgrade header needed for WebSocket connections
 
-**What's Working:**
+__What's Working:__
 
 - DNS resolution fixed (192.168.68.71 - correct Traefik IP)
 - Home Assistant backend accessible at 192.168.68.20:8123
@@ -476,13 +495,13 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 - Authentik authentication working
 - Home Assistant config updated with external/internal URLs
 
-**Solution Applied:**
+__Solution Applied:__
 
 - Switched from standard Ingress to Traefik IngressRoute
 - IngressRoute properly handles HTTP/1.1 protocol for WebSocket connections
 - Created: `/home/jim/Documents/mj-infra-flux/apps/production/home-assistant-proxy/ingressroute.yaml`
 
-**Next Steps:**
+__Next Steps:__
 
 - Verify WebSocket connection works after IngressRoute deployment
 - Test frontend can establish connection to backend API
@@ -524,12 +543,12 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 
 ### Security Model
 
-**Authentication Flow:**
+__Authentication Flow:__
 
 - Public services: No authentication (landing page, guest services)
 - Protected services: Authentik ForwardAuth (jimswiki, teslamate, grafana, home assistant)
 
-**Secrets Management:**
+__Secrets Management:__
 
 - SOPS + Age encryption for secrets in git
 - Cluster-only secrets for highly sensitive data
@@ -568,24 +587,24 @@ Exception: When image requires root (document why in README).
 
 ### For All Agents
 
-1. **Read this file first** before starting any work
-2. **Read key documentation:**
+1. __Read this file first__ before starting any work
+2. __Read key documentation:__
    - ARCHITECTURE.md - Complete architecture
    - DEPLOYMENT-GUIDELINES.md - Deployment patterns
    - CODE_STANDARDS.md - Coding standards
    - CONTRIBUTING.md - Contribution guidelines
-3. **Update this file** after completing tasks
-4. **Note your session** in the "Completed Work" section with date and work done
-5. **Follow the key principles** - They are mandatory, not optional
+3. __Update this file__ after completing tasks
+4. __Note your session__ in the "Completed Work" section with date and work done
+5. __Follow the key principles__ - They are mandatory, not optional
 
 ### Critical Rules
 
-- ❌ **NEVER** commit secrets in plaintext
-- ❌ **NEVER** use Helm for new deployments without justification
-- ✅ **ALWAYS** use Kustomize for new applications
-- ✅ **ALWAYS** document in README.md
-- ✅ **ALWAYS** test before committing
-- ✅ **ALWAYS** update AGENTS.md when completing work
+- ❌ __NEVER__ commit secrets in plaintext
+- ❌ __NEVER__ use Helm for new deployments without justification
+- ✅ __ALWAYS__ use Kustomize for new applications
+- ✅ __ALWAYS__ document in README.md
+- ✅ __ALWAYS__ test before committing
+- ✅ __ALWAYS__ update AGENTS.md when completing work
 
 ### When in Doubt
 
@@ -614,13 +633,13 @@ kubectl get pods -A
 
 ## References
 
-- **GitHub Repository:** <https://github.com/jwilleke/mj-infra-flux>
-- **Original Inspiration:** <https://github.com/activescott/home-infra-k8s-flux>
-- **Flux Documentation:** <https://fluxcd.io/>
-- **Kustomize Documentation:** <https://kustomize.io/>
+- __GitHub Repository:__ <https://github.com/jwilleke/mj-infra-flux>
+- __Original Inspiration:__ <https://github.com/activescott/home-infra-k8s-flux>
+- __Flux Documentation:__ <https://fluxcd.io/>
+- __Kustomize Documentation:__ <https://kustomize.io/>
 
 ---
 
-**Important:** Keep this file synchronized and updated. It's the bridge between different agents and sessions working on the same project.
+__Important:__ Keep this file synchronized and updated. It's the bridge between different agents and sessions working on the same project.
 
-**Last Updated:** 2026-05-22 by Claude Opus 4.7 (operational-history consolidation — session logs moved to `jwilleke/deby:docs/project_log.md`).
+__Last Updated:__ 2026-05-22 by Claude Opus 4.7 (operational-history consolidation — session logs moved to `jwilleke/deby:docs/project_log.md`).

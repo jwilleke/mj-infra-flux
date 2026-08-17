@@ -18,26 +18,26 @@ The landing page serves three main routes:
 
 ### Build and Deploy Process
 
-1. **Build the Docker image** (from `/opt/traefik/landingpage`):
+1. __Build the Docker image__ (from `/opt/traefik/landingpage`):
 
    ```bash
    cd /opt/traefik/landingpage
    docker build -t landingpage:latest .
    ```
 
-2. **Export the image for k3s**:
+2. __Export the image for k3s__:
 
    ```bash
    docker save landingpage:latest -o /tmp/landingpage.tar
    ```
 
-3. **Import into k3s**:
+3. __Import into k3s__:
 
    ```bash
    sudo k3s ctr images import /tmp/landingpage.tar
    ```
 
-4. **Apply with Flux** (or kubectl):
+4. __Apply with Flux__ (or kubectl):
 
    ```bash
    # Flux will automatically pick up changes from git
@@ -61,19 +61,19 @@ When you make changes to the React source code:
 
 ### Ingress Routes
 
-- **Public routes** (`ingress-public.yaml`):
+- __Public routes__ (`ingress-public.yaml`):
   - `nerdsbythehour.com/` → Landing page
   - `nerdsbythehour.com/guest` → Guest page
   - `www.nerdsbythehour.com/` → Landing page
 
-- **Redirect routes** (`ingress-members.yaml`):
+- __Redirect routes__ (`ingress-members.yaml`):
   - `nerdsbythehour.com/members` → Redirects to Authentik User Library
 
 ### Members Page Redirect
 
 The `/members` route uses a Traefik middleware to redirect users directly to the Authentik User Library at `https://auth.nerdsbythehour.com/if/user/#/library`. This eliminates the need for a separate Members page since Authentik already provides a user portal showing all authorized applications.
 
-**Implementation**:
+__Implementation__:
 
 - `middleware-redirect-members.yaml` - Traefik redirectRegex middleware
 - Permanent (301) redirect to Authentik library

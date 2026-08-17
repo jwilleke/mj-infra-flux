@@ -8,12 +8,12 @@ Complete reference for all 14 tools provided by jimsmcp.
 
 Get pods in a namespace or across all namespaces.
 
-**Parameters:**
+__Parameters:__
 
 - `namespace` (optional): Namespace to query
 - `labelSelector` (optional): Label selector (e.g., 'app=grafana')
 
-**Examples:**
+__Examples:__
 
 ```json
 // All pods in monitoring namespace
@@ -26,7 +26,7 @@ Get pods in a namespace or across all namespaces.
 {}
 ```
 
-**Returns:**
+__Returns:__
 
 ```json
 [
@@ -47,14 +47,14 @@ Get pods in a namespace or across all namespaces.
 
 Get logs from a specific pod.
 
-**Parameters:**
+__Parameters:__
 
 - `namespace` (required): Namespace of the pod
 - `podName` (required): Name of the pod
 - `container` (optional): Container name
 - `tailLines` (optional): Number of lines to tail (default: 100)
 
-**Example:**
+__Example:__
 
 ```json
 {
@@ -70,11 +70,11 @@ Get logs from a specific pod.
 
 Get deployments in a namespace or across all namespaces.
 
-**Parameters:**
+__Parameters:__
 
 - `namespace` (optional): Namespace to query
 
-**Returns:**
+__Returns:__
 
 ```json
 [
@@ -95,11 +95,11 @@ Get deployments in a namespace or across all namespaces.
 
 Get services in a namespace or across all namespaces.
 
-**Parameters:**
+__Parameters:__
 
 - `namespace` (optional): Namespace to query
 
-**Returns:**
+__Returns:__
 
 ```json
 [
@@ -125,11 +125,11 @@ Get services in a namespace or across all namespaces.
 
 Get ingresses in a namespace or across all namespaces.
 
-**Parameters:**
+__Parameters:__
 
 - `namespace` (optional): Namespace to query
 
-**Returns:**
+__Returns:__
 
 ```json
 [
@@ -155,12 +155,12 @@ Get ingresses in a namespace or across all namespaces.
 
 Get status of all Flux resources or specific kustomizations.
 
-**Parameters:**
+__Parameters:__
 
 - `resource` (optional): Specific resource type ('kustomization', 'helmrelease')
 - `namespace` (optional): Namespace to query (default: flux-system)
 
-**Examples:**
+__Examples:__
 
 ```json
 // All Flux resources
@@ -173,7 +173,7 @@ Get status of all Flux resources or specific kustomizations.
 {"resource": "kustomization", "namespace": "flux-system"}
 ```
 
-**Returns:** Text output from `flux get` command
+__Returns:__ Text output from `flux get` command
 
 ---
 
@@ -181,14 +181,14 @@ Get status of all Flux resources or specific kustomizations.
 
 Force reconciliation of a Flux resource.
 
-**Parameters:**
+__Parameters:__
 
 - `kind` (required): 'kustomization', 'helmrelease', or 'gitrepository'
 - `name` (required): Name of the resource
 - `namespace` (optional): Namespace (default: flux-system)
 - `withSource` (optional): Also reconcile source (default: false)
 
-**Example:**
+__Example:__
 
 ```json
 {
@@ -206,12 +206,12 @@ Force reconciliation of a Flux resource.
 
 Comprehensive health check for an application (pods + service + ingress).
 
-**Parameters:**
+__Parameters:__
 
 - `app` (required): Application name
 - `namespace` (required): Namespace
 
-**Example:**
+__Example:__
 
 ```json
 {
@@ -220,7 +220,7 @@ Comprehensive health check for an application (pods + service + ingress).
 }
 ```
 
-**Returns:**
+__Returns:__
 
 ```json
 {
@@ -252,11 +252,11 @@ Comprehensive health check for an application (pods + service + ingress).
 
 Get all URLs/ingresses for applications in the cluster.
 
-**Parameters:**
+__Parameters:__
 
 - `namespace` (optional): Filter by namespace
 
-**Returns:**
+__Returns:__
 
 ```json
 [
@@ -281,9 +281,9 @@ Get all URLs/ingresses for applications in the cluster.
 
 Get information about Authentik deployment and API endpoint.
 
-**Parameters:** None
+__Parameters:__ None
 
-**Returns:**
+__Returns:__
 
 ```json
 {
@@ -308,9 +308,9 @@ Get information about Authentik deployment and API endpoint.
 
 Create a complete Authentik setup for Home Assistant (proxy provider + application).
 
-**Parameters:** None (uses hardcoded configuration for ha.nerdsbythehour.com)
+__Parameters:__ None (uses hardcoded configuration for ha.nerdsbythehour.com)
 
-**What it does:**
+__What it does:__
 
 1. Creates a Proxy Provider with:
    - External host: `https://ha.nerdsbythehour.com`
@@ -320,7 +320,7 @@ Create a complete Authentik setup for Home Assistant (proxy provider + applicati
 2. Creates an Application linked to the provider
 3. Returns URLs for admin configuration
 
-**Returns:**
+__Returns:__
 
 ```json
 {
@@ -341,7 +341,7 @@ Create a complete Authentik setup for Home Assistant (proxy provider + applicati
 }
 ```
 
-**Example:**
+__Example:__
 
 ```json
 {}
@@ -353,9 +353,9 @@ Create a complete Authentik setup for Home Assistant (proxy provider + applicati
 
 List all applications configured in Authentik.
 
-**Parameters:** None
+__Parameters:__ None
 
-**Returns:**
+__Returns:__
 
 ```json
 [
@@ -375,9 +375,9 @@ List all applications configured in Authentik.
 
 List all providers configured in Authentik.
 
-**Parameters:** None
+__Parameters:__ None
 
-**Returns:**
+__Returns:__
 
 ```json
 [
@@ -398,11 +398,11 @@ List all providers configured in Authentik.
 
 Get the latest stock quote using Alpha Vantage's GLOBAL_QUOTE function.
 
-**Parameters:**
+__Parameters:__
 
 - `symbol` (required): Stock ticker symbol (e.g., 'AAPL', 'TSLA', 'MSFT')
 
-**Example:**
+__Example:__
 
 ```json
 {
@@ -410,7 +410,7 @@ Get the latest stock quote using Alpha Vantage's GLOBAL_QUOTE function.
 }
 ```
 
-**Returns:**
+__Returns:__
 
 ```json
 {
@@ -427,12 +427,12 @@ Get the latest stock quote using Alpha Vantage's GLOBAL_QUOTE function.
 }
 ```
 
-**Requirements:**
+__Requirements:__
 
 - `ALPHA_VANTAGE_KEY` environment variable must be set
 - See "Setup" section below for configuration
 
-**Rate Limits:**
+__Rate Limits:__
 
 - Free tier: 5 requests per minute, 500 per day
 - Premium tier: Higher limits available

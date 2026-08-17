@@ -22,9 +22,9 @@ Production access to CMS's Blue Button 2.0 API requires a Zoom demo of the sign-
 
 Two patterns already prove the hard parts work in this exact cluster, so this is largely a copy-and-adapt job rather than new design:
 
-- **`yourphr-relay`** is the template for both the demo app and demo relay: Deployment + Service only, no Ingress, no cert-manager — Cloudflare terminates TLS at the edge and the tunnel reaches the Service over plain in-cluster HTTP, which is what bypasses Traefik/Authentik by design. Already live at `relay.nerdsbythehour.com`.
-- **`cloudflared`** already serves two different zones (`nerdsbythehour.com` and `geohazardwatch.com`) off one tunnel. Routing a third zone (`yourphr.org`) through the same tunnel is proven, not novel — as long as `yourphr.org` is confirmed on the same Cloudflare account.
-- **`yourphr`'s `image-automation`** ImagePolicy (release-gated semver, public GHCR scanning) is directly reusable for the demo app's image updates.
+- __`yourphr-relay`__ is the template for both the demo app and demo relay: Deployment + Service only, no Ingress, no cert-manager — Cloudflare terminates TLS at the edge and the tunnel reaches the Service over plain in-cluster HTTP, which is what bypasses Traefik/Authentik by design. Already live at `relay.nerdsbythehour.com`.
+- __`cloudflared`__ already serves two different zones (`nerdsbythehour.com` and `geohazardwatch.com`) off one tunnel. Routing a third zone (`yourphr.org`) through the same tunnel is proven, not novel — as long as `yourphr.org` is confirmed on the same Cloudflare account.
+- __`yourphr`'s `image-automation`__ ImagePolicy (release-gated semver, public GHCR scanning) is directly reusable for the demo app's image updates.
 
 ## Proposed answers to the issue's "explicitly TBD" list
 
@@ -66,7 +66,7 @@ Storage: demo app pod → /opt/fasten/db (hostPath /mnt/local-k3s-data/demo-your
 2. `/mnt/local-k3s-data/demo-yourphr/` created on node `deby` (root:root, 755 — matches sibling dirs)
 3. `apps/production/demo-yourphr/pv.yaml` + `pvc.yaml` — hostPath PV (1Gi, `Retain` reclaim policy, `storageClassName: ""`), mirrors the existing `owntracks-recorder` manual-hostPath-PV pattern rather than `local-path` dynamic provisioning (deliberate: a named, explicitly-bound PV keeps this volume distinct from the ops `yourphr-data` PVC with no chance of cross-binding)
 
-Verified: `kubectl kustomize apps/production/demo-yourphr` builds cleanly. **Not yet wired into `apps/production/kustomization.yaml`** — that's Phase 5, once the app + relay Deployments/Services exist too. Namespace + empty PV/PVC with no workloads is inert either way, so each phase stays independently reviewable.
+Verified: `kubectl kustomize apps/production/demo-yourphr` builds cleanly. __Not yet wired into `apps/production/kustomization.yaml`__ — that's Phase 5, once the app + relay Deployments/Services exist too. Namespace + empty PV/PVC with no workloads is inert either way, so each phase stays independently reviewable.
 
 ### Phase 2 — Demo app — ✅ done 2026-07-31 (`26f9304`)
 
@@ -74,7 +74,7 @@ Verified: `kubectl kustomize apps/production/demo-yourphr` builds cleanly. **Not
 2. `apps/production/demo-yourphr/deployment.yaml` — mirrors `apps/production/yourphr/deployment.yaml` structurally, dropped down to just:
    - Image `ghcr.io/jwilleke/yourphr:1.18.0` with the `# {"$imagepolicy": "flux-system:yourphr"}` setter marker (shares the prod ImagePolicy; Phase 5 adds a separate `ImageUpdateAutomation` path)
    - `YOURPHR_RELAY_URL` → in-cluster demo relay Service (not the public hostname)
-   - `YOURPHR_RELAY_PUBLIC_URL` → `https://demo-relay.yourphr.org` — **confirmed** (not guessed) against `backend/pkg/relay/relay.go`: `relay.public_url` is exactly the public browser-facing origin the provider redirects to, distinct from `relay.url` (the poll URL); env var derivation (`relay.public_url` → `YOURPHR_RELAY_PUBLIC_URL`) is mechanical per `backend/pkg/config`
+   - `YOURPHR_RELAY_PUBLIC_URL` → `https://demo-relay.yourphr.org` — __confirmed__ (not guessed) against `backend/pkg/relay/relay.go`: `relay.public_url` is exactly the public browser-facing origin the provider redirects to, distinct from `relay.url` (the poll URL); env var derivation (`relay.public_url` → `YOURPHR_RELAY_PUBLIC_URL`) is mechanical per `backend/pkg/config`
    - `YOURPHR_RELAY_SECRET` from the demo relay's SOPS secret — `secretKeyRef` with `optional: true`, so this Deployment ships ahead of Phase 3/4 without blocking, same as prod's pattern
    - `YOURPHR_BACKUP_LABEL=demo` (harmless even with no backup destination configured)
    - `YOURPHR_MEDICATIONS_RXTERMS_ENRICH=true` — offline-only, no external calls, kept for demo data readability
@@ -91,7 +91,7 @@ Verified: `kubectl kustomize apps/production/demo-yourphr` builds cleanly. Still
 2. `apps/production/demo-yourphr-relay/service.yaml` — ClusterIP, port 8080
 3. `apps/production/demo-yourphr-relay/relay-secret.sops.yaml` — freshly generated (`openssl rand -base64 32`), SOPS-encrypted with the repo's standard age recipient + `encrypted_regex: ^(data|stringData)$` convention, decrypt-verified locally before committing. Distinct value, never shared with the prod relay's.
 
-**Scope correction to Phase 4 below:** this relay secret didn't need operator input — it's a shared secret between two of our own in-cluster services, safe to self-generate like the ops relay's already is. Phase 4 narrows to just the sandbox Blue Button credentials, which genuinely do need operator-supplied (CMS-registered) values.
+__Scope correction to Phase 4 below:__ this relay secret didn't need operator input — it's a shared secret between two of our own in-cluster services, safe to self-generate like the ops relay's already is. Phase 4 narrows to just the sandbox Blue Button credentials, which genuinely do need operator-supplied (CMS-registered) values.
 
 Verified: `kubectl kustomize apps/production/demo-yourphr-relay` builds cleanly; decrypted the secret locally to confirm it round-trips correctly. Still not wired into `apps/production/kustomization.yaml` — Phase 5.
 
@@ -109,14 +109,14 @@ Verified: `kubectl kustomize apps/production/demo-yourphr-relay` builds cleanly;
 
 ### Phase 6 — Cloudflare dashboard (manual, not git — mirrors the relay's existing step) — ✅ done 2026-07-31
 
-1. Zero Trust → existing tunnel (`tunnel-infra-flux`) → **Published application routes** → added:
+1. Zero Trust → existing tunnel (`tunnel-infra-flux`) → __Published application routes__ → added:
    - Subdomain `demo`, domain `yourphr.org`, type `HTTP`, URL `demo-yourphr.demo-yourphr.svc.cluster.local:8080`
    - Subdomain `demo-relay`, domain `yourphr.org`, type `HTTP`, URL `demo-yourphr-relay.demo-yourphr.svc.cluster.local:8080`
 2. `yourphr.org` zone confirmed on the same Cloudflare account as the tunnel — both routes saved successfully.
 
-**Naming correction found during setup:** the original plan used `relay.demo.yourphr.org` (a second-level subdomain). Cloudflare's default Universal SSL cert for this zone only covers the apex + one wildcard level (`yourphr.org`, `*.yourphr.org`), confirmed via `openssl s_client`. A second-level subdomain has no matching certificate and fails the TLS handshake before routing even applies — this is a certificate-scope limit, not a tunnel/DNS misconfiguration. Renamed to the single-level `demo-relay.yourphr.org`, which is covered by the existing wildcard.
+__Naming correction found during setup:__ the original plan used `relay.demo.yourphr.org` (a second-level subdomain). Cloudflare's default Universal SSL cert for this zone only covers the apex + one wildcard level (`yourphr.org`, `*.yourphr.org`), confirmed via `openssl s_client`. A second-level subdomain has no matching certificate and fails the TLS handshake before routing even applies — this is a certificate-scope limit, not a tunnel/DNS misconfiguration. Renamed to the single-level `demo-relay.yourphr.org`, which is covered by the existing wildcard.
 
-**Verified live:**
+__Verified live:__
 
 ```bash
 curl -o /dev/null -w "%{http_code}\n" https://demo.yourphr.org/        # 502 — tunnel/TLS OK, Service not built yet
@@ -141,8 +141,8 @@ Copied from the issue — this plan doesn't change them, just tracks against the
 - [x] Demo app polls the relay in-cluster; the public relay URL is used only for the browser OAuth callback — confirmed via env vars + no relay errors in pod logs
 - [x] Ops `yourphr` namespace/PVC completely unchanged by this work — confirmed: `yourphr-data` still bound to its own 5Gi `local-path` PVC, all three ops pods (`yourphr`, `yourphr-relay`, `yourphr-cda-converter`) unaffected
 - [x] README documents the wipe procedure, hostnames, and secret keys — done
-- [ ] Sandbox Medicare connect flow completes end-to-end — **not curl-verifiable**, needs an operator to actually click through the app in a browser
-- [ ] CMS sandbox app's registered callback URL matches `https://demo-relay.yourphr.org/callback` — **operator/CMS-portal action**, tracked in [yourphr#433](https://github.com/jwilleke/yourphr/issues/433), not infra work
+- [ ] Sandbox Medicare connect flow completes end-to-end — __not curl-verifiable__, needs an operator to actually click through the app in a browser
+- [ ] CMS sandbox app's registered callback URL matches `https://demo-relay.yourphr.org/callback` — __operator/CMS-portal action__, tracked in [yourphr#433](https://github.com/jwilleke/yourphr/issues/433), not infra work
 
 All infra-side acceptance criteria are met. The two remaining items are outside what Flux/Kubernetes work can verify — they're the operator's next step, not blocked on anything here.
 
@@ -150,8 +150,8 @@ All infra-side acceptance criteria are met. The two remaining items are outside 
 
 | Risk | Status |
 |---|---|
-| `yourphr.org` zone not on the Cloudflare account | **Resolved** — confirmed same account, both routes saved |
-| Second-level subdomain (`relay.demo.yourphr.org`) not covered by Universal SSL | **Resolved** — renamed to single-level `demo-relay.yourphr.org`, covered by the `*.yourphr.org` wildcard, verified via TLS handshake + `502` from Cloudflare |
+| `yourphr.org` zone not on the Cloudflare account | __Resolved__ — confirmed same account, both routes saved |
+| Second-level subdomain (`relay.demo.yourphr.org`) not covered by Universal SSL | __Resolved__ — renamed to single-level `demo-relay.yourphr.org`, covered by the `*.yourphr.org` wildcard, verified via TLS handshake + `502` from Cloudflare |
 | Wrong Service DNS/port in tunnel config → 502 | Low risk — exact pattern already works for `relay.nerdsbythehour.com`; current `502`s on both new hostnames are the expected no-Service-yet state, not a config error |
 | Reusing ops PVC by mistake → PHI on public demo | Mitigated by using a dedicated hostPath, never referencing `yourphr-data` anywhere in the demo manifests |
 | Relay secret mismatch between demo app and demo relay | Mitigated by generating both from one SOPS-encrypted source of truth in Phase 4 |

@@ -8,32 +8,32 @@ This repository uses MCP servers to enable Claude Code to interact with external
 
 Custom MCP server for managing infrastructure.
 
-**Location:** `apps/production/jimsmcp/`
+__Location:__ `apps/production/jimsmcp/`
 
 ### 2. Authentik MCP Server
 
 Provides full API access to Authentik for automated user, group, and application management.
 
-**Configuration:** Encrypted with SOPS+Age
-**Encrypted File:** `.env.secret.mcp-authentik.encrypted`
+__Configuration:__ Encrypted with SOPS+Age
+__Encrypted File:__ `.env.secret.mcp-authentik.encrypted`
 
 ## Setup Instructions
 
 ### Prerequisites
 
-1. **SOPS installed:**
+1. __SOPS installed:__
 
    ```bash
    # Already installed at /usr/local/bin/sops
    sops --version
    ```
 
-2. **Age key file:**
+2. __Age key file:__
    - Private key: `home-infra-private.agekey` (git-ignored)
    - Public key: `age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj`
    - The private key is also stored in Kubernetes secret: `flux-system/sops-age`
 
-3. **jq installed:**
+3. __jq installed:__
 
    ```bash
    sudo apt install jq
@@ -69,7 +69,7 @@ After running the update script, restart Claude Code to load the MCP servers:
 
 `~/.config/claude-code/mcp.json`
 
-**Note:** This file contains decrypted credentials and is **not committed to git**.
+__Note:__ This file contains decrypted credentials and is __not committed to git__.
 
 ### Encrypted Credentials
 
@@ -80,8 +80,8 @@ Contains:
 - `AUTHENTIK_BASE_URL` - Authentik instance URL
 - `AUTHENTIK_TOKEN` - API token with full access
 
-**Encryption:** SOPS with Age encryption
-**Public Key:** age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj
+__Encryption:__ SOPS with Age encryption
+__Public Key:__ age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj
 
 ### Decrypting Manually
 
@@ -96,17 +96,17 @@ sops decrypt --input-type dotenv --output-type dotenv .env.secret.mcp-authentik.
 
 ### ✅ Secure Practices
 
-1. **Private key never committed:** `.agekey` files are in `.gitignore`
-2. **Credentials encrypted at rest:** SOPS encryption in git
-3. **Decrypted config protected:** `mcp.json` has 600 permissions
-4. **API token scope limited:** Token has necessary permissions only
+1. __Private key never committed:__ `.agekey` files are in `.gitignore`
+2. __Credentials encrypted at rest:__ SOPS encryption in git
+3. __Decrypted config protected:__ `mcp.json` has 600 permissions
+4. __API token scope limited:__ Token has necessary permissions only
 
 ### ⚠️ Important Reminders
 
-- **Never commit** `home-infra-private.agekey` to git
-- **Never commit** unencrypted `.env` files
-- **Rotate tokens** periodically (every 90-180 days)
-- **Backup the age key** securely (it's in Kubernetes secret)
+- __Never commit__ `home-infra-private.agekey` to git
+- __Never commit__ unencrypted `.env` files
+- __Rotate tokens__ periodically (every 90-180 days)
+- __Backup the age key__ securely (it's in Kubernetes secret)
 
 ### Extracting Age Key from Kubernetes
 
@@ -121,13 +121,13 @@ chmod 600 home-infra-private.agekey
 
 ### Rotate Authentik API Token
 
-1. **Create new token in Authentik:**
+1. __Create new token in Authentik:__
    - Go to: <https://auth.nerdsbythehour.com>
    - Navigate to Directory → Tokens
    - Create new token with API intent
    - Copy the token
 
-2. **Update encrypted file:**
+2. __Update encrypted file:__
 
    ```bash
    # Create temp env file
@@ -148,20 +148,20 @@ chmod 600 home-infra-private.agekey
    rm /tmp/mcp-authentik.env
    ```
 
-3. **Update MCP config:**
+3. __Update MCP config:__
 
    ```bash
    ./scripts/update-mcp-config.sh
    ```
 
-4. **Commit the new encrypted file:**
+4. __Commit the new encrypted file:__
 
    ```bash
    git add .env.secret.mcp-authentik.encrypted
    git commit -m "Rotate Authentik MCP token"
    ```
 
-5. **Revoke old token in Authentik**
+5. __Revoke old token in Authentik__
 
 ## Available MCP Tools
 

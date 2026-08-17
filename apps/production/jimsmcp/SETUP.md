@@ -8,7 +8,7 @@ The jimsmcp MCP server has been built and is ready to use!
 
 Add jimsmcp to your Claude Code MCP configuration:
 
-**File location:** `~/.config/claude-code/mcp.json`
+__File location:__ `~/.config/claude-code/mcp.json`
 
 ```json
 {
