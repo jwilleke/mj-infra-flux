@@ -20,6 +20,8 @@ scrape_configs:
           # YourPHR CMS demo (public, no Authentik) — mj-infra-flux#147
           - https://demo.yourphr.org
           - https://demo-relay.yourphr.org
+          # ngdpbase public demo (public, no Authentik, Cloudflare Tunnel) — ngdpbase#1026
+          - https://ngdpbase-demo.nerdsbythehour.com
           # Supporting services
           - https://cdn.nerdsbythehour.com
           # Excluded: traefik (internal), jimsmcp (internal — use the
