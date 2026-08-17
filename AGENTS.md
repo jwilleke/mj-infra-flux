@@ -66,19 +66,19 @@ This file serves as the single source of truth for project context and state. Al
 
 ## Team Role & Cross-Project Scope
 
-You (Claude, and any other AI agent) operate as a **senior member of a development–deployment team**, not a one-off assistant. Act with that ownership: anticipate cluster/downstream impact, surface risk and contradictions instead of rubber-stamping, and keep shared context current for the agents who follow you.
+You (Claude, and any other AI agent) operate as a __senior member of a development–deployment team__, not a one-off assistant. Act with that ownership: anticipate cluster/downstream impact, surface risk and contradictions instead of rubber-stamping, and keep shared context current for the agents who follow you.
 
-This team runs **three coupled projects on the same `deby` host (192.168.68.71)**, treated as one effort:
+This team runs __three coupled projects on the same `deby` host (192.168.68.71)__, treated as one effort:
 
-- **`/home/jim/Documents/mj-infra-flux`** (this repo) — the Flux GitOps source of truth for the k3s cluster (the *deployment* side).
-- **`/home/jim/thishost`** — the `deby` host operations workspace (the *host/infra* side: networking, storage/ZFS, systemd, alerting). Its conventions live in that workspace's own `AGENTS.md`.
-- **`/home/jim/Documents/mjs-network`** — the network domain (LAN, UniFi gear, Protect cameras, internal DNS). Its conventions live in that repo's own `AGENTS.md`.
+- __`/home/jim/Documents/mj-infra-flux`__ (this repo) — the Flux GitOps source of truth for the k3s cluster (the *deployment* side).
+- __`/home/jim/thishost`__ — the `deby` host operations workspace (the *host/infra* side: networking, storage/ZFS, systemd, alerting). Its conventions live in that workspace's own `AGENTS.md`.
+- __`/home/jim/Documents/mjs-network`__ — the network domain (LAN, UniFi gear, Protect cameras, internal DNS). Its conventions live in that repo's own `AGENTS.md`.
 
 Implications:
 
-- The **one curated TODO digest** covers all three repos: `~/thishost/TODO.md` (spans `jwilleke/mj-infra-flux` + `jwilleke/deby` + `jwilleke/mjs-network`). Do **not** recreate a repo-root `TODO.md` here.
-- The **one operational session log** lives at `~/thishost/docs/project_log.md` (consolidated 2026-05-22) and covers session work touching *any* of the three repos.
-- **Do not add session-shaped entries to this repo's `docs/project_log.md` or the "Completed Work" section below** — both are frozen historical archives (entries up to 2026-05-22); see freeze headers at the top of each.
+- The __one curated TODO digest__ covers all three repos: `~/thishost/TODO.md` (spans `jwilleke/mj-infra-flux` + `jwilleke/deby` + `jwilleke/mjs-network`). Do __not__ recreate a repo-root `TODO.md` here.
+- The __one operational session log__ lives at `~/thishost/docs/project_log.md` (consolidated 2026-05-22) and covers session work touching *any* of the three repos.
+- __Do not add session-shaped entries to this repo's `docs/project_log.md` or the "Completed Work" section below__ — both are frozen historical archives (entries up to 2026-05-22); see freeze headers at the top of each.
 - New work referencing this repo records `mj-infra-flux@<sha>` in the canonical log over in `jwilleke/deby`.
 - Code-side conventions still live here: `CHANGELOG.md`, ADRs, build/release notes, this `AGENTS.md` (excluding the frozen "Completed Work" section). The consolidation is operational history only.
 - Live source of truth for work items is the GitHub issue trackers (`jwilleke/mj-infra-flux`, `jwilleke/deby`, `jwilleke/mjs-network`).
@@ -99,13 +99,13 @@ In all interactions and commit messages
 
 ## Project Overview
 
-**Project Name:** mj-infra-flux
+__Project Name:__ mj-infra-flux
 
-**Description:** Production Kubernetes (k3s) GitOps infrastructure running on 192.168.68.71 (deby) with Flux CD. Hosts 16+ production services including TeslaMate, JimsWiki (38,004 pages), Home Assistant, Grafana, Authentik SSO, and more. All services are managed through Git and automatically deployed via Flux.
+__Description:__ Production Kubernetes (k3s) GitOps infrastructure running on 192.168.68.71 (deby) with Flux CD. Hosts 16+ production services including TeslaMate, JimsWiki (38,004 pages), Home Assistant, Grafana, Authentik SSO, and more. All services are managed through Git and automatically deployed via Flux.
 
-**Primary Domain:** nerdsbythehour.com
+__Primary Domain:__ nerdsbythehour.com
 
-**Goals:**
+__Goals:__
 
 - Maintain a production-grade Kubernetes infrastructure using GitOps principles
 - Ensure all services are highly available and properly secured
@@ -147,21 +147,21 @@ mj-infra-flux/
 
 ## Key Documentation Files (READ THESE)
 
-**Essential Reading:**
+__Essential Reading:__
 
-1. **ARCHITECTURE.md** - Complete architecture, service inventory, URLs, authentication flow
-2. **DEPLOYMENT-GUIDELINES.md** - Deployment best practices, Kustomize patterns
-3. **CODE_STANDARDS.md** - Coding standards and best practices
-4. **CONTRIBUTING.md** - Contribution gelines
-5. **SETUP.md** - Initial setup and bootstrapping instructions
+1. __ARCHITECTURE.md__ - Complete architecture, service inventory, URLs, authentication flow
+2. __DEPLOYMENT-GUIDELINES.md__ - Deployment best practices, Kustomize patterns
+3. __CODE_STANDARDS.md__ - Coding standards and best practices
+4. __CONTRIBUTING.md__ - Contribution gelines
+5. __SETUP.md__ - Initial setup and bootstrapping instructions
 
-**Reference Documentation:**
+__Reference Documentation:__
 
-- **README.md** - Quick start, common commands, usage
-- **SECURITY-INCIDENT.md** - Real security incident and lessons learned
-- **docker-migration.md** - Migration strategy from Docker to Kubernetes
+- __README.md__ - Quick start, common commands, usage
+- __SECURITY-INCIDENT.md__ - Real security incident and lessons learned
+- __docker-migration.md__ - Migration strategy from Docker to Kubernetes
 
-**Application READMEs:**
+__Application READMEs:__
 
 - Each app in `apps/production/*/README.md` has detailed documentation
 
@@ -169,13 +169,13 @@ mj-infra-flux/
 
 ### 1. Deployment Philosophy
 
-**ALWAYS use Kustomize. NEVER use Helm unless absolutely necessary.**
+__ALWAYS use Kustomize. NEVER use Helm unless absolutely necessary.__
 
 - ✅ Use plain Kubernetes YAML + Kustomize for all new applications
 - ✅ Helm is acceptable ONLY for existing third-party charts with active maintenance
 - ❌ Must justify why Kustomize won't work before considering Helm
 
-**Good Kustomize Examples:**
+__Good Kustomize Examples:__
 
 - `apps/production/jimswiki/` - Complex app with 38K+ files
 - `apps/production/teslamate/` - Multi-component application
@@ -184,11 +184,11 @@ mj-infra-flux/
 
 ### 2. Secret Management
 
-**NEVER commit secrets in plaintext to git. This is non-negotiable.**
+__NEVER commit secrets in plaintext to git. This is non-negotiable.__
 
-**Approved methods (in priority order):**
+__Approved methods (in priority order):__
 
-1. **SOPS + Age encryption** (PREFERRED)
+1. __SOPS + Age encryption__ (PREFERRED)
 
    ```bash
    # Store secrets in .env files
@@ -196,7 +196,7 @@ mj-infra-flux/
    # Only commit .env*.encrypted files to git
    ```
 
-2. **Cluster-only Kubernetes Secrets**
+2. __Cluster-only Kubernetes Secrets__
 
    ```bash
    # Create directly in cluster (NOT in git)
@@ -204,9 +204,9 @@ mj-infra-flux/
    # Document in README how to recreate it
    ```
 
-3. **Helm valuesFrom** (only if using Helm)
+3. __Helm valuesFrom__ (only if using Helm)
 
-**Reference:** `SECURITY-INCIDENT.md` documents a real security incident caused by improper secret handling.
+__Reference:__ `SECURITY-INCIDENT.md` documents a real security incident caused by improper secret handling.
 
 ### 3. Documentation Requirements
 
@@ -221,11 +221,11 @@ Every application MUST have a README.md with:
 7. Deployment - How to deploy/update
 8. Troubleshooting - Common issues
 
-**Example:** `apps/production/jimswiki/README.md`
+__Example:__ `apps/production/jimswiki/README.md`
 
 ### 4. Testing Before Commit
 
-**Always validate before committing:**
+__Always validate before committing:__
 
 ```bash
 # 1. Validate Kustomize
@@ -248,29 +248,29 @@ kubectl logs -n namespace -l app=myapp
 
 ### Core Infrastructure
 
-- **Traefik** (kube-system) - Ingress controller
-- **cert-manager** (cert-manager) - Let's Encrypt certificates
-- **Flux** (flux-system) - GitOps automation
+- __Traefik__ (kube-system) - Ingress controller
+- __cert-manager__ (cert-manager) - Let's Encrypt certificates
+- __Flux__ (flux-system) - GitOps automation
 
 ### Shared Services
 
-- **PostgreSQL** (database) - Shared database for multiple apps
-- **Mosquitto** (messaging) - MQTT broker for IoT
-- **Grafana** (monitoring) - Dashboards and monitoring
-- **Authentik** (authentik) - SSO/IdP for all protected services
+- __PostgreSQL__ (database) - Shared database for multiple apps
+- __Mosquitto__ (messaging) - MQTT broker for IoT
+- __Grafana__ (monitoring) - Dashboards and monitoring
+- __Authentik__ (authentik) - SSO/IdP for all protected services
 
 ### Applications
 
-- **Landing Page** - Public landing page at nerdsbythehour.com
-- **JimsWiki** - 38,004 pages wiki (JSPWiki)
-- **TeslaMate** - Vehicle tracking
-- **Home Assistant** - Home automation
-- **Hoarder** - Bookmark and content management
-- **Guest Services** - Public services (OpenSpeedTest, whoami)
-- **jimsmcp** - MCP server for managing infrastructure
-- **Shared Resources** - CDN for static assets
+- __Landing Page__ - Public landing page at nerdsbythehour.com
+- __JimsWiki__ - 38,004 pages wiki (JSPWiki)
+- __TeslaMate__ - Vehicle tracking
+- __Home Assistant__ - Home automation
+- __Hoarder__ - Bookmark and content management
+- __Guest Services__ - Public services (OpenSpeedTest, whoami)
+- __jimsmcp__ - MCP server for managing infrastructure
+- __Shared Resources__ - CDN for static assets
 
-**Full inventory:** See `ARCHITECTURE.md`
+__Full inventory:__ See `ARCHITECTURE.md`
 
 ## Data Organization
 
@@ -361,34 +361,34 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 
 ### Migration to Kubernetes
 
-- **Decision:** Migrate all Docker Compose services to k3s
-- **Status:** Phase 3 Complete - All services migrated
-- **Rationale:** Better orchestration, scaling, and GitOps integration
-- **Documentation:** `docker-migration.md`
+- __Decision:__ Migrate all Docker Compose services to k3s
+- __Status:__ Phase 3 Complete - All services migrated
+- __Rationale:__ Better orchestration, scaling, and GitOps integration
+- __Documentation:__ `docker-migration.md`
 
 ### Kustomize Over Helm
 
-- **Decision:** Use Kustomize for all new deployments
-- **Rationale:** Transparency, simplicity, better GitOps integration
-- **Exception:** Existing Helm charts (e.g., Authentik) acceptable
-- **Documentation:** `DEPLOYMENT-GUIDELINES.md`
+- __Decision:__ Use Kustomize for all new deployments
+- __Rationale:__ Transparency, simplicity, better GitOps integration
+- __Exception:__ Existing Helm charts (e.g., Authentik) acceptable
+- __Documentation:__ `DEPLOYMENT-GUIDELINES.md`
 
 ### SOPS + Age for Secrets
 
-- **Decision:** Use SOPS + Age encryption for all secrets in git
-- **Rationale:** Security, audit trail, GitOps compatibility
-- **Alternative:** Cluster-only secrets for highly sensitive data
-- **Documentation:** `SECURITY-INCIDENT.md` (lessons learned)
+- __Decision:__ Use SOPS + Age encryption for all secrets in git
+- __Rationale:__ Security, audit trail, GitOps compatibility
+- __Alternative:__ Cluster-only secrets for highly sensitive data
+- __Documentation:__ `SECURITY-INCIDENT.md` (lessons learned)
 
 ### Port Range for Applications
 
-- **Decision:** Run apps within ports 9200-9299 when possible
-- **User/Group:** Run as apps:apps (3003:3003) when possible
-- **Rationale:** Consistency, security, easy firewall rules
+- __Decision:__ Run apps within ports 9200-9299 when possible
+- __User/Group:__ Run as apps:apps (3003:3003) when possible
+- __Rationale:__ Consistency, security, easy firewall rules
 
 ## Completed Work
 
-> **Frozen as of 2026-05-22.** Operational history is consolidated at [`jwilleke/deby:docs/project_log.md`](https://github.com/jwilleke/deby/blob/master/docs/project_log.md). The entries below are preserved as historical record; do not add new session-shaped entries here.
+> __Frozen as of 2026-05-22.__ Operational history is consolidated at [`jwilleke/deby:docs/project_log.md`](https://github.com/jwilleke/deby/blob/master/docs/project_log.md). The entries below are preserved as historical record; do not add new session-shaped entries here.
 
 ### Session: 2025-12-01 (Morning)
 
@@ -479,15 +479,15 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 
 ### Active Issue: Home Assistant Proxy WebSocket Connection
 
-**Status:** In Progress - WebSocket failing due to HTTP/2 limitation
+__Status:__ In Progress - WebSocket failing due to HTTP/2 limitation
 
-**Problem:**
+__Problem:__
 
 - Home Assistant accessible at ha.nerdsbythehour.com but frontend shows "Unable to connect"
 - Root cause: Traefik's standard Ingress uses HTTP/2, but WebSocket requires HTTP/1.1
 - Traefik's HTTP/2 doesn't support the Upgrade header needed for WebSocket connections
 
-**What's Working:**
+__What's Working:__
 
 - DNS resolution fixed (192.168.68.71 - correct Traefik IP)
 - Home Assistant backend accessible at 192.168.68.20:8123
@@ -495,13 +495,13 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 - Authentik authentication working
 - Home Assistant config updated with external/internal URLs
 
-**Solution Applied:**
+__Solution Applied:__
 
 - Switched from standard Ingress to Traefik IngressRoute
 - IngressRoute properly handles HTTP/1.1 protocol for WebSocket connections
 - Created: `/home/jim/Documents/mj-infra-flux/apps/production/home-assistant-proxy/ingressroute.yaml`
 
-**Next Steps:**
+__Next Steps:__
 
 - Verify WebSocket connection works after IngressRoute deployment
 - Test frontend can establish connection to backend API
@@ -543,12 +543,12 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 
 ### Security Model
 
-**Authentication Flow:**
+__Authentication Flow:__
 
 - Public services: No authentication (landing page, guest services)
 - Protected services: Authentik ForwardAuth (jimswiki, teslamate, grafana, home assistant)
 
-**Secrets Management:**
+__Secrets Management:__
 
 - SOPS + Age encryption for secrets in git
 - Cluster-only secrets for highly sensitive data
@@ -587,24 +587,24 @@ Exception: When image requires root (document why in README).
 
 ### For All Agents
 
-1. **Read this file first** before starting any work
-2. **Read key documentation:**
+1. __Read this file first__ before starting any work
+2. __Read key documentation:__
    - ARCHITECTURE.md - Complete architecture
    - DEPLOYMENT-GUIDELINES.md - Deployment patterns
    - CODE_STANDARDS.md - Coding standards
    - CONTRIBUTING.md - Contribution guidelines
-3. **Update this file** after completing tasks
-4. **Note your session** in the "Completed Work" section with date and work done
-5. **Follow the key principles** - They are mandatory, not optional
+3. __Update this file__ after completing tasks
+4. __Note your session__ in the "Completed Work" section with date and work done
+5. __Follow the key principles__ - They are mandatory, not optional
 
 ### Critical Rules
 
-- ❌ **NEVER** commit secrets in plaintext
-- ❌ **NEVER** use Helm for new deployments without justification
-- ✅ **ALWAYS** use Kustomize for new applications
-- ✅ **ALWAYS** document in README.md
-- ✅ **ALWAYS** test before committing
-- ✅ **ALWAYS** update AGENTS.md when completing work
+- ❌ __NEVER__ commit secrets in plaintext
+- ❌ __NEVER__ use Helm for new deployments without justification
+- ✅ __ALWAYS__ use Kustomize for new applications
+- ✅ __ALWAYS__ document in README.md
+- ✅ __ALWAYS__ test before committing
+- ✅ __ALWAYS__ update AGENTS.md when completing work
 
 ### When in Doubt
 
@@ -633,13 +633,13 @@ kubectl get pods -A
 
 ## References
 
-- **GitHub Repository:** <https://github.com/jwilleke/mj-infra-flux>
-- **Original Inspiration:** <https://github.com/activescott/home-infra-k8s-flux>
-- **Flux Documentation:** <https://fluxcd.io/>
-- **Kustomize Documentation:** <https://kustomize.io/>
+- __GitHub Repository:__ <https://github.com/jwilleke/mj-infra-flux>
+- __Original Inspiration:__ <https://github.com/activescott/home-infra-k8s-flux>
+- __Flux Documentation:__ <https://fluxcd.io/>
+- __Kustomize Documentation:__ <https://kustomize.io/>
 
 ---
 
-**Important:** Keep this file synchronized and updated. It's the bridge between different agents and sessions working on the same project.
+__Important:__ Keep this file synchronized and updated. It's the bridge between different agents and sessions working on the same project.
 
-**Last Updated:** 2026-05-22 by Claude Opus 4.7 (operational-history consolidation — session logs moved to `jwilleke/deby:docs/project_log.md`).
+__Last Updated:__ 2026-05-22 by Claude Opus 4.7 (operational-history consolidation — session logs moved to `jwilleke/deby:docs/project_log.md`).

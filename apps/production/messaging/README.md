@@ -6,11 +6,11 @@ Shared Mosquitto MQTT broker for IoT and telemetry messaging.
 
 Single Mosquitto MQTT broker instance serving multiple applications with topic-based isolation.
 
-- **Namespace**: `messaging`
-- **Service**: `mosquitto.messaging.svc.cluster.local:1883`
-- **Protocol**: MQTT v3.1.1 / v5.0
-- **Data Location**: `/mnt/local-k3s-data/mosquitto/data/` (hostPath PV on `deby`)
-- **Security**: Runs as mosquitto user (UID 1883, image default), anonymous auth for internal use
+- __Namespace__: `messaging`
+- __Service__: `mosquitto.messaging.svc.cluster.local:1883`
+- __Protocol__: MQTT v3.1.1 / v5.0
+- __Data Location__: `/mnt/local-k3s-data/mosquitto/data/` (hostPath PV on `deby`)
+- __Security__: Runs as mosquitto user (UID 1883, image default), anonymous auth for internal use
 
 ## Applications & Topics
 
@@ -26,7 +26,7 @@ Each application uses its own topic prefix for isolation:
 
 Applications connect using Kubernetes service DNS:
 
-**Connection Example (TeslaMate)**:
+__Connection Example (TeslaMate)__:
 
 ```yaml
 env:
@@ -36,7 +36,7 @@ env:
     value: "1883"
 ```
 
-**Connection Example (Python)**:
+__Connection Example (Python)__:
 
 ```python
 import paho.mqtt.client as mqtt
@@ -85,10 +85,10 @@ The Mosquitto configuration is managed via ConfigMap (`mosquitto-configmap.yaml`
 
 Current settings:
 
-- **Persistence**: Enabled (messages persisted to disk)
-- **Authentication**: Anonymous allowed (internal cluster only)
-- **Listeners**: 1883 (MQTT)
-- **Max message size**: 256MB
+- __Persistence__: Enabled (messages persisted to disk)
+- __Authentication__: Anonymous allowed (internal cluster only)
+- __Listeners__: 1883 (MQTT)
+- __Max message size__: 256MB
 
 ### Updating Configuration
 
@@ -100,9 +100,9 @@ Current settings:
 
 ### Current Setup (Internal Only)
 
-- **No authentication**: Safe for internal cluster communication
-- **No TLS**: Not exposed outside cluster
-- **Topic isolation**: Applications use prefixed topics
+- __No authentication__: Safe for internal cluster communication
+- __No TLS__: Not exposed outside cluster
+- __Topic isolation__: Applications use prefixed topics
 
 ### Future Enhancements (If Exposing Externally)
 

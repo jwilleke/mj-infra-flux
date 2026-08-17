@@ -1,10 +1,10 @@
 # netalertx-proxy
 
-Traefik + Authentik front-end for **NetAlertX**, which runs as a Docker container on the **deby host** (`192.168.68.71:20211`, `network_mode: host`) — not in the cluster. Mirrors the `home-assistant-proxy` / `prometheus` external-service + forward-auth pattern.
+Traefik + Authentik front-end for __NetAlertX__, which runs as a Docker container on the __deby host__ (`192.168.68.71:20211`, `network_mode: host`) — not in the cluster. Mirrors the `home-assistant-proxy` / `prometheus` external-service + forward-auth pattern.
 
-- **Host runbook for the NetAlertX app itself:** `~/thishost/docs/dockers/netalertx.md` (deby#22).
-- **This ingress work:** deby#24.
-- **Access:** internal-only. `netalertx.nerdsbythehour.com` → `192.168.68.71` (private). No UDM port-forward, so it is reachable only from the LAN / VPN — unlike `ha.nerdsbythehour.com`, which is intentionally inside **and** outside.
+- __Host runbook for the NetAlertX app itself:__ `~/thishost/docs/dockers/netalertx.md` (deby#22).
+- __This ingress work:__ deby#24.
+- __Access:__ internal-only. `netalertx.nerdsbythehour.com` → `192.168.68.71` (private). No UDM port-forward, so it is reachable only from the LAN / VPN — unlike `ha.nerdsbythehour.com`, which is intentionally inside __and__ outside.
 
 ## Request flow
 
@@ -27,11 +27,11 @@ LAN/VPN browser → https://netalertx.nerdsbythehour.com (→ 192.168.68.71)
 ## Status
 
 - ✅ Flux manifests applied; TLS cert `Ready`.
-- ✅ **Authentik app provisioned** (2026-05-29) via `../jimsmcp/setup-netalertx.mjs` — forward_domain proxy provider **pk 12**, application slug `netalertx`, bound to the embedded outpost. Forward-auth verified: requests redirect to `auth.nerdsbythehour.com/application/o/authorize/...`.
-- ⏳ **DNS pending** — see step 1 below.
+- ✅ __Authentik app provisioned__ (2026-05-29) via `../jimsmcp/setup-netalertx.mjs` — forward_domain proxy provider __pk 12__, application slug `netalertx`, bound to the embedded outpost. Forward-auth verified: requests redirect to `auth.nerdsbythehour.com/application/o/authorize/...`.
+- ⏳ __DNS pending__ — see step 1 below.
 
 ## Remaining manual steps (not in Flux)
 
-1. **DNS (UDM) — last step:** add `netalertx.nerdsbythehour.com` → `deby.nerdsbythehour.com` (CNAME) via the UniFi **Local DNS Records** UI — same place/way the `grafana`/`prometheus` CNAMEs were added. (Done via UI, not hand-edited on the UDM: local DNS affects the whole LAN and is a human-review item.) DNS-01 cert issues regardless via the Cloudflare TXT challenge.
-2. **Authentik access policy (optional):** the `netalertx` app currently has no policy bindings → any authenticated Authentik user can access. Bind a user/group in Authentik to restrict.
-3. **Optional (strict SSO):** an nft rule on deby restricting direct `:20211` to localhost/cluster so the raw port can't bypass Authentik. Until then, the NetAlertX `SETPWD` password remains the gate on the direct port. **Firewall change requires operator sign-off.**
+1. __DNS (UDM) — last step:__ add `netalertx.nerdsbythehour.com` → `deby.nerdsbythehour.com` (CNAME) via the UniFi __Local DNS Records__ UI — same place/way the `grafana`/`prometheus` CNAMEs were added. (Done via UI, not hand-edited on the UDM: local DNS affects the whole LAN and is a human-review item.) DNS-01 cert issues regardless via the Cloudflare TXT challenge.
+2. __Authentik access policy (optional):__ the `netalertx` app currently has no policy bindings → any authenticated Authentik user can access. Bind a user/group in Authentik to restrict.
+3. __Optional (strict SSO):__ an nft rule on deby restricting direct `:20211` to localhost/cluster so the raw port can't bypass Authentik. Until then, the NetAlertX `SETPWD` password remains the gate on the direct port. __Firewall change requires operator sign-off.__

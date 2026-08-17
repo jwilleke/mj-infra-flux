@@ -4,11 +4,11 @@ TeslaMate is a self-hosted data logger for Tesla vehicles with real-time trackin
 
 ## Overview
 
-- **Namespace**: `teslamate`
-- **URL**: <https://teslamate.nerdsbythehour.com>
-- **Database**: Shared PostgreSQL in `database` namespace
-- **MQTT**: Shared Mosquitto in `messaging` namespace
-- **Grafana**: <https://grafana.nerdsbythehour.com> (monitoring namespace)
+- __Namespace__: `teslamate`
+- __URL__: <https://teslamate.nerdsbythehour.com>
+- __Database__: Shared PostgreSQL in `database` namespace
+- __MQTT__: Shared Mosquitto in `messaging` namespace
+- __Grafana__: <https://grafana.nerdsbythehour.com> (monitoring namespace)
 
 ## Architecture
 
@@ -21,7 +21,7 @@ TeslaMate App (teslamate ns)
 
 ## Dependencies
 
-**Required Services** (must be running):
+__Required Services__ (must be running):
 
 1. PostgreSQL with teslamate database (`postgresql.database.svc.cluster.local:5432`)
 2. Mosquitto MQTT broker (`mosquitto.messaging.svc.cluster.local:1883`)
@@ -50,12 +50,12 @@ sudo kubectl apply -k apps/production/teslamate/
 
 ### Security
 
-**Secrets** (`teslamate-secret.yaml`):
+__Secrets__ (`teslamate-secret.yaml`):
 
 - `encryption-key`: Encrypts sensitive Tesla API credentials
 - `database-password`: PostgreSQL password
 
-**IMPORTANT**: Update these before production use!
+__IMPORTANT__: Update these before production use!
 
 ```bash
 # Generate encryption key
@@ -108,12 +108,12 @@ sudo kubectl exec -n database postgresql-0 -- psql -U teslamate -d teslamate -c 
 1. Access Grafana: <https://grafana.nerdsbythehour.com>
 2. Configuration → Data Sources → Add data source → PostgreSQL
 3. Settings:
-   - **Name**: TeslaMate
-   - **Host**: `postgresql.database.svc.cluster.local:5432`
-   - **Database**: `teslamate`
-   - **User**: `teslamate`
-   - **Password**: `teslamate_db_password_changeme`
-   - **TLS/SSL Mode**: disable (internal cluster communication)
+   - __Name__: TeslaMate
+   - __Host__: `postgresql.database.svc.cluster.local:5432`
+   - __Database__: `teslamate`
+   - __User__: `teslamate`
+   - __Password__: `teslamate_db_password_changeme`
+   - __TLS/SSL Mode__: disable (internal cluster communication)
 
 ### Import TeslaMate Dashboards
 
@@ -166,14 +166,14 @@ SELECT * FROM drives ORDER BY start_date DESC LIMIT 5;
 
 ### TeslaMate Won't Start
 
-**Error**: Permission denied creating extensions
+__Error__: Permission denied creating extensions
 
 ```
 Solution: Grant superuser to teslamate user
 sudo kubectl exec -n database postgresql-0 -- psql -U postgres -d teslamate -c "ALTER USER teslamate WITH SUPERUSER;"
 ```
 
-**Error**: Can't connect to database
+__Error__: Can't connect to database
 
 ```
 Check PostgreSQL is running:
@@ -223,12 +223,12 @@ TeslaMate uses your Tesla account credentials to access vehicle data:
 
 ## Security Notes
 
-- **Credentials**: Tesla credentials encrypted with `ENCRYPTION_KEY`
-- **Database**: Isolated teslamate database with own user
-- **MQTT**: Topic prefix `teslamate/*` for isolation
-- **Network**: All internal cluster communication
-- **Ingress**: HTTPS with Let's Encrypt TLS
-- **Auth**: Protect with Authentik ForwardAuth (optional but recommended)
+- __Credentials__: Tesla credentials encrypted with `ENCRYPTION_KEY`
+- __Database__: Isolated teslamate database with own user
+- __MQTT__: Topic prefix `teslamate/*` for isolation
+- __Network__: All internal cluster communication
+- __Ingress__: HTTPS with Let's Encrypt TLS
+- __Auth__: Protect with Authentik ForwardAuth (optional but recommended)
 
 ## Maintenance
 

@@ -12,35 +12,35 @@ I stole this from [Activescott](https://github.com/activescott/home-infra-k8s-fl
 
 ### Key Documentation Files
 
-- **[AGENTS.md](AGENTS.md)** - **START HERE** - Project context and instructions for all AI agents (Claude, Gemini, etc.)
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Complete architecture documentation
-- **[DEPLOYMENT-GUIDELINES.md](DEPLOYMENT-GUIDELINES.md)** - Deployment best practices
-- **[CODE_STANDARDS.md](CODE_STANDARDS.md)** - Coding standards and best practices
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
-- **[SETUP.md](SETUP.md)** - Initial setup and bootstrapping instructions
-- **[SECURITY-INCIDENT.md](SECURITY-INCIDENT.md)** - Security lessons learned
-- **[docker-migration.md](docker-migration.md)** - Migration strategy from Docker to Kubernetes
+- __[AGENTS.md](AGENTS.md)__ - __START HERE__ - Project context and instructions for all AI agents (Claude, Gemini, etc.)
+- __[ARCHITECTURE.md](ARCHITECTURE.md)__ - Complete architecture documentation
+- __[DEPLOYMENT-GUIDELINES.md](DEPLOYMENT-GUIDELINES.md)__ - Deployment best practices
+- __[CODE_STANDARDS.md](CODE_STANDARDS.md)__ - Coding standards and best practices
+- __[CONTRIBUTING.md](CONTRIBUTING.md)__ - Contribution guidelines
+- __[SETUP.md](SETUP.md)__ - Initial setup and bootstrapping instructions
+- __[SECURITY-INCIDENT.md](SECURITY-INCIDENT.md)__ - Security lessons learned
+- __[docker-migration.md](docker-migration.md)__ - Migration strategy from Docker to Kubernetes
 
 ### Infrastructure
 
-- **[Traefik Ingress](apps/base/traefik-ingress/README.md)** - Ingress controller configuration
-- **[Image Scanning Webhook Receiver](infrastructure/base/configs/image-scanning-webhook-receiver/README.md)** - Webhook receiver for GitHub push events
-- **[MariaDB Library](apps/lib/mariadb/README.md)** - Shared MariaDB configuration
+- __[Traefik Ingress](apps/base/traefik-ingress/README.md)__ - Ingress controller configuration
+- __[Image Scanning Webhook Receiver](infrastructure/base/configs/image-scanning-webhook-receiver/README.md)__ - Webhook receiver for GitHub push events
+- __[MariaDB Library](apps/lib/mariadb/README.md)__ - Shared MariaDB configuration
 
 ### Production Applications
 
-- **[Authentik](apps/production/authentik/README.md)** - SSO/IdP for all protected services
-- **[TeslaMate](apps/production/teslamate/README.md)** - Vehicle tracking
-- **[Home Assistant](apps/production/home-assistant/README.md)** - Home automation
-- **[Home Assistant Proxy](apps/production/home-assistant-proxy/README.md)** - Authentik-protected proxy for Home Assistant
-- **[Hoarder](apps/production/hoarder/README.md)** - Bookmark and content management
-- **[Landing Page](apps/production/landingpage/README.md)** - Public landing page
-- **[Guest Services](apps/production/guest-services/README.md)** - Public guest services
-- **[Monitoring](apps/production/monitoring/README.md)** - Grafana, Prometheus, Alertmanager
-- **[jimsmcp](apps/production/jimsmcp/README.md)** - MCP server for managing infrastructure
-- **[Database](apps/production/database/README.md)** - Shared PostgreSQL database
-- **[Messaging](apps/production/messaging/README.md)** - Shared Mosquitto MQTT broker
-- **[Shared Resources](apps/production/shared-resources/README.md)** - CDN for static assets (icons, logos)
+- __[Authentik](apps/production/authentik/README.md)__ - SSO/IdP for all protected services
+- __[TeslaMate](apps/production/teslamate/README.md)__ - Vehicle tracking
+- __[Home Assistant](apps/production/home-assistant/README.md)__ - Home automation
+- __[Home Assistant Proxy](apps/production/home-assistant-proxy/README.md)__ - Authentik-protected proxy for Home Assistant
+- __[Hoarder](apps/production/hoarder/README.md)__ - Bookmark and content management
+- __[Landing Page](apps/production/landingpage/README.md)__ - Public landing page
+- __[Guest Services](apps/production/guest-services/README.md)__ - Public guest services
+- __[Monitoring](apps/production/monitoring/README.md)__ - Grafana, Prometheus, Alertmanager
+- __[jimsmcp](apps/production/jimsmcp/README.md)__ - MCP server for managing infrastructure
+- __[Database](apps/production/database/README.md)__ - Shared PostgreSQL database
+- __[Messaging](apps/production/messaging/README.md)__ - Shared Mosquitto MQTT broker
+- __[Shared Resources](apps/production/shared-resources/README.md)__ - CDN for static assets (icons, logos)
 
 ## Usage
 

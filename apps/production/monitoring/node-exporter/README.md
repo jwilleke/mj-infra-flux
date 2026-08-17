@@ -4,10 +4,10 @@
 
 Node Exporter exposes hardware and kernel-level metrics from the host system to Prometheus, providing comprehensive insights into system performance.
 
-- **Namespace**: `monitoring`
-- **Deployment Type**: DaemonSet (one pod per node)
-- **Port**: 9100
-- **Metrics Endpoint**: `http://node-exporter.monitoring.svc.cluster.local:9100/metrics`
+- __Namespace__: `monitoring`
+- __Deployment Type__: DaemonSet (one pod per node)
+- __Port__: 9100
+- __Metrics Endpoint__: `http://node-exporter.monitoring.svc.cluster.local:9100/metrics`
 
 ## What It Monitors
 
@@ -97,26 +97,26 @@ annotations:
 
 Import these dashboard IDs in Grafana (Dashboards → Import):
 
-1. **Node Exporter Full** - Dashboard ID: **1860**
+1. __Node Exporter Full__ - Dashboard ID: __1860__
    - Most comprehensive, shows all metrics
    - CPU, Memory, Disk, Network in detail
    - Best for general monitoring
 
-2. **Node Exporter Server Metrics** - Dashboard ID: **11074**
+2. __Node Exporter Server Metrics__ - Dashboard ID: __11074__
    - Clean, modern layout
    - Focus on key metrics
 
-3. **Node Exporter for Prometheus Dashboard** - Dashboard ID: **13978**
+3. __Node Exporter for Prometheus Dashboard__ - Dashboard ID: __13978__
    - Simple, easy to read
    - Good for quick overviews
 
 ### Import Steps
 
 1. Navigate to Grafana: <https://grafana.nerdsbythehour.com>
-2. Click **Dashboards** → **Import**
+2. Click __Dashboards__ → __Import__
 3. Enter dashboard ID (e.g., `1860`)
-4. Select **Prometheus** as data source
-5. Click **Import**
+4. Select __Prometheus__ as data source
+5. Click __Import__
 
 ## Common Queries
 

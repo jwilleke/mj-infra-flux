@@ -4,14 +4,14 @@
 
 GitGuardian detected exposed secrets in commit `65bf391a1ef2a7d2b9bc077676aa7a75a913df16` (2024-11-17).
 
-**Status:** ✅ REMEDIATED (secrets removed from current codebase, rotation recommended)
+__Status:__ ✅ REMEDIATED (secrets removed from current codebase, rotation recommended)
 
 ## Exposed Secrets
 
 The following secrets were committed in plaintext in `apps/production/authentik/helmrelease.yaml`:
 
-1. **Authentik Secret Key** (line 19)
-2. **PostgreSQL Password** (lines 23, 41)
+1. __Authentik Secret Key__ (line 19)
+2. __PostgreSQL Password__ (lines 23, 41)
 
 ## Remediation Actions Taken
 
@@ -45,7 +45,7 @@ kubectl rollout restart deployment -n authentik -l app.kubernetes.io/name=authen
 
 ### ⏳ Step 3: Clean Git History (OPTIONAL)
 
-**Warning:** This rewrites git history and requires force push!
+__Warning:__ This rewrites git history and requires force push!
 
 To completely remove secrets from git history:
 
@@ -71,7 +71,7 @@ git filter-repo --invert-paths --path apps/production/authentik/helmrelease.yaml
 git push --force origin master
 ```
 
-**Note:** Only do this if:
+__Note:__ Only do this if:
 
 - You're the sole maintainer
 - Or you've coordinated with all team members
@@ -86,10 +86,10 @@ git push --force origin master
 
 ### ⏳ Future Improvements
 
-1. **Use SOPS for secret encryption** (already configured in repo)
-2. **Add pre-commit hooks** to detect secrets before commit
-3. **Use Kustomize instead of Helm** for all future deployments
-4. **Enable GitGuardian pre-receive hooks** (if possible)
+1. __Use SOPS for secret encryption__ (already configured in repo)
+2. __Add pre-commit hooks__ to detect secrets before commit
+3. __Use Kustomize instead of Helm__ for all future deployments
+4. __Enable GitGuardian pre-receive hooks__ (if possible)
 
 ## Lessons Learned
 
@@ -101,10 +101,10 @@ git push --force origin master
 
 ## Timeline
 
-- **2024-11-17**: Secrets committed in `65bf391`
-- **2024-11-18 03:XX**: GitGuardian alert received
-- **2024-11-18 03:XX**: Secrets removed from current code (`de98c43`)
-- **2024-11-18 03:XX**: This incident report created
+- __2024-11-17__: Secrets committed in `65bf391`
+- __2024-11-18 03:XX__: GitGuardian alert received
+- __2024-11-18 03:XX__: Secrets removed from current code (`de98c43`)
+- __2024-11-18 03:XX__: This incident report created
 
 ## References
 

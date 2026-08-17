@@ -55,10 +55,10 @@ here. Add a Public Hostname to the existing tunnel:
 
 ## The key pair
 
-The ConfigMap holds the **public** key. Publishing it is the entire point —
+The ConfigMap holds the __public__ key. Publishing it is the entire point —
 there is nothing secret in this repository.
 
-The matching **private** key is held on the Home Assistant side and must never
+The matching __private__ key is held on the Home Assistant side and must never
 be committed. It was generated as EC prime256v1 (P-256) on 2026-08-11:
 
 ```bash
@@ -72,7 +72,7 @@ working the moment the served file changes.
 
 ## Verification
 
-From **outside** the network — a LAN check proves nothing here, because the
+From __outside__ the network — a LAN check proves nothing here, because the
 whole point is public reachability:
 
 ```bash

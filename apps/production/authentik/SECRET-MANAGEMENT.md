@@ -2,7 +2,7 @@
 
 ## Overview
 
-Authentik requires sensitive credentials that **must not** be stored in git. This document explains how secrets are managed.
+Authentik requires sensitive credentials that __must not__ be stored in git. This document explains how secrets are managed.
 
 ## Secrets Location
 
@@ -16,8 +16,8 @@ Secrets are stored in a Kubernetes Secret named `authentik-secrets` in the `auth
 
 The following secrets are required:
 
-1. **secret_key** - Authentik's secret key for encryption
-2. **postgresql_password** - Password for the PostgreSQL database
+1. __secret_key__ - Authentik's secret key for encryption
+2. __postgresql_password__ - Password for the PostgreSQL database
 
 ## Creating the Secret
 
@@ -42,7 +42,7 @@ kubectl apply -f authentik-secrets-backup.yaml
 
 ## Backing Up the Secret
 
-**IMPORTANT:** Back up this secret securely before making cluster changes!
+__IMPORTANT:__ Back up this secret securely before making cluster changes!
 
 ```bash
 # Export the secret (store securely, NOT in git!)
@@ -108,12 +108,12 @@ To rotate secrets:
 
 ## Security Best Practices
 
-1. **Never commit secrets to git**
-2. **Back up secrets securely** (encrypted, separate from git)
-3. **Rotate secrets periodically**
-4. **Limit access** to the `authentik` namespace
-5. **Use RBAC** to control who can read secrets
-6. **Monitor secret access** via audit logs
+1. __Never commit secrets to git__
+2. __Back up secrets securely__ (encrypted, separate from git)
+3. __Rotate secrets periodically__
+4. __Limit access__ to the `authentik` namespace
+5. __Use RBAC__ to control who can read secrets
+6. __Monitor secret access__ via audit logs
 
 ## Troubleshooting
 
@@ -143,7 +143,7 @@ The `authentik-secrets` secret doesn't exist. Create it using the commands above
 
 ## Migration from Plaintext
 
-**This has been completed.** Previously, secrets were stored in plaintext in `helmrelease.yaml`. They have been:
+__This has been completed.__ Previously, secrets were stored in plaintext in `helmrelease.yaml`. They have been:
 
 1. ✅ Moved to a Kubernetes Secret
 2. ✅ Removed from git via `git filter-repo`

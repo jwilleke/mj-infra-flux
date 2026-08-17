@@ -2,11 +2,11 @@
 
 Public, throwaway demo of [ngdpbase](https://github.com/jwilleke/ngdpbase) at `https://ngdpbase-demo.nerdsbythehour.com`. Anyone evaluating the project can click rather than clone. Source issue: [ngdpbase#1026](https://github.com/jwilleke/ngdpbase/issues/1026).
 
-Runs the **stock base image** — no addons, no domain config. `geohazardwatch` layers its own image on the same base but tracks its own tag, so the two never move together.
+Runs the __stock base image__ — no addons, no domain config. `geohazardwatch` layers its own image on the same base but tracks its own tag, so the two never move together.
 
-**Never contains anything worth keeping.** Anything a visitor writes here is disposable and is not backed up.
+__Never contains anything worth keeping.__ Anything a visitor writes here is disposable and is not backed up.
 
-There is **no scheduled wipe** — no CronJob, nothing automatic. The volume is only ever reset by an operator deliberately running the commands under [Resetting the demo](#resetting-the-demo).
+There is __no scheduled wipe__ — no CronJob, nothing automatic. The volume is only ever reset by an operator deliberately running the commands under [Resetting the demo](#resetting-the-demo).
 
 ## How it's exposed publicly — Cloudflare Tunnel (not Traefik)
 
@@ -24,7 +24,7 @@ Storage: hostPath /mnt/local-k3s-data/ngdpbase-demo → /app/data
 
 ### Cloudflare dashboard step (manual, not in git)
 
-Zero Trust → existing tunnel (`tunnel-infra-flux`) → **Published application routes** → add:
+Zero Trust → existing tunnel (`tunnel-infra-flux`) → __Published application routes__ → add:
 
 | Subdomain | Domain | Type | Service |
 |---|---|---|---|
@@ -32,38 +32,38 @@ Zero Trust → existing tunnel (`tunnel-infra-flux`) → **Published application
 
 Saving auto-creates the proxied CNAME — no manual DNS entry, no firewall port.
 
-> **Keep the hostname single-level.** `demo-yourphr`'s README records a TLS handshake failure at the Cloudflare edge from a two-level subdomain, because the zone's Universal SSL cert covers one wildcard level only.
+> __Keep the hostname single-level.__ `demo-yourphr`'s README records a TLS handshake failure at the Cloudflare edge from a two-level subdomain, because the zone's Universal SSL cert covers one wildcard level only.
 
 ## Access model
 
 | Who | Can |
 |---|---|
 | Anonymous | Read every page, and nothing else |
-| Signed in | Read, edit, create, upload — **not** delete or rename |
+| Signed in | Read, edit, create, upload — __not__ delete or rename |
 
-Accounts come from **magic link only** (ngdpbase#1026). The password `/register` form is off (`application.registration.password: false`), and accounts created by a magic link are `isExternal` — they hold an empty password hash that no password input can match, so there is no password to guess or leak.
+Accounts come from __magic link only__ (ngdpbase#1026). The password `/register` form is off (`application.registration.password: false`), and accounts created by a magic link are `isExternal` — they hold an empty password hash that no password input can match, so there is no password to guess or leak.
 
-`admin` still has a password and `/login` still accepts it — but it is **never** the shipped `admin123`. `ngdpbase.user.security.defaultpassword` is fed from the `admin-password` Secret key, and that is what the account is created with on first boot.
+`admin` still has a password and `/login` still accepts it — but it is __never__ the shipped `admin123`. `ngdpbase.user.security.defaultpassword` is fed from the `admin-password` Secret key, and that is what the account is created with on first boot.
 
-This matters most **after a wipe**. `createDefaultAdmin()` only runs when no admin exists, so resetting the volume recreates the account from that config value. Without this wiring, every reset would put `admin`/`admin123` back on a permanently-live public URL — and unlike a private install there is no window in which to fix it before the internet can reach it.
+This matters most __after a wipe__. `createDefaultAdmin()` only runs when no admin exists, so resetting the volume recreates the account from that config value. Without this wiring, every reset would put `admin`/`admin123` back on a permanently-live public URL — and unlike a private install there is no window in which to fix it before the internet can reach it.
 
 ### `/admin/configuration` cannot save here
 
-The dashboard itself works normally — users, roles, trash, backup, logs, required-pages and the rest. The one exception is **saving** on `/admin/configuration`: `ConfigurationManager.saveCustomConfiguration()` writes `app-custom-config.json`, which on this instance is a read-only `subPath` ConfigMap mount, so the write throws. Viewing is fine.
+The dashboard itself works normally — users, roles, trash, backup, logs, required-pages and the rest. The one exception is __saving__ on `/admin/configuration`: `ConfigurationManager.saveCustomConfiguration()` writes `app-custom-config.json`, which on this instance is a read-only `subPath` ConfigMap mount, so the write throws. Viewing is fine.
 
 That is the intended trade — config belongs in this repo, not in a volume that gets wiped. Change settings by editing `configmap.yaml` here and letting Flux roll the pod.
 
 ## Secrets
 
-> **Not in git.** Unlike `demo-yourphr` and `geohazardwatch`, this app ships **no SOPS-encrypted secret file**. Both Secrets below were created by hand with `kubectl` and exist only in the cluster.
+> __Not in git.__ Unlike `demo-yourphr` and `geohazardwatch`, this app ships __no SOPS-encrypted secret file__. Both Secrets below were created by hand with `kubectl` and exist only in the cluster.
 >
-> They survive pod restarts, image bumps and node reboots — ordinary Kubernetes state. They do **not** survive deleting the namespace or rebuilding the cluster, and `flux bootstrap` alone will not restore them: the pod fails to start until they are recreated by hand.
+> They survive pod restarts, image bumps and node reboots — ordinary Kubernetes state. They do __not__ survive deleting the namespace or rebuilding the cluster, and `flux bootstrap` alone will not restore them: the pod fails to start until they are recreated by hand.
 >
-> That is a deliberate trade for a disposable demo — recovery is the two commands below — but it means this app is **not** self-contained in git the way its neighbours are. If that stops being acceptable, encrypt them into `resend-smtp.sops.yaml` and `secrets.sops.yaml` here and list both in `kustomization.yaml`, matching `../demo-yourphr/sandbox-credentials.sops.yaml`.
+> That is a deliberate trade for a disposable demo — recovery is the two commands below — but it means this app is __not__ self-contained in git the way its neighbours are. If that stops being acceptable, encrypt them into `resend-smtp.sops.yaml` and `secrets.sops.yaml` here and list both in `kustomization.yaml`, matching `../demo-yourphr/sandbox-credentials.sops.yaml`.
 
-Two, both distinct from every other instance. Create them **before** this app first reconciles: `ngdpbase-demo-resend` and the `admin-password` key are deliberately not `optional`, so the pod will not start without them.
+Two, both distinct from every other instance. Create them __before__ this app first reconciles: `ngdpbase-demo-resend` and the `admin-password` key are deliberately not `optional`, so the pod will not start without them.
 
-- `ngdpbase-demo-resend` — `api-key` (Resend send-only API key) and `from` (a sender on a Resend-verified domain). Consumed by the `$NGDPBASE_SMTP_PASS` / `$NGDPBASE_MAIL_FROM` env-refs in `configmap.yaml`. **Not optional**: an unset ref throws at startup naming the key, which is what we want — magic link is the only way in, so silently having no mail would leave the demo unauthenticatable with nothing in the logs explaining why.
+- `ngdpbase-demo-resend` — `api-key` (Resend send-only API key) and `from` (a sender on a Resend-verified domain). Consumed by the `$NGDPBASE_SMTP_PASS` / `$NGDPBASE_MAIL_FROM` env-refs in `configmap.yaml`. __Not optional__: an unset ref throws at startup naming the key, which is what we want — magic link is the only way in, so silently having no mail would leave the demo unauthenticatable with nothing in the logs explaining why.
 - `ngdpbase-demo-secrets` — `admin-password` (required, see above) and `session-secret` (optional).
 
 ```bash
@@ -82,11 +82,11 @@ Read the admin password back when you need it:
 kubectl -n ngdpbase-demo get secret ngdpbase-demo-secrets -o jsonpath='{.data.admin-password}' | base64 -d; echo
 ```
 
-Resend's free tier is roughly **100 sends/day** and every sign-in request spends one. The per-IP budget in `ngdpbase.mail.rate-limit.*` is enabled in the ConfigMap for exactly that reason — do not turn it off here.
+Resend's free tier is roughly __100 sends/day__ and every sign-in request spends one. The per-IP budget in `ngdpbase.mail.rate-limit.*` is enabled in the ConfigMap for exactly that reason — do not turn it off here.
 
 ## Resetting the demo
 
-**Manual only, and not on any schedule.** Nothing resets this instance automatically — no CronJob, no timer. Run this when you actually want a clean slate (accumulated spam, a mangled demo, or testing the reseed path), not as routine maintenance.
+__Manual only, and not on any schedule.__ Nothing resets this instance automatically — no CronJob, no timer. Run this when you actually want a clean slate (accumulated spam, a mangled demo, or testing the reseed path), not as routine maintenance.
 
 ```bash
 kubectl scale deploy/ngdpbase-demo -n ngdpbase-demo --replicas=0
@@ -105,8 +105,8 @@ The pod reseeds `required-pages/` from the image on next boot (`HEADLESS_INSTALL
 
 ## Known behaviour
 
-- **Magic-link tokens are held in memory.** A pod restart — including an image bump — invalidates every outstanding link. Not a bug; request another.
-- **The ConfigMap mount is read-only.** Admin UI screens that write back to `app-custom-config.json` will fail here. Change config in this repo instead.
+- __Magic-link tokens are held in memory.__ A pod restart — including an image bump — invalidates every outstanding link. Not a bug; request another.
+- __The ConfigMap mount is read-only.__ Admin UI screens that write back to `app-custom-config.json` will fail here. Change config in this repo instead.
 
 ## Verify
 

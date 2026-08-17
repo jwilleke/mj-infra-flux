@@ -6,12 +6,12 @@ Step-by-step instructions to set up the project locally for development.
 
 ### Required
 
-- **Node.js**: v18 or higher
+- __Node.js__: v18 or higher
   - Check: `node --version`
   - Download: <https://nodejs.org/>
-- **npm**: v9 or higher
+- __npm__: v9 or higher
   - Check: `npm --version`
-- **Git**: Latest version
+- __Git__: Latest version
   - Check: `git --version`
 
 ### Recommended
@@ -132,10 +132,10 @@ PORT=3001 npm run dev
 
 After setup, read these files to understand the project:
 
-- **AGENTS.md** - Project goals, status, and priorities
-- **CODE_STANDARDS.md** - Coding guidelines and standards
-- **CONTRIBUTING.md** - How to contribute
-- **README.md** - Project overview
+- __AGENTS.md__ - Project goals, status, and priorities
+- __CODE_STANDARDS.md__ - Coding guidelines and standards
+- __CONTRIBUTING.md__ - How to contribute
+- __README.md__ - Project overview
 
 ## Next Steps
 

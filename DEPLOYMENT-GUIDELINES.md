@@ -2,25 +2,25 @@
 
 ## Kustomize First
 
-**ALWAYS prefer Kustomize over Helm when possible.**
+__ALWAYS prefer Kustomize over Helm when possible.__
 
 ### Why Kustomize?
 
-1. **Transparency** - Plain Kubernetes YAML, no templating magic
-2. **GitOps-friendly** - Easy to review changes in PRs
-3. **Simplicity** - No additional tools needed (built into kubectl)
-4. **Composability** - Overlay-based customization
-5. **Debuggability** - What you see is what you deploy
+1. __Transparency__ - Plain Kubernetes YAML, no templating magic
+2. __GitOps-friendly__ - Easy to review changes in PRs
+3. __Simplicity__ - No additional tools needed (built into kubectl)
+4. __Composability__ - Overlay-based customization
+5. __Debuggability__ - What you see is what you deploy
 
 ### When to Use Helm
 
-Use Helm **only** when:
+Use Helm __only__ when:
 
 - Complex third-party applications with extensive configuration
 - Active upstream Helm chart with frequent updates
 - Converting would require significant effort
 
-**Current Helm deployments** (to be migrated when time permits):
+__Current Helm deployments__ (to be migrated when time permits):
 
 - Authentik (SSO/IdP)
 
@@ -39,18 +39,18 @@ See `apps/production/` for reference implementations:
 
 ## Secret Management
 
-**NEVER commit secrets in plaintext to git.**
+__NEVER commit secrets in plaintext to git.__
 
 ### Approved Methods
 
-1. **SOPS + Age (Preferred)**
+1. __SOPS + Age (Preferred)__
 
    ```bash
    # Encrypt secrets with SOPS
    ./scripts/encrypt-env-files.sh <directory>
    ```
 
-2. **Cluster-only Secrets**
+2. __Cluster-only Secrets__
 
    ```bash
    # Create secret directly in cluster (not in git)
@@ -58,7 +58,7 @@ See `apps/production/` for reference implementations:
      --from-literal=key="value"
    ```
 
-3. **Helm valuesFrom** (for Helm deployments)
+3. __Helm valuesFrom__ (for Helm deployments)
 
    ```yaml
    valuesFrom:
@@ -95,21 +95,21 @@ apps/
 
 ## Naming Conventions
 
-- **Namespaces**: Lowercase, hyphenated (e.g., `guest-services`)
-- **Resources**: Descriptive, include app name (e.g., `jimswiki-deployment`)
-- **Labels**: Use `app: <name>` for selectors
-- **Secrets**: End with `-secret` (e.g., `authentik-secrets`)
+- __Namespaces__: Lowercase, hyphenated (e.g., `guest-services`)
+- __Resources__: Descriptive, include app name (e.g., `jimswiki-deployment`)
+- __Labels__: Use `app: <name>` for selectors
+- __Secrets__: End with `-secret` (e.g., `authentik-secrets`)
 
 ## Documentation
 
 Every application should have a `README.md` with:
 
-1. **Overview** - What does it do?
-2. **URL** - Where is it accessed?
-3. **Dependencies** - What does it need?
-4. **Configuration** - How is it configured?
-5. **Secrets** - How are secrets managed?
-6. **Troubleshooting** - Common issues
+1. __Overview__ - What does it do?
+2. __URL__ - Where is it accessed?
+3. __Dependencies__ - What does it need?
+4. __Configuration__ - How is it configured?
+5. __Secrets__ - How are secrets managed?
+6. __Troubleshooting__ - Common issues
 
 ## Testing Before Commit
 

@@ -2,7 +2,7 @@
 
 ## Current Status
 
-✅ **Completed:**
+✅ __Completed:__
 
 - Authentik deployed via Flux at <https://auth.nerdsbythehour.com>
 - PostgreSQL and Redis persistence configured
@@ -10,9 +10,9 @@
 - Traefik ForwardAuth middleware created
 - DNS records configured for the `auth` subdomain
 
-> **Note:** This guide was originally written using Filebrowser as the worked example for an Authentik-protected application. That deployment was removed on 2026-05-05 (the SMB stack it served was orphaned — see the related cleanup commit). The Step 1 / Step 2 / Step 3 instructions below still reference Filebrowser by name; treat them as historical reference for the shape of the setup, and substitute your own application's name and URLs when adapting.
+> __Note:__ This guide was originally written using Filebrowser as the worked example for an Authentik-protected application. That deployment was removed on 2026-05-05 (the SMB stack it served was orphaned — see the related cleanup commit). The Step 1 / Step 2 / Step 3 instructions below still reference Filebrowser by name; treat them as historical reference for the shape of the setup, and substitute your own application's name and URLs when adapting.
 
-🔧 **Pending Configuration:**
+🔧 __Pending Configuration:__
 
 - Complete OAuth2/Proxy Provider setup in Authentik UI (steps below)
 - Test authentication flow
@@ -25,51 +25,51 @@
 
 ## Configure OAuth2/Proxy Provider for Traefik ForwardAuth
 
-**To access the Admin Interface:**
+__To access the Admin Interface:__
 
 - Click on your username in the top right corner
-- Select **Admin Interface** from the dropdown
+- Select __Admin Interface__ from the dropdown
 - OR directly access: <https://auth.nerdsbythehour.com/if/admin/>
 
 ### Step 1: Create Provider
 
-1. In the Admin Interface, go to **Applications** → **Providers**
-2. Click **Create** → Select **Proxy Provider**
+1. In the Admin Interface, go to __Applications__ → __Providers__
+2. Click __Create__ → Select __Proxy Provider__
 3. Configure:
-   - **Name**: `Filebrowser Forward Auth`
-   - **Authorization flow**: `default-provider-authorization-implicit-consent`
-   - **Type**: `Forward auth (single application)` or `Proxy` (depending on your version)
-   - **External host**: `https://filebrowser.nerdsbythehour.com` ⚠️ **IMPORTANT: Use the protected app domain, NOT auth.nerdsbythehour.com**
-   - **Internal host**: Leave empty or use `http://smb-filebrowser.default.svc.cluster.local`
-   - **Token validity**: `hours=24` (or your preference)
-4. Click **Finish**
-5. **IMPORTANT**: Client ID and Client Secret may be displayed
-   - **DO NOT commit these to the repository**
-   - **DO NOT share these credentials**
+   - __Name__: `Filebrowser Forward Auth`
+   - __Authorization flow__: `default-provider-authorization-implicit-consent`
+   - __Type__: `Forward auth (single application)` or `Proxy` (depending on your version)
+   - __External host__: `https://filebrowser.nerdsbythehour.com` ⚠️ __IMPORTANT: Use the protected app domain, NOT auth.nerdsbythehour.com__
+   - __Internal host__: Leave empty or use `http://smb-filebrowser.default.svc.cluster.local`
+   - __Token validity__: `hours=24` (or your preference)
+4. Click __Finish__
+5. __IMPORTANT__: Client ID and Client Secret may be displayed
+   - __DO NOT commit these to the repository__
+   - __DO NOT share these credentials__
    - Store them securely if needed for other integrations
    - For Traefik ForwardAuth, these are NOT required in the middleware configuration
 
 ### Step 2: Create Application
 
-1. Go to **Applications** → **Applications**
-2. Click **Create**
+1. Go to __Applications__ → __Applications__
+2. Click __Create__
 3. Configure:
-   - **Name**: `Filebrowser`
-   - **Slug**: `filebrowser`
-   - **Provider**: Select the provider created in Step 1 (`Filebrowser Forward Auth`)
-4. Click **Create**
+   - __Name__: `Filebrowser`
+   - __Slug__: `filebrowser`
+   - __Provider__: Select the provider created in Step 1 (`Filebrowser Forward Auth`)
+4. Click __Create__
 
 ### Step 3: Create Outpost
 
-1. Go to **Admin Interface** → **Outposts**
-2. Click **Create** (or edit the existing `authentik Embedded Outpost`)
+1. Go to __Admin Interface__ → __Outposts__
+2. Click __Create__ (or edit the existing `authentik Embedded Outpost`)
 3. Configure:
-   - **Name**: `authentik Embedded Outpost` (or create new)
-   - **Type**: `Proxy`
-   - **Applications**: Select `Filebrowser`
-4. Click **Create** or **Update**
-5. ⚠️ **IMPORTANT**: After creating, check if an ingress was auto-created for filebrowser.nerdsbythehour.com
-   - If an ingress `ak-outpost-*` appears for filebrowser, **DELETE IT** - we already have our own ingress configured
+   - __Name__: `authentik Embedded Outpost` (or create new)
+   - __Type__: `Proxy`
+   - __Applications__: Select `Filebrowser`
+4. Click __Create__ or __Update__
+5. ⚠️ __IMPORTANT__: After creating, check if an ingress was auto-created for filebrowser.nerdsbythehour.com
+   - If an ingress `ak-outpost-*` appears for filebrowser, __DELETE IT__ - we already have our own ingress configured
 
 ## Traefik ForwardAuth Middleware
 
@@ -88,16 +88,16 @@ Other services in the cluster apply the Authentik ForwardAuth middleware directl
 
 Unprotected (accessible without login):
 
-- **Whoami**: <https://nerdsbythehour.com> and <https://deby.nerdsbythehour.com>
+- __Whoami__: <https://nerdsbythehour.com> and <https://deby.nerdsbythehour.com>
 
 ## Important URLs
 
-- **Authentik Setup**: <https://auth.nerdsbythehour.com/if/flow/initial-setup/>
-- **Authentik Admin Portal**: <https://auth.nerdsbythehour.com/if/admin/>
+- __Authentik Setup__: <https://auth.nerdsbythehour.com/if/flow/initial-setup/>
+- __Authentik Admin Portal__: <https://auth.nerdsbythehour.com/if/admin/>
 
 ## Default Credentials
 
-- **Authentik Admin**: `akadmin` (set password on first login)
+- __Authentik Admin__: `akadmin` (set password on first login)
 
 ## DNS Configuration
 
@@ -111,14 +111,14 @@ All DNS records are configured in Cloudflare with Proxy enabled (orange cloud):
 
 If you see an Authentik-branded "Not Found" page when accessing a protected service:
 
-- ✅ **Good**: ForwardAuth middleware is working and intercepting requests
-- ❌ **Issue**: OAuth2/Proxy Provider configuration is incomplete or missing
+- ✅ __Good__: ForwardAuth middleware is working and intercepting requests
+- ❌ __Issue__: OAuth2/Proxy Provider configuration is incomplete or missing
 
-**Solution**: Complete the provider, application, and outpost setup in the Admin Interface.
+__Solution__: Complete the provider, application, and outpost setup in the Admin Interface.
 
 ### Version-Specific UI Differences
 
-You're running Authentik **2025.10.1**. The UI and options may differ from older guides:
+You're running Authentik __2025.10.1__. The UI and options may differ from older guides:
 
 - Look for "Proxy" or "Forward auth" when creating providers
 - Some versions have "Forward auth (single application)" vs "Forward auth (domain level)"

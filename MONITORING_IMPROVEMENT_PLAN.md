@@ -1,8 +1,8 @@
 # Infrastructure Monitoring Improvement Plan
 
-**Created**: 2025-12-22
-**Issue Tracking**: GitHub jwilleke/mj-infra-flux
-**Status**: In Development
+__Created__: 2025-12-22
+__Issue Tracking__: GitHub jwilleke/mj-infra-flux
+__Status__: In Development
 
 ---
 
@@ -10,11 +10,11 @@
 
 Your infrastructure currently lacks comprehensive health checking and proactive alerting for critical services. The recent cascading failures (TeslaMate data loss, jimswiki 404, Home Assistant offline, Prometheus startup issues) indicate the need for:
 
-1. **Blackbox Monitoring** - External HTTP/HTTPS health checks for all public services
-2. **Service Dependency Tracking** - Alerts when dependencies fail (DB, MQTT, caches)
-3. **Log Aggregation** - Centralized visibility into pod/service failures
-4. **Alerting Escalation** - Automated incident response for critical services
-5. **Health Dashboard** - Real-time service status visibility
+1. __Blackbox Monitoring__ - External HTTP/HTTPS health checks for all public services
+2. __Service Dependency Tracking__ - Alerts when dependencies fail (DB, MQTT, caches)
+3. __Log Aggregation__ - Centralized visibility into pod/service failures
+4. __Alerting Escalation__ - Automated incident response for critical services
+5. __Health Dashboard__ - Real-time service status visibility
 
 ---
 
@@ -31,13 +31,13 @@ Your infrastructure currently lacks comprehensive health checking and proactive 
 
 ### Critical Gaps ❌
 
-1. **No application health checks** - Services can fail silently
-2. **No dependency monitoring** - PostgreSQL/MQTT failures not detected
-3. **No external endpoint monitoring** - Public services not checked from outside
-4. **Limited alerting rules** - Only project-specific rules (coinpoet, tayle)
-5. **No service mesh observability** - Pod-to-pod communication failures invisible
-6. **No log centralization** - Must SSH to pods to debug issues
-7. **No uptime tracking** - No SLA/availability metrics
+1. __No application health checks__ - Services can fail silently
+2. __No dependency monitoring__ - PostgreSQL/MQTT failures not detected
+3. __No external endpoint monitoring__ - Public services not checked from outside
+4. __Limited alerting rules__ - Only project-specific rules (coinpoet, tayle)
+5. __No service mesh observability__ - Pod-to-pod communication failures invisible
+6. __No log centralization__ - Must SSH to pods to debug issues
+7. __No uptime tracking__ - No SLA/availability metrics
 
 ---
 
@@ -45,18 +45,18 @@ Your infrastructure currently lacks comprehensive health checking and proactive 
 
 ### Issue #1: TeslaMate - Data Loss Since November
 
-**Symptoms**: No vehicle data collection since November 2024
+__Symptoms__: No vehicle data collection since November 2024
 
-**Monitoring Gaps**:
+__Monitoring Gaps__:
 
 - No alert if TeslaMate pod crashes/restarts
 - No check if PostgreSQL connection fails
 - No alert if MQTT broker becomes unavailable
 - No Prometheus metrics from TeslaMate application
 
-**Root Cause Likely**: Silent failure in one of the dependencies
+__Root Cause Likely__: Silent failure in one of the dependencies
 
-**Alert Required**:
+__Alert Required__:
 
 ```yaml
 alert: TeslaMateDataCollectionFailed
@@ -69,18 +69,18 @@ severity: critical
 
 ### Issue #2: AMD Wiki - Server Not Found
 
-**Symptoms**: <https://amd.nerdsbythehour.com/> returns "server not found"
+__Symptoms__: <https://amd.nerdsbythehour.com/> returns "server not found"
 
-**Monitoring Gaps**:
+__Monitoring Gaps__:
 
 - No external HTTP health check on the endpoint
 - No alert if Ingress route misconfigured
 - No alert if pod fails to start
 - No DNS resolution monitoring
 
-**Root Cause**: Service unreachable (DNS, Ingress, or Pod issue)
+__Root Cause__: Service unreachable (DNS, Ingress, or Pod issue)
 
-**Alert Required**:
+__Alert Required__:
 
 ```yaml
 alert: ServiceEndpointDown
@@ -95,18 +95,18 @@ annotations:
 
 ### Issue #3: JimsWiki - 404 Error
 
-**Symptoms**: <https://jimswiki.nerdsbythehour.com/> returns 404
+__Symptoms__: <https://jimswiki.nerdsbythehour.com/> returns 404
 
-**Monitoring Gaps**:
+__Monitoring Gaps__:
 
 - No alert for application initialization failures
 - No check if NFS mount is accessible
 - No monitoring of disk space
 - No Prometheus metrics from JimsWiki (JSPWiki)
 
-**Root Cause**: Likely NFS mount unmounted or data corruption
+__Root Cause__: Likely NFS mount unmounted or data corruption
 
-**Alert Required**:
+__Alert Required__:
 
 ```yaml
 alert: JimsWikiApplicationError
@@ -119,17 +119,17 @@ severity: critical
 
 ### Issue #4: Prometheus - WAL Replay Delay
 
-**Symptoms**: "Replaying WAL (28/805)" message, extended startup
+__Symptoms__: "Replaying WAL (28/805)" message, extended startup
 
-**Monitoring Gaps**:
+__Monitoring Gaps__:
 
 - No alert if Prometheus takes too long to start
 - No monitoring of WAL replay progress
 - No alert for unclean shutdown
 
-**Root Cause**: Previous crash or hard shutdown
+__Root Cause__: Previous crash or hard shutdown
 
-**Alert Required**:
+__Alert Required__:
 
 ```yaml
 alert: PrometheusStartupDelayed
@@ -142,17 +142,17 @@ severity: warning
 
 ### Issue #5: Grafana - Login Loop
 
-**Symptoms**: TeslaMate dashboard link redirects to Grafana login instead of serving dashboard
+__Symptoms__: TeslaMate dashboard link redirects to Grafana login instead of serving dashboard
 
-**Monitoring Gaps**:
+__Monitoring Gaps__:
 
 - No health check for Grafana-Prometheus datasource connection
 - No alert if authentication middleware fails
 - No check if Authentik is accessible
 
-**Root Cause**: Authentik session/authentication misconfiguration
+__Root Cause__: Authentik session/authentication misconfiguration
 
-**Alert Required**:
+__Alert Required__:
 
 ```yaml
 alert: GrafanaAuthenticationFailure
@@ -165,18 +165,18 @@ severity: warning
 
 ### Issue #6: Home Assistant - Connection Failed
 
-**Symptoms**: "Unable to connect to Home Assistant. Retrying in 23 seconds..."
+__Symptoms__: "Unable to connect to Home Assistant. Retrying in 23 seconds..."
 
-**Monitoring Gaps**:
+__Monitoring Gaps__:
 
 - No alert for pod crash/restart
 - No check if port binding failed
 - No alert for OOM kills
 - No storage mount verification
 
-**Root Cause**: Pod not running or not responding on configured port
+__Root Cause__: Pod not running or not responding on configured port
 
-**Alert Required**:
+__Alert Required__:
 
 ```yaml
 alert: HomeAssistantPodDown
@@ -191,9 +191,9 @@ severity: critical
 
 ### 1. Enhanced Blackbox Monitoring (HIGH PRIORITY)
 
-**Objective**: Monitor all public endpoints from outside the cluster
+__Objective__: Monitor all public endpoints from outside the cluster
 
-**Implementation**:
+__Implementation__:
 
 Create `apps/production/monitoring/prometheus/config/scrape-configs.blackbox.yaml`:
 
@@ -262,7 +262,7 @@ scrape_configs:
         replacement: blackbox-exporter.monitoring.svc.cluster.local:9115
 ```
 
-**Alert Rules** (`apps/production/monitoring/prometheus/config/alerting-rules.blackbox.yaml`):
+__Alert Rules__ (`apps/production/monitoring/prometheus/config/alerting-rules.blackbox.yaml`):
 
 ```yaml
 groups:
@@ -324,9 +324,9 @@ groups:
 
 ### 2. Application Health Checks (HIGH PRIORITY)
 
-**Objective**: Monitor application-level metrics for each service
+__Objective__: Monitor application-level metrics for each service
 
-**TeslaMate Metrics** - Enable in `apps/production/teslamate/teslamate-deployment.yaml`:
+__TeslaMate Metrics__ - Enable in `apps/production/teslamate/teslamate-deployment.yaml`:
 
 ```yaml
 apiVersion: apps/v1
@@ -342,7 +342,7 @@ spec:
         prometheus.io/path: "/metrics"
 ```
 
-**Alert Rules** (`apps/production/monitoring/prometheus/config/alerting-rules.teslamate.yaml`):
+__Alert Rules__ (`apps/production/monitoring/prometheus/config/alerting-rules.teslamate.yaml`):
 
 ```yaml
 groups:
@@ -391,7 +391,7 @@ groups:
 
 ### 3. Service Dependency Monitoring (MEDIUM PRIORITY)
 
-**PostgreSQL Health Check**:
+__PostgreSQL Health Check__:
 
 ```yaml
 # In apps/production/monitoring/prometheus/config/alerting-rules.postgres.yaml
@@ -423,7 +423,7 @@ groups:
           summary: "PostgreSQL disk space < 1GB"
 ```
 
-**MQTT (Mosquitto) Health Check**:
+__MQTT (Mosquitto) Health Check__:
 
 ```yaml
 # In apps/production/monitoring/prometheus/config/alerting-rules.mqtt.yaml
@@ -451,16 +451,16 @@ groups:
 
 ### 4. Log Aggregation (MEDIUM PRIORITY)
 
-**Recommended**: Deploy Loki + Promtail for centralized logging
+__Recommended__: Deploy Loki + Promtail for centralized logging
 
-**Benefits**:
+__Benefits__:
 
 - Single source for all pod logs
 - Search by labels (namespace, pod, container)
 - Linked to Prometheus metrics
 - Retention and compression
 
-**Implementation Steps**:
+__Implementation Steps__:
 
 1. Deploy Promtail to collect logs from all pods (DaemonSet)
 2. Deploy Loki to store logs
@@ -471,7 +471,7 @@ groups:
 
 ### 5. Enhanced Alerting Rules (HIGH PRIORITY)
 
-**Create these alert rule files**:
+__Create these alert rule files__:
 
 `apps/production/monitoring/prometheus/config/alerting-rules.kubernetes.yaml`:
 
@@ -520,7 +520,7 @@ groups:
 
 ### 6. Real-Time Status Dashboard (LOW PRIORITY)
 
-**Create Service Health Dashboard in Grafana**:
+__Create Service Health Dashboard in Grafana__:
 
 Components:
 
@@ -571,35 +571,35 @@ Components:
 
 | Level | Response Time | Examples |
 |-------|---------------|----------|
-| **Critical** | Immediate (< 5 min) | Service down, data loss, security |
-| **Warning** | Quick (< 30 min) | Performance issues, cert expiration soon |
-| **Info** | Routine (< 1 day) | Planned maintenance, minor issues |
+| __Critical__ | Immediate (< 5 min) | Service down, data loss, security |
+| __Warning__ | Quick (< 30 min) | Performance issues, cert expiration soon |
+| __Info__ | Routine (< 1 day) | Planned maintenance, minor issues |
 
 ---
 
 ## GitHub Issues to Create
 
-1. **[CRITICAL] TeslaMate: Missing data collection since November**
+1. __[CRITICAL] TeslaMate: Missing data collection since November__
    - Investigate pod logs and database connectivity
    - Implement metrics scraping and alerting
 
-2. **[CRITICAL] AMD Wiki: Server not found**
+2. __[CRITICAL] AMD Wiki: Server not found__
    - Check deployment/ingress/DNS configuration
    - Add endpoint monitoring
 
-3. **[CRITICAL] JimsWiki: 404 error**
+3. __[CRITICAL] JimsWiki: 404 error__
    - Verify NFS mount and application startup
    - Add application-level monitoring
 
-4. **[HIGH] Prometheus: Slow WAL replay on startup**
+4. __[HIGH] Prometheus: Slow WAL replay on startup__
    - Investigate previous crashes
    - Monitor startup time and trigger alerts
 
-5. **[HIGH] Grafana: Authentication loop issue**
+5. __[HIGH] Grafana: Authentication loop issue__
    - Verify Authentik session handling
    - Check middleware configuration
 
-6. **[CRITICAL] Home Assistant: Connection failures**
+6. __[CRITICAL] Home Assistant: Connection failures__
    - Check pod health and port binding
    - Implement pod restart alerts
 
@@ -632,11 +632,11 @@ apps/production/monitoring/grafana/                       # Add health dashboard
 
 ## Expected Outcomes
 
-✅ **Immediate visibility** into service failures
-✅ **Proactive alerting** for dependent services
-✅ **Root cause analysis** with centralized logs
-✅ **SLA tracking** for critical services
-✅ **Improved MTTR** (Mean Time To Recovery)
+✅ __Immediate visibility__ into service failures
+✅ __Proactive alerting__ for dependent services
+✅ __Root cause analysis__ with centralized logs
+✅ __SLA tracking__ for critical services
+✅ __Improved MTTR__ (Mean Time To Recovery)
 
 ---
 

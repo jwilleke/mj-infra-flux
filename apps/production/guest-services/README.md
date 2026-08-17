@@ -8,22 +8,22 @@ Public-facing services that don't require authentication.
 
 Simple HTTP service that displays request information including IP address, headers, and connection details.
 
-- **URL**: <https://deby.nerdsbythehour.com>
-- **Image**: traefik/whoami:latest
-- **Authentication**: None (public)
-- **Purpose**: Debugging and connection information display
-- **Security**: Runs as apps:apps (3003:3003)
+- __URL__: <https://deby.nerdsbythehour.com>
+- __Image__: traefik/whoami:latest
+- __Authentication__: None (public)
+- __Purpose__: Debugging and connection information display
+- __Security__: Runs as apps:apps (3003:3003)
 
 ### openspeedtest
 
 Self-hosted network speed testing tool for measuring upload and download speeds.
 
-- **URL**: <https://nerdsbythehour.com/speed>
-- **Image**: Custom build from /opt/traefik/openspeedtest
-- **Authentication**: None (public)
-- **Purpose**: Network speed testing
-- **Security**: Runs as root (nginx requirement for temp directories)
-- **Features**:
+- __URL__: <https://nerdsbythehour.com/speed>
+- __Image__: Custom build from /opt/traefik/openspeedtest
+- __Authentication__: None (public)
+- __Purpose__: Network speed testing
+- __Security__: Runs as root (nginx requirement for temp directories)
+- __Features__:
   - HTML5-based speed test (no Flash required)
   - Measures download and upload speeds
   - Displays latency and jitter
@@ -59,8 +59,8 @@ When making changes to the OpenSpeedTest source or configuration:
 
 ## Security
 
-- **whoami**: Runs as UID/GID 3003:3003 (apps:apps)
-- **openspeedtest**: Runs as root (required by nginx to create temp directories)
+- __whoami__: Runs as UID/GID 3003:3003 (apps:apps)
+- __openspeedtest__: Runs as root (required by nginx to create temp directories)
 
 ## Notes
 

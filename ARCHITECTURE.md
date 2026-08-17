@@ -6,12 +6,12 @@ Complete Kubernetes (k3s) infrastructure running on `192.168.68.71` (deby) with 
 
 ## Infrastructure
 
-- **Kubernetes Distribution:** k3s
-- **GitOps Tool:** Flux CD
-- **Ingress Controller:** Traefik (kube-system namespace)
-- **Certificate Management:** cert-manager (Let's Encrypt)
-- **Domain:** nerdsbythehour.com
-- **Cluster IP:** 192.168.68.71 (hostname: deby)
+- __Kubernetes Distribution:__ k3s
+- __GitOps Tool:__ Flux CD
+- __Ingress Controller:__ Traefik (kube-system namespace)
+- __Certificate Management:__ cert-manager (Let's Encrypt)
+- __Domain:__ nerdsbythehour.com
+- __Cluster IP:__ 192.168.68.71 (hostname: deby)
 
 ### Coding Standard:** DRY (Don't Repeat Yourself) principle
 
@@ -21,15 +21,15 @@ Complete Kubernetes (k3s) infrastructure running on `192.168.68.71` (deby) with 
 
 ### Key Technologies
 
-- **Container Orchestration:** Kubernetes (k3s)
-- **GitOps:** Flux CD
-- **Configuration Management:** Kustomize (preferred) / Helm (only when necessary)
-- **Secret Management:** SOPS + Age encryption
-- **Ingress:** Traefik
-- **Authentication:** Authentik SSO
-- **Databases:** PostgreSQL (shared)
-- **Messaging:** Mosquitto MQTT (shared)
-- **Monitoring:** Grafana + Prometheus
+- __Container Orchestration:__ Kubernetes (k3s)
+- __GitOps:__ Flux CD
+- __Configuration Management:__ Kustomize (preferred) / Helm (only when necessary)
+- __Secret Management:__ SOPS + Age encryption
+- __Ingress:__ Traefik
+- __Authentication:__ Authentik SSO
+- __Databases:__ PostgreSQL (shared)
+- __Messaging:__ Mosquitto MQTT (shared)
+- __Monitoring:__ Grafana + Prometheus
 
 ### Application Stack
 
@@ -43,27 +43,27 @@ Complete Kubernetes (k3s) infrastructure running on `192.168.68.71` (deby) with 
 
 ### Public Access (No Authentication)
 
-**Landing Page:** `https://nerdsbythehour.com`
+__Landing Page:__ `https://nerdsbythehour.com`
 
 - `/` - Main landing page
 - `/guest` - Guest page with public service links
   - OpenSpeedTest (`/speed`)
   - whoami (`https://deby.nerdsbythehour.com`)
 
-**CDN:** `https://cdn.nerdsbythehour.com`
+__CDN:__ `https://cdn.nerdsbythehour.com`
 
 - Static asset server for icons, logos, and shared resources
 
 ### Authenticated Access (Authentik SSO)
 
-**Members Portal:** `https://nerdsbythehour.com/members` → Redirects to Authentik User Library
+__Members Portal:__ `https://nerdsbythehour.com/members` → Redirects to Authentik User Library
 
 Protected services accessible after Authentik login at `https://auth.nerdsbythehour.com/if/user/#/library`:
 
-- **Home Assistant** - `https://ha.nerdsbythehour.com` (private DNS only)
-- **TeslaMate** - `https://teslamate.nerdsbythehour.com` (vehicle tracking)
-- **Grafana** - `https://grafana.nerdsbythehour.com` (dashboards)
-- **Authentik** - `https://auth.nerdsbythehour.com` (SSO/IdP, user profile)
+- __Home Assistant__ - `https://ha.nerdsbythehour.com` (private DNS only)
+- __TeslaMate__ - `https://teslamate.nerdsbythehour.com` (vehicle tracking)
+- __Grafana__ - `https://grafana.nerdsbythehour.com` (dashboards)
+- __Authentik__ - `https://auth.nerdsbythehour.com` (SSO/IdP, user profile)
 
 ## Service Categories
 
@@ -71,19 +71,19 @@ Protected services accessible after Authentik login at `https://auth.nerdsbytheh
 
 | Service | Namespace | Purpose | Storage |
 |---------|-----------|---------|---------|
-| **Traefik** | kube-system | Ingress controller | - |
-| **cert-manager** | cert-manager | Let's Encrypt certificates | - |
-| **Flux** | flux-system | GitOps automation | - |
+| __Traefik__ | kube-system | Ingress controller | - |
+| __cert-manager__ | cert-manager | Let's Encrypt certificates | - |
+| __Flux__ | flux-system | GitOps automation | - |
 
 ### Shared Services
 
 | Service | Namespace | Purpose | Storage |
 |---------|-----------|---------|---------|
-| **PostgreSQL** | database | Shared database | `/mnt/local-k3s-data/postgresql` |
-| **Mosquitto** | messaging | MQTT broker | NFS: `/home/jim/docs/data/systems/mj-infra-flux/mosquitto` |
-| **Grafana** | monitoring | Dashboards | `/mnt/local-k3s-data/grafana` |
-| **Authentik** | authentik | SSO/IdP | PostgreSQL + Redis |
-| **Shared Resources** | shared-resources | CDN for static assets | NFS: `/home/jim/docs/data/systems/shared-resources` |
+| __PostgreSQL__ | database | Shared database | `/mnt/local-k3s-data/postgresql` |
+| __Mosquitto__ | messaging | MQTT broker | NFS: `/home/jim/docs/data/systems/mj-infra-flux/mosquitto` |
+| __Grafana__ | monitoring | Dashboards | `/mnt/local-k3s-data/grafana` |
+| __Authentik__ | authentik | SSO/IdP | PostgreSQL + Redis |
+| __Shared Resources__ | shared-resources | CDN for static assets | NFS: `/home/jim/docs/data/systems/shared-resources` |
 
 ### Applications
 
@@ -91,26 +91,26 @@ Protected services accessible after Authentik login at `https://auth.nerdsbytheh
 
 | Title | URL | Port | Access Group | Provider ID |
 |-------|-----|------|--------------|-------------|
-| **Landing Page** | nerdsbythehour.com | 3000 | Public + Members | — |
-| **OpenSpeedTest** | /speed | 80 | Public | — |
-| **whoami** | deby.nerdsbythehour.com | 80 | Public | — |
-| **CDN** | cdn.nerdsbythehour.com | 80 | anyone | No auth needed |
-| **TeslaMate** | teslamate.nerdsbythehour.com | 4000 | mj | 9 |
-| **Grafana** | grafana.nerdsbythehour.com | 80 | mj | 10 |
-| **Home Assistant** | ha.nerdsbythehour.com | 8123 | mj | Existing |
-| **Authentik** | auth.nerdsbythehour.com | — | All | Self-service |
-| **FileBrowser** | TBD | 80 | Protected | TBD |
+| __Landing Page__ | nerdsbythehour.com | 3000 | Public + Members | — |
+| __OpenSpeedTest__ | /speed | 80 | Public | — |
+| __whoami__ | deby.nerdsbythehour.com | 80 | Public | — |
+| __CDN__ | cdn.nerdsbythehour.com | 80 | anyone | No auth needed |
+| __TeslaMate__ | teslamate.nerdsbythehour.com | 4000 | mj | 9 |
+| __Grafana__ | grafana.nerdsbythehour.com | 80 | mj | 10 |
+| __Home Assistant__ | ha.nerdsbythehour.com | 8123 | mj | Existing |
+| __Authentik__ | auth.nerdsbythehour.com | — | All | Self-service |
+| __FileBrowser__ | TBD | 80 | Protected | TBD |
 
 #### Detailed Applications Table
 
 | Service | Namespace | Type | URL | Auth |
 |---------|-----------|------|-----|------|
-| **Landing Page** | landingpage | React SPA | nerdsbythehour.com | Public + Members |
-| **OpenSpeedTest** | guest-services | Speed test | /speed | Public |
-| **whoami** | guest-services | Diagnostics | deby.nerdsbythehour.com | Public |
-| **TeslaMate** | teslamate | Vehicle tracking | teslamate.nerdsbythehour.com | To enable |
-| **Home Assistant** | home-assistant-proxy | Smart home | ha.nerdsbythehour.com | To enable |
-| **FileBrowser** | filebrowser | File manager | TBD | Protected |
+| __Landing Page__ | landingpage | React SPA | nerdsbythehour.com | Public + Members |
+| __OpenSpeedTest__ | guest-services | Speed test | /speed | Public |
+| __whoami__ | guest-services | Diagnostics | deby.nerdsbythehour.com | Public |
+| __TeslaMate__ | teslamate | Vehicle tracking | teslamate.nerdsbythehour.com | To enable |
+| __Home Assistant__ | home-assistant-proxy | Smart home | ha.nerdsbythehour.com | To enable |
+| __FileBrowser__ | filebrowser | File manager | TBD | Protected |
 
 ## Data Organization
 
@@ -163,10 +163,10 @@ Authentik Protected (ForwardAuth - TO BE ENABLED)
 
 Each protected service will have:
 
-1. **Authentik Application** - Configured in Authentik UI
-2. **Authentik Provider** - ForwardAuth provider with auth URL
-3. **Traefik Middleware** - ForwardAuth middleware CRD
-4. **Ingress Annotation** - Links ingress to middleware
+1. __Authentik Application__ - Configured in Authentik UI
+2. __Authentik Provider__ - ForwardAuth provider with auth URL
+3. __Traefik Middleware__ - ForwardAuth middleware CRD
+4. __Ingress Annotation__ - Links ingress to middleware
 
 ## Network Architecture
 
@@ -313,13 +313,13 @@ After verification period:
 
 ### Critical Data Backups
 
-**Must backup:**
+__Must backup:__
 
 1. Config: `/home/jim/docs/data/systems/mj-infra-flux/`
 2. PostgreSQL: Database dumps from `/mnt/local-k3s-data/postgresql/`
 3. Kubernetes secrets: Export and store securely
 
-**Can regenerate:**
+__Can regenerate:__
 
 - Logs
 - Lucene indices
