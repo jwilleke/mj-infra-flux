@@ -1,0 +1,16 @@
+{
+  "status": "behind",
+  "local": "v1.11.1",
+  "source": ".agent-kit.json",
+  "marker": "v1.11.1-0-g71bbbdf",
+  "kit": "v1.11.4-5-g17d7aa6",
+  "missing": [],
+  "collisions": [],
+  "modified": [],
+  "target": "/home/runner/work/mj-infra-flux/mj-infra-flux",
+  "repo": "jwilleke/mj-infra-flux",
+  "position": {
+    "upstream": "origin/master",
+    "behind": 0
+  }
+}
