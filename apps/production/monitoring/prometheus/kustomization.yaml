@@ -2,6 +2,9 @@ resources:
   - ./authorize-prometheus-to-k8s.yaml
   # netalertx-api-token Secret applied out-of-band via kubectl (not in git)
   # kubectl create secret generic netalertx-api-token -n monitoring --from-literal=token=<API_TOKEN>
+  # homeassistant-api-token Secret likewise out-of-band (mjs-ha#72). Value is a
+  # Home Assistant long-lived access token from the HA UI (profile > Security).
+  # kubectl create secret generic homeassistant-api-token -n monitoring --from-file=token=/dev/stdin
   - ./prometheus-statefulset.yaml
   - ./prometheus-service.yaml
   - ./prometheus-pdb.yaml
@@ -39,6 +42,9 @@ configMapGenerator:
       # YourPHR SMART relay /metrics scrape + alert rules (yourphr#50)
       - config/scrape-configs.yourphr-relay.yaml
       - config/alerting-rules.yourphr-relay.yaml
+      # Home Assistant /api/prometheus scrape + alert rules (mjs-ha#72)
+      - config/scrape-configs.homeassistant.yaml
+      - config/alerting-rules.homeassistant.yaml
       # coinpoet and tayle configs removed
 
 labels:

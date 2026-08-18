@@ -1,0 +1,81 @@
+groups:
+  - name: homeassistant
+    interval: 1m
+    rules:
+      # Home Assistant unreachable or /api/prometheus failing.
+      # 10m rather than 5m: HA restarts take the endpoint down for ~1-2 min and
+      # a routine restart should not page.
+      - alert: HomeAssistantScrapeDown
+        expr: up{job="homeassistant"} == 0
+        for: 10m
+        labels:
+          severity: critical
+          host: hapi
+          source: homeassistant
+        annotations:
+          summary: "Home Assistant metrics scrape is down"
+          description: |
+            Prometheus cannot reach Home Assistant /api/prometheus at
+            192.168.68.20:8123. HA may be down, restarting, or the long-lived
+            access token may have been revoked (401 rather than a connection
+            error). The house keeps running automations either way — this is
+            loss of visibility, not loss of function.
+            Check: ssh 192.168.68.20 'ha core info'
+            Token check: curl -s -o /dev/null -w '%{http_code}' \
+              -H "Authorization: Bearer $TOKEN" \
+              http://192.168.68.20:8123/api/prometheus
+
+      # A safety-relevant entity has stopped reporting.
+      #
+      # Deliberately staleness, NOT hass_entity_available. Verified 2026-08-18:
+      # hass_entity_available is 0 only for `unavailable`, and reads 1 for
+      # `unknown`. After an HA restart a dead device flips from `unavailable` to
+      # `unknown`, so entity_available jumps back to 1 while the device is still
+      # dead — a false all-clear. The patio bulbs (mjs-ha#69) did exactly this.
+      # last_updated cannot be faked that way: a dead entity stops updating.
+      #
+      # last_updated also resets on restart, so this self-clears across a
+      # restart rather than firing spuriously.
+      - alert: HomeAssistantSafetyEntityStale
+        expr: |
+          (time() - hass_last_updated_time_seconds{entity=~"alarm_control_panel\\.alarmo|binary_sensor\\.(ds_front_door_contact|patio_door_contact|ds_garage_man_contact|office_stairs_door_contact|garage_all_in_one_garage_door_closed_switch)"}) > 21600
+        for: 30m
+        labels:
+          severity: critical
+          host: hapi
+          source: homeassistant
+        annotations:
+          summary: "HA safety entity {{ $labels.entity }} stale for over 6h"
+          description: |
+            {{ $labels.entity }} ({{ $labels.friendly_name }}) has not reported a
+            state change in over 6 hours. These are the alarm panel and the door
+            contacts it arms on — a stale one means the alarm may be arming over
+            a sensor that cannot report an opening.
+            Check the device battery and mesh first (Z-Wave / Zigbee), then
+            .storage/core.restore_state for the last known value.
+
+      # Bulk entity health. The baseline is high and mostly dashboard cruft, so
+      # this is a change detector, not a correctness check.
+      #
+      # 170 of 1080 entities read unavailable on 2026-08-18. Threshold 200 gives
+      # headroom for churn while still catching an integration dropping wholesale
+      # (a Z-Wave stick falling off, Zigbee2MQTT stopping). Revisit the number if
+      # the baseline moves; a permanently-firing alert gets ignored, which is
+      # worse than no alert.
+      - alert: HomeAssistantUnavailableEntitiesHigh
+        expr: count(hass_entity_available == 0) > 200
+        for: 1h
+        labels:
+          severity: warning
+          host: hapi
+          source: homeassistant
+        annotations:
+          summary: "Home Assistant: {{ $value }} entities unavailable"
+          description: |
+            {{ $value }} entities report unavailable, against a 2026-08-18
+            baseline of 170. A jump usually means a whole integration is down
+            rather than individual devices.
+            List them:
+              hass_entity_available == 0
+            Note this counts `unavailable` only — `unknown` entities are NOT
+            included, see HomeAssistantSafetyEntityStale above.

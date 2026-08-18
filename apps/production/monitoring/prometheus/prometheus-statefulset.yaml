@@ -74,6 +74,13 @@ spec:
               subPath: token
               readOnly: true
 
+            # Home Assistant long-lived access token (mjs-ha#72) — out-of-band
+            # secret, same pattern as NetAlertX above.
+            - name: homeassistant-token-volume
+              mountPath: /etc/prometheus-secrets/homeassistant-token
+              subPath: token
+              readOnly: true
+
       securityContext:
         # this user is on the node's os as the file system owner
         # https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
@@ -91,6 +98,10 @@ spec:
         - name: netalertx-token-volume
           secret:
             secretName: netalertx-api-token
+
+        - name: homeassistant-token-volume
+          secret:
+            secretName: homeassistant-api-token
 
   volumeClaimTemplates:
     - metadata:

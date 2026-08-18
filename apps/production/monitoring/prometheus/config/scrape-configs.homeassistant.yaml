@@ -1,0 +1,26 @@
+scrape_configs:
+  # Home Assistant /api/prometheus (mjs-ha#72).
+  # Endpoint: http://192.168.68.20:8123/api/prometheus (Bearer auth).
+  #
+  # Token is a Home Assistant long-lived access token, sourced from the
+  # homeassistant-api-token secret, mounted at
+  # /etc/prometheus-secrets/homeassistant-token (see prometheus-statefulset.yaml).
+  # Applied out-of-band via kubectl, same as netalertx-api-token.
+  #
+  # 60s, not the 15s global default: Home Assistant runs on a Raspberry Pi 4 and
+  # the payload is ~825 KB / ~6100 series even with the domain filter already
+  # applied on the HA side (configuration.yaml `prometheus.filter`).
+  - job_name: "homeassistant"
+    static_configs:
+      - targets: ["192.168.68.20:8123"]
+    metrics_path: /api/prometheus
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus-secrets/homeassistant-token
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    relabel_configs:
+      - target_label: host
+        replacement: hapi
+      - target_label: source
+        replacement: homeassistant
