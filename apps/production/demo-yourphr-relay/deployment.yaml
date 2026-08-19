@@ -21,7 +21,7 @@ spec:
           # apps/production/yourphr-relay exactly. docs/demo-yourphr-org/implementation-plan.md
           # (mj-infra-flux#147). Shares the ops yourphr-relay ImagePolicy; Phase 5 adds a separate
           # ImageUpdateAutomation path so this bumps independently.
-          image: ghcr.io/jwilleke/yourphr-relay:main-49 # {"$imagepolicy": "flux-system:yourphr-relay"}
+          image: ghcr.io/jwilleke/yourphr-relay:main-50 # {"$imagepolicy": "flux-system:yourphr-relay"}
           ports:
             - containerPort: 8080
               name: http
