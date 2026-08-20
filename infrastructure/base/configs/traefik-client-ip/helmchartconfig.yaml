@@ -13,10 +13,12 @@
 # Safe here because deby is a single-node cluster: `Local` only serves traffic
 # on nodes running a Traefik pod, which is every node there is.
 #
-# The `--api.insecure=true` argument below is carried over verbatim from the
-# hand-applied object rather than changed. It exposes the Traefik dashboard
-# without authentication and deserves its own review; adopting the object into
-# Flux is not the moment to alter it.
+# `--api.dashboard=true` and `--api.insecure=true` were carried over verbatim
+# from the hand-applied object when this was first adopted, and served the
+# dashboard/API with no authentication to any pod in the cluster. Dropped per
+# jwilleke/mj-infra-flux#177 — nothing here uses the dashboard day to day.
+# `--api` alone stays: Traefik needs it internally (e.g. `/ping`), and without
+# `.insecure`/`.dashboard` it is not exposed on any entrypoint.
 apiVersion: helm.cattle.io/v1
 kind: HelmChartConfig
 metadata:
@@ -26,8 +28,6 @@ spec:
   valuesContent: |-
     additionalArguments:
       - "--api"
-      - "--api.dashboard=true"
-      - "--api.insecure=true" # For simplicity, but NOT recommended for production
     service:
       spec:
         externalTrafficPolicy: Local

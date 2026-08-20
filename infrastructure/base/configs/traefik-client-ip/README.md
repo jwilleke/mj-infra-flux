@@ -27,8 +27,10 @@ requires attention to scheduling. `deby` is single-node, so the constraint is no
 
 Traefik here is installed by k3s' bundled Helm controller, not by a Flux `HelmRelease`, so values are
 overridden through a `HelmChartConfig` in `kube-system`. That object already existed in the cluster
-as a hand-applied `kubectl apply` carrying the dashboard arguments. Those are reproduced verbatim so
-adopting it into Flux changes exactly one thing.
+as a hand-applied `kubectl apply` carrying `--api.dashboard=true` and `--api.insecure=true`, which
+served the Traefik API and dashboard with no authentication to any pod in the cluster. Those two
+arguments were dropped in a follow-up fix — see
+[jwilleke/mj-infra-flux#177](https://github.com/jwilleke/mj-infra-flux/issues/177).
 
 ## Verifying
 
