@@ -1,0 +1,28 @@
+# Gates the Traefik dashboard/API at traefik.nerdsbythehour.com with authentik
+# forward-auth, routed directly to Traefik's built-in api@internal service.
+#
+# Replaces the earlier plain Ingress + hand-applied Service that proxied to
+# the pod's raw "traefik" entrypoint (:8080). That only served content while
+# --api.insecure=true was set, which also meant any pod in the cluster could
+# reach that same unauthenticated router directly, going around this gate
+# entirely — see mj-infra-flux#177. api@internal needs no such entrypoint:
+# it is reachable only through a router that explicitly names it, so dropping
+# --api.insecure closes the pod-to-pod hole without breaking this route.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-dashboard
+  namespace: kube-system
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`traefik.nerdsbythehour.com`)
+      kind: Rule
+      middlewares:
+        - name: authentik-forwardauth
+      services:
+        - name: api@internal
+          kind: TraefikService
+  tls:
+    secretName: traefik-dashboard-tls
