@@ -1,0 +1,28 @@
+# Authentik's embedded outpost expects a pre-provisioned secret named
+# authentik-outpost-tls for its auto-generated Ingress
+# (ak-outpost-authentik-embedded-outpost) — confirmed via the outpost's own
+# stored config (kubernetes_ingress_secret_name), not inferred. Authentik does
+# not add cert-manager annotations to that Ingress itself
+# (kubernetes_ingress_annotations is empty), so the secret has to come from
+# somewhere else. This is that somewhere else.
+#
+# dnsNames must list every host currently proxied through this outpost — kept
+# in sync with the outpost's bound Proxy Providers by hand, since Authentik
+# adds a host here automatically when a new app joins but has no way to
+# update this Certificate for us. See mj-infra-flux#180.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: authentik-outpost-tls
+  namespace: authentik
+spec:
+  secretName: authentik-outpost-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - teslamate.nerdsbythehour.com
+    - prometheus.nerdsbythehour.com
+    - netalertx.nerdsbythehour.com
+    - traefik.nerdsbythehour.com
+    - yourphr.nerdsbythehour.com
