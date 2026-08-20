@@ -1,47 +1,68 @@
 # Home Assistant Proxy
 
-Proxy for external Home Assistant instance with Authentik authentication.
+Proxy for external Home Assistant instance, authenticated by Home Assistant's own OIDC login
+against Authentik.
 
 ## Overview
 
 - __URL:__ <https://ha.nerdsbythehour.com>
 - __Backend:__ 192.168.68.20:8123 (external host on local network)
 - __Type:__ External Service Proxy (Home Assistant runs outside k3s)
-- __Security:__ Protected by Authentik ForwardAuth (to be enabled)
+- __Security:__ Home Assistant's OIDC login, pointed at Authentik as the identity provider
 
 ## Architecture
 
-This is a __proxy configuration__ for an external Home Assistant instance:
+```text
+User Browser
+    ↓ HTTPS
+ha.nerdsbythehour.com (Traefik Ingress, Let's Encrypt cert)
+    ↓ HTTPS, insecureSkipVerify (self-signed cert on the HA side)
+192.168.68.20:8123 (Home Assistant, OIDC login against Authentik)
+```
 
-1. Home Assistant runs on separate host at `192.168.68.20:8123`
-2. k3s Traefik ingress proxies `ha.nerdsbythehour.com` → `192.168.68.20:8123`
-3. Authentik ForwardAuth protects access (optional, to be enabled)
-4. Let's Encrypt certificate via cert-manager
+Home Assistant itself runs outside k3s, on a separate host. This app has no forward-auth gate in
+front of it — Traefik proxies straight through, and Home Assistant's own login screen (backed by
+OIDC against Authentik) is what enforces access.
+
+An earlier iteration of this app used Traefik's Authentik ForwardAuth middleware instead
+(`ingressroute.yaml` + `middleware.yaml`, referenced by the old `AUTHENTIK-SETUP.md`). Those files
+were never wired into `kustomization.yaml` and were removed as dead config — see
+[jwilleke/mj-infra-flux#176](https://github.com/jwilleke/mj-infra-flux/issues/176). If ForwardAuth
+is wanted again later (e.g. for defense in depth, or to gate access before it reaches HA's own
+login), follow the pattern in `apps/production/jimsmcp/ingress.yaml`: add the annotation
+`traefik.ingress.kubernetes.io/router.middlewares: authentik-authentik-forwardauth@kubernetescrd`
+to `ingress.yaml` rather than reviving the `IngressRoute` — confirm first whether double-auth
+(Authentik, then HA's own OIDC) is acceptable.
 
 ## Components
 
-### External Service
+### External Service (`external-service.yaml`)
+
+A `Service`/`Endpoints` pair with no selector, pointing directly at the external host:
 
 ```yaml
-type: ExternalName
-externalName: ha.nerdsbythehour.com  # Resolves to 192.168.68.20
-port: 8123 (HTTPS)
+Service:   home-assistant-external, port 8123
+Endpoints: 192.168.68.20:8123
 ```
 
-### Ingress
+### ServersTransport (`serverstransport.yaml`)
+
+`insecure-skip-verify` — Home Assistant's backend cert is self-signed, so Traefik skips TLS
+validation on the hop to `192.168.68.20`.
+
+### Ingress (`ingress.yaml`)
 
 - __Host:__ ha.nerdsbythehour.com
 - __Path:__ / (all paths)
 - __Backend:__ home-assistant-external:8123
-- __TLS:__ Let's Encrypt certificate
-- __Authentication:__ Authentik (commented out, ready to enable)
+- __TLS:__ Let's Encrypt certificate (`certificate.yaml`)
 
 ## Deployment
 
 ### Prerequisites
 
 1. Home Assistant running at `192.168.68.20:8123`
-2. DNS: `ha.nerdsbythehour.com` → Your public IP
+2. DNS: `ha.nerdsbythehour.com` → public IP
 3. k3s Traefik ingress controller
 4. cert-manager for Let's Encrypt
 
@@ -58,82 +79,29 @@ flux reconcile kustomization flux-system --with-source
 ### Verify
 
 ```bash
-# Check resources
 kubectl get all -n home-assistant-proxy
 kubectl get ingress -n home-assistant-proxy
 kubectl get certificate -n home-assistant-proxy
 
-# Test access
 curl -I https://ha.nerdsbythehour.com
 ```
 
-## Authentik Integration
+## Home Assistant OIDC configuration
 
-__Current Status:__ Authentik ForwardAuth is ENABLED
+Home Assistant's own login is configured to use Authentik as an OIDC provider. That configuration
+lives on the Home Assistant side (`configuration.yaml` / the auth provider config on
+`192.168.68.20`), not in this repo.
 
-### Architecture
+Home Assistant should still trust Traefik as a reverse proxy for forwarded-for handling:
 
-This setup uses Authentik as a forward authentication proxy:
-
-1. User requests <https://ha.nerdsbythehour.com>
-2. Traefik forwards authentication to Authentik
-3. If authenticated, Authentik passes request to Home Assistant with user headers
-4. Home Assistant trusts the headers from Authentik
-
-### Configuration Steps
-
-#### 1. Configure Authentik Application
-
-Create a Proxy Provider application in Authentik:
-
-1. Log into Authentik at <https://auth.nerdsbythehour.com>
-2. Navigate to __Applications > Applications__
-3. Click __Create with Provider__
-4. Select __Proxy__ as provider type
-5. Configure:
-   - __Name:__ Home Assistant
-   - __External host:__ `https://ha.nerdsbythehour.com`
-   - __Internal host:__ `http://home-assistant-external.home-assistant-proxy.svc.cluster.local:8123`
-   - __Authorization flow:__ Default (implicit consent)
-6. Create the application
-
-#### 2. Configure Home Assistant
-
-Home Assistant needs to trust the proxy headers from Authentik:
-
-1. SSH to the Home Assistant host (192.168.68.20)
-2. Edit `/homeassistant/configuration.yaml`:
-
-   ```yaml
-   http:
-     use_x_forwarded_for: true
-     trusted_proxies:
-       - 10.42.0.0/16  # k3s pod network
-       - 10.43.0.0/16  # k3s service network
-       - 192.168.68.71 # k3s host (deby)
-   ```
-
-3. Restart Home Assistant
-
-#### 3. (Optional) Install hass-auth-header Component
-
-For automatic user matching based on Authentik username:
-
-1. Install the `hass-auth-header` custom component
-2. Configure it to use `X-authentik-username` header
-3. Users will auto-login if their HA username matches Authentik username
-
-Reference: <https://integrations.goauthentik.io/miscellaneous/home-assistant/>
-
-__Important:__ Home Assistant will still require its own user accounts. Authentik provides SSO layer, but users must exist in HA.
-
-## Home Assistant Configuration
-
-The actual Home Assistant instance runs on `192.168.68.20` (separate host).
-
-__Configuration location:__ `apps/production/home-assistant/config-home-assistant/`
-
-This directory contains the Home Assistant configuration files that sync to the external host.
+```yaml
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 10.42.0.0/16   # k3s pod network
+    - 10.43.0.0/16   # k3s service network
+    - 192.168.68.71  # k3s host (deby)
+```
 
 ## Troubleshooting
 
@@ -147,8 +115,6 @@ curl -I https://192.168.68.20:8123 -k
 
 ### Certificate Issues
 
-Check cert-manager:
-
 ```bash
 kubectl describe certificate -n home-assistant-proxy
 kubectl get certificaterequest -n home-assistant-proxy
@@ -156,23 +122,11 @@ kubectl get certificaterequest -n home-assistant-proxy
 
 ### DNS Not Resolving
 
-Verify DNS:
-
 ```bash
 nslookup ha.nerdsbythehour.com
 # Should resolve to your public IP
 ```
 
-### Authentik 401 Errors
-
-Check Authentik configuration:
-
-```bash
-kubectl logs -n authentik -l app.kubernetes.io/name=authentik
-```
-
 ## Related Documentation
 
-- Home Assistant config: `apps/production/home-assistant/`
 - Authentik setup: `apps/production/authentik/`
-- Traefik ingress: `infrastructure/base/traefik/`
