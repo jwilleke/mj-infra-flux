@@ -1,0 +1,33 @@
+---
+# Traefik is installed by k3s' bundled Helm controller, so it is customised
+# through a HelmChartConfig rather than a HelmRelease. This object previously
+# existed in-cluster as a hand-applied `kubectl apply`; it is declared here so
+# Flux owns it and the values survive a rebuild.
+#
+# `service.spec.externalTrafficPolicy: Local` is the reason this file exists.
+# With the default `Cluster`, k3s ServiceLB (klipper-lb) SNATs inbound traffic,
+# so Traefik sees every client as the pod-network gateway 10.42.0.1 and stamps
+# that into X-Forwarded-For. Downstream origins then have no way to learn who
+# actually connected. `Local` skips the SNAT and preserves the source address.
+#
+# Safe here because deby is a single-node cluster: `Local` only serves traffic
+# on nodes running a Traefik pod, which is every node there is.
+#
+# The `--api.insecure=true` argument below is carried over verbatim from the
+# hand-applied object rather than changed. It exposes the Traefik dashboard
+# without authentication and deserves its own review; adopting the object into
+# Flux is not the moment to alter it.
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    additionalArguments:
+      - "--api"
+      - "--api.dashboard=true"
+      - "--api.insecure=true" # For simplicity, but NOT recommended for production
+    service:
+      spec:
+        externalTrafficPolicy: Local
