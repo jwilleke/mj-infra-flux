@@ -10,3 +10,4 @@ spec:
     kind: ClusterIssuer
   dnsNames:
   - nerdsbythehour.com
+  - www.nerdsbythehour.com

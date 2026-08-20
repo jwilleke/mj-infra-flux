@@ -14,9 +14,20 @@ spec:
   tls:
   - hosts:
     - nerdsbythehour.com
+    - www.nerdsbythehour.com
     secretName: openspeedtest-tls
   rules:
   - host: nerdsbythehour.com
+    http:
+      paths:
+      - path: /speed
+        pathType: Prefix
+        backend:
+          service:
+            name: openspeedtest
+            port:
+              number: 80
+  - host: www.nerdsbythehour.com
     http:
       paths:
       - path: /speed
