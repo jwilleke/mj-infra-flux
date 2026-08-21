@@ -25,34 +25,77 @@ groups:
               -H "Authorization: Bearer $TOKEN" \
               http://192.168.68.20:8123/api/prometheus
 
-      # A safety-relevant entity has stopped reporting.
+      # A safety-relevant entity's DEVICE has stopped reporting.
       #
-      # Deliberately staleness, NOT hass_entity_available. Verified 2026-08-18:
-      # hass_entity_available is 0 only for `unavailable`, and reads 1 for
-      # `unknown`. After an HA restart a dead device flips from `unavailable` to
-      # `unknown`, so entity_available jumps back to 1 while the device is still
-      # dead — a false all-clear. The patio bulbs (mjs-ha#69) did exactly this.
-      # last_updated cannot be faked that way: a dead entity stops updating.
+      # Supersedes HomeAssistantSafetyEntityStale, which watched last_updated on
+      # the door contacts themselves and was a false positive by construction.
+      # HA's last_updated only advances when state or attributes CHANGE, so a
+      # closed door that stays closed never updates however healthy the sensor
+      # is. Every exterior door trivially passed 6h overnight. Verified
+      # 2026-08-21: four contacts alerting, all four devices demonstrably alive
+      # (ds_garage_man linkquality 0.2h old, ds_front_door battery 0.6h,
+      # garage_all_in_one uptime 0.0h). See #182.
       #
-      # last_updated also resets on restart, so this self-clears across a
-      # restart rather than firing spuriously.
-      - alert: HomeAssistantSafetyEntityStale
+      # The original rule's reasoning still holds and is preserved below: it
+      # rejected hass_entity_available because that reads 1 for `unknown`, and a
+      # dead device flips unavailable -> unknown across an HA restart, giving a
+      # false all-clear (the patio bulbs, mjs-ha#69). So availability alone is
+      # not enough, and staleness alone cries wolf. Both are used, on different
+      # signals.
+
+      # Signal 1 — the integration says the device is gone.
+      # Zigbee2MQTT availability is enabled (active 10m, passive 1500m) and
+      # ESPHome marks entities unavailable on API disconnect, so this is a real
+      # verdict from the integration rather than an inference.
+      - alert: HomeAssistantSafetyEntityUnavailable
         expr: |
-          (time() - hass_last_updated_time_seconds{entity=~"alarm_control_panel\\.alarmo|binary_sensor\\.(ds_front_door_contact|patio_door_contact|ds_garage_man_contact|office_stairs_door_contact|garage_all_in_one_garage_door_closed_switch)"}) > 21600
+          hass_entity_available{entity=~"alarm_control_panel\\.alarmo|binary_sensor\\.(ds_front_door_contact|patio_door_contact|ds_garage_man_contact|office_stairs_door_contact|garage_all_in_one_garage_door_closed_switch)"} == 0
+        for: 15m
+        labels:
+          severity: critical
+          host: hapi
+          source: homeassistant
+        annotations:
+          summary: "HA safety entity {{ $labels.entity }} is unavailable"
+          description: |
+            {{ $labels.entity }} ({{ $labels.friendly_name }}) is reported
+            unavailable. These are the alarm panel and the door contacts it arms
+            on — an unavailable one means the alarm may be arming over a sensor
+            that cannot report an opening.
+            Check the device battery and mesh first (Zigbee / ESPHome), then
+            .storage/core.restore_state for the last known value.
+
+      # Signal 2 — the device's own heartbeat stopped.
+      # Catches the case signal 1 misses: a dead device reading `unknown` after
+      # an HA restart, where entity_available is back to 1. These heartbeat
+      # entities carry values that drift on their own (device temperature, link
+      # quality, uptime), so unlike a door contact they update whether or not
+      # anyone touches the door — and staleness on them cannot be faked.
+      #
+      # 24h, not 6h: the slowest observed heartbeat is
+      # office_stairs_door_device_temperature at ~10h, and Zigbee2MQTT's own
+      # passive availability timeout is 25h. A battery contact cannot be
+      # declared dead faster than it reports; a shorter window would only
+      # reintroduce false positives.
+      - alert: HomeAssistantSafetyDeviceHeartbeatStale
+        expr: |
+          (time() - hass_last_updated_time_seconds{entity=~"sensor\\.(ds_front_door_device_temperature|patio_door_device_temperature|ds_garage_man_linkquality|office_stairs_door_device_temperature|garage_all_in_one_system_uptime)"}) > 86400
         for: 30m
         labels:
           severity: critical
           host: hapi
           source: homeassistant
         annotations:
-          summary: "HA safety entity {{ $labels.entity }} stale for over 6h"
+          summary: "HA safety device heartbeat {{ $labels.entity }} stale for over 24h"
           description: |
-            {{ $labels.entity }} ({{ $labels.friendly_name }}) has not reported a
-            state change in over 6 hours. These are the alarm panel and the door
-            contacts it arms on — a stale one means the alarm may be arming over
-            a sensor that cannot report an opening.
-            Check the device battery and mesh first (Z-Wave / Zigbee), then
-            .storage/core.restore_state for the last known value.
+            {{ $labels.entity }} ({{ $labels.friendly_name }}) has not reported
+            in over 24 hours. This is the liveness heartbeat for one of the
+            devices behind the alarm's door contacts, so the contact itself is
+            probably not reporting either — even if it still reads a plausible
+            state.
+            Check the device battery and mesh (Zigbee / ESPHome). If the device
+            is fine, confirm this entity still exists and was not renamed: a
+            heartbeat entity that vanishes silently disables this alert.
 
       # Bulk entity health. The baseline is high and mostly dashboard cruft, so
       # this is a change detector, not a correctness check.
