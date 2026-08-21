@@ -1,0 +1,52 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: yourphr-ts
+  namespace: flux-system
+spec:
+  image: ghcr.io/jwilleke/yourphr-ts-spike
+  interval: 1m
+  # GHCR package must be PUBLIC for anonymous scanning (same as yourphr and yourphr-relay).
+  # RELEASE-GATED: docker-release.yaml in jwilleke/yourphr-ts-spike publishes :X.Y.Z (+ :X.Y,
+  # :latest) ONLY on a vX.Y.Z tag; the ImagePolicy below selects the highest semver tag.
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: yourphr-ts
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: yourphr-ts
+  filterTags:
+    pattern: '^(\d+\.\d+\.\d+)$'
+    extract: '$1'
+  policy:
+    semver:
+      range: '>=0.1.0'
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: yourphr-ts
+  namespace: flux-system
+spec:
+  interval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump yourphr-ts to {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    path: ./apps/production/yourphr-ts
+    strategy: Setters

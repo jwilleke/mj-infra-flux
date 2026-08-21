@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: yourphr-ts-keys
+    namespace: yourphr
+type: Opaque
+stringData:
+    SPIKE_DATABASE_ENCRYPTION_KEY: ENC[AES256_GCM,data:X0kZGkM67DcNq6orBRAIMGMwyltqCloAZDo8KaUwrBm2UFuF10QMr4QcZjfUM+rtWTgZT/dBXgBYPmdZsNHXUQ==,iv:6ta0egz+CqrPje3rIygR7xPVgKfDMDQHAbshOYOWNcM=,tag:14Hipd9+FuvmgzmkfC6t6g==,type:str]
+    SPIKE_BACKUP_ENCRYPTION_KEY: ENC[AES256_GCM,data:vuhYtFuXMLfdKZDf+h8I9jo+sa6BRRpnUDq/+nTIsl4dm1CLPhvyyi8wOkoA9kEU6W8XbrukpYygtbJMnuGuxw==,iv:0eXRYp+BfdDmbUagTg21vayPrN/143lfCvskTEicQ9w=,tag:pm0D3ykZrrEiaIS9Rnhwtw==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBic1JZRURtWWNCRXdldU5E
+            bGIyMExUYTJjanhGcUxtU1A5ajdZWXdVQmlNClZnOFd1SllqaEZHd1dSQ01BYUJH
+            eEVBY2dxZ1o4Y2N0aHF2Wk44YlYwYWcKLS0tIDNBUmxuTDhIK2dCcmpxMDRpNllr
+            dHJNMUI3UG5SYk55UTRXd2trNWhrNGMKA6E8bPCBGuwUVjqMkRyoMnEgZbEoKifj
+            0JOZntlWRnH2oBHcj9kelbzz+/YqdvsS5c/TJYQSJqw4F6F90ozfvA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-08-21T10:38:44Z"
+    mac: ENC[AES256_GCM,data:0vvCrzZ0Aq08nivCAozZOiCqE6Y4DRRjmykg3844gwajNV7LBKEfxGGcxGsfubRmdLKYi/Y28CgKHQ3XvQZ2IWWNXESLU6Wl6bL/A8sWpacLe3ClhQtvDyrUQ6qIDYSNwubpFNIMK3nZo5e/nQrsBPOAN+91wv8Utv1xB1uDD1U=,iv:zIqX0PK78CGGBV4LdlDysDTsgO0T7QpHfHUZRCduOYQ=,tag:nmtR2IMAIRzew2f5Ovwgaw==,type:str]
+    version: 3.13.1

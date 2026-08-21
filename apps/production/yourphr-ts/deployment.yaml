@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yourphr-ts
+  namespace: yourphr
+  labels:
+    app: yourphr-ts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yourphr-ts
+  strategy:
+    type: Recreate # one SQLite writer; never two pods on one data dir
+  template:
+    metadata:
+      labels:
+        app: yourphr-ts
+    spec:
+      containers:
+        - name: yourphr-ts
+          # CI: https://github.com/jwilleke/yourphr-ts-spike/actions/workflows/docker-release.yaml
+          # RELEASE-GATED, same contract as the Go image: Flux image-automation picks the highest
+          # semver tag (:X.Y.Z), published only on a vX.Y.Z release tag. Pushes to main do NOT deploy.
+          # The Angular UI inside is copied from the released product image the Dockerfile pins.
+          image: ghcr.io/jwilleke/yourphr-ts-spike:0.1.0 # {"$imagepolicy": "flux-system:yourphr-ts"}
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            # BOOTSTRAP ONLY (yourphr#472). Everything that is a setting — session policy, throttle,
+            # sync cadence, backup retention, trusted proxies — lives in the config store under the
+            # data dir and is edited from the Admin screen; the migration tool (yourphr#586) seeds
+            # it from the Go instance's custom config. The image already sets these three; they are
+            # repeated here so the deployment documents where the data is, not the image.
+            - name: SPIKE_STORAGE_DATA_DIR
+              value: "/opt/yourphr/data"
+            - name: SPIKE_WEB_STATIC_DIR
+              value: "/opt/yourphr/web"
+            - name: SPIKE_WEB_LISTEN_PORT
+              value: "8080"
+            # At-rest keys. REQUIRED (no `optional: true`): if the Secret is missing the pod must
+            # fail to schedule its container rather than boot and store tokens in the clear. The
+            # database key is what makes the migrated Go tokens safer here than they were there
+            # (yourphr#584); the backup key is separate on purpose — the copy that travels and the
+            # copy that stays must not fall together.
+            - name: SPIKE_DATABASE_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yourphr-ts-keys
+                  key: SPIKE_DATABASE_ENCRYPTION_KEY
+            - name: SPIKE_BACKUP_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yourphr-ts-keys
+                  key: SPIKE_BACKUP_ENCRYPTION_KEY
+          volumeMounts:
+            - name: yourphr-ts-data
+              mountPath: /opt/yourphr/data
+            # Same NAS archive the Go instance writes backups to (yourphr#361); the migration carries
+            # backup.destination=/nas-backup, so the path must exist here too.
+            - name: nas-archive
+              mountPath: /nas-backup
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+      volumes:
+        - name: yourphr-ts-data
+          persistentVolumeClaim:
+            claimName: yourphr-ts-data
+        - name: nas-archive
+          hostPath:
+            path: /mnt/tank/jims/data/archive/yourphr-backup
+            type: DirectoryOrCreate

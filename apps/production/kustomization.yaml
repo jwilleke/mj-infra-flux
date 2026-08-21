@@ -26,6 +26,7 @@ resources:
   # Protected Applications
   - ./yourphr            # Personal health record aggregator; authentik forward-auth, internal-only (mj-infra-flux#103)
   - ./yourphr-relay      # SMART OAuth relay; public via Cloudflare Tunnel (yourphr#50, mj-infra-flux#104+#105)
+  - ./yourphr-ts         # TypeScript stack alongside Go; own PVC, NO Ingress until the cut-over (yourphr#587, yourphr#588)
   - ./yourphr-cda-converter  # C-CDA/CCD import sidecar; internal-only, no Ingress (mj-infra-flux#114, yourphr#254)
   - ./demo-yourphr       # Public, throwaway CMS Blue Button demo; no Authentik, no real PHI, separate ns/PVC from ops yourphr (yourphr#438, mj-infra-flux#147)
   - ./demo-yourphr-relay # Demo instance of the SMART OAuth relay; public via the same Cloudflare Tunnel (mj-infra-flux#147)
