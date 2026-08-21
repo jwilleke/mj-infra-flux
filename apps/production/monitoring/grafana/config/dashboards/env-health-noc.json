@@ -1687,8 +1687,8 @@
     },
     {
       "type": "stat",
-      "title": "Entities unavailable",
-      "description": "Entities reporting unavailable, of ~1080 scraped. Baseline was 170 on 2026-08-18 and is mostly dashboard cruft, so watch the trend rather than the number. Counts unavailable ONLY - unknown entities are excluded, which is why the stale panel beside this one exists.",
+      "title": "Entities newly unavailable (24h)",
+      "description": "Entities that are unavailable now AND were available 24h ago — the only count here that carries new information. The previous panel counted raw hass_entity_available == 0, which measured 168 on 2026-08-21 and 168 six hours earlier: a number that never reaches zero and never changes is not a health indicator, and a permanently red panel gets ignored. Much of that 168 is entities that are SUPPOSED to be absent — a sleeping car, unlicensed camera features, out-of-range beacons, Z-Wave diagnostics that only populate when something breaks. See mjs-ha#81. Caveat: if Prometheus loses more than 24h of history this reads 0 rather than unknown; the HA reachable panel beside this one is the guard for that.",
       "id": 46,
       "datasource": {
         "type": "prometheus",
@@ -1727,11 +1727,11 @@
               },
               {
                 "color": "yellow",
-                "value": 200
+                "value": 1
               },
               {
                 "color": "red",
-                "value": 250
+                "value": 5
               }
             ]
           },
@@ -1754,7 +1754,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "count(hass_entity_available == 0)",
+          "expr": "count((hass_entity_available == 0) and (hass_entity_available offset 24h == 1)) or vector(0)",
           "instant": true,
           "legendFormat": "",
           "refId": "A"
@@ -1763,8 +1763,8 @@
     },
     {
       "type": "stat",
-      "title": "Safety entities stale",
-      "description": "Alarm panel and the door contacts it arms on, with no state change in over 6h. Uses staleness rather than availability on purpose: after an HA restart a dead device flips from unavailable to unknown and hass_entity_available reads 1 again, a false all-clear (mjs-ha#69). A dead entity cannot fake last_updated.",
+      "title": "Safety entities down",
+      "description": "The alarm panel and the door contacts it arms on. Mirrors the two alerting rules exactly: an entity reported unavailable by its integration, OR a device whose own heartbeat (device temperature, link quality, uptime) has not reported in 24h. Previously this counted staleness on the door contacts themselves, which was a false positive by construction — HA's last_updated only advances when state CHANGES, so a closed door that stays closed never updates however healthy the sensor is. That expression read 4 on 2026-08-21 with all four devices demonstrably alive. Both signals are kept because availability alone reads 1 for unknown after a restart (mjs-ha#69) and staleness alone cries wolf. See mj-infra-flux#182.",
       "id": 47,
       "datasource": {
         "type": "prometheus",
@@ -1826,7 +1826,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "count((time() - hass_last_updated_time_seconds{entity=~\"alarm_control_panel\\\\.alarmo|binary_sensor\\\\.(ds_front_door_contact|patio_door_contact|ds_garage_man_contact|office_stairs_door_contact|garage_all_in_one_garage_door_closed_switch)\"}) > 21600)",
+          "expr": "count((hass_entity_available{entity=~\"alarm_control_panel\\\\.alarmo|binary_sensor\\\\.(ds_front_door_contact|patio_door_contact|ds_garage_man_contact|office_stairs_door_contact|garage_all_in_one_garage_door_closed_switch)\"} == 0) or ((time() - hass_last_updated_time_seconds{entity=~\"sensor\\\\.(ds_front_door_device_temperature|patio_door_device_temperature|ds_garage_man_linkquality|office_stairs_door_device_temperature|garage_all_in_one_system_uptime)\"}) > 86400)) or vector(0)",
           "instant": true,
           "legendFormat": "",
           "refId": "A"
