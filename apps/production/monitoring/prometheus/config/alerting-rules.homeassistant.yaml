@@ -36,12 +36,21 @@ groups:
       # (ds_garage_man linkquality 0.2h old, ds_front_door battery 0.6h,
       # garage_all_in_one uptime 0.0h). See #182.
       #
-      # The original rule's reasoning still holds and is preserved below: it
-      # rejected hass_entity_available because that reads 1 for `unknown`, and a
-      # dead device flips unavailable -> unknown across an HA restart, giving a
-      # false all-clear (the patio bulbs, mjs-ha#69). So availability alone is
-      # not enough, and staleness alone cries wolf. Both are used, on different
-      # signals.
+      # CORRECTION 2026-08-23 (#189): the original rule's reasoning, preserved
+      # below, rested on a false premise. It rejected hass_entity_available
+      # because "that reads 1 for `unknown`". It does not. From the live
+      # endpoint on HA 2026.8.2:
+      #   # HELP hass_entity_available Entity is available (not in the
+      #   #      unavailable or unknown state)
+      # The gauge is 0 for BOTH `unavailable` and `unknown`, so signal 1 does
+      # not hand out a false all-clear when a dead device flips to `unknown`
+      # across an HA restart (the patio bulbs, mjs-ha#69).
+      #
+      # Both signals are still used, but signal 2 earns its place for a
+      # different reason than the one recorded here: it covers the case no
+      # availability gauge can see, a device that stops reporting while its
+      # entity holds a plausible last value. Availability alone is not enough,
+      # and staleness alone cries wolf.
 
       # Signal 1 — the integration says the device is gone.
       # Zigbee2MQTT availability is enabled (active 10m, passive 1500m) and
@@ -66,8 +75,9 @@ groups:
             .storage/core.restore_state for the last known value.
 
       # Signal 2 — the device's own heartbeat stopped.
-      # Catches the case signal 1 misses: a dead device reading `unknown` after
-      # an HA restart, where entity_available is back to 1. These heartbeat
+      # Catches the case signal 1 cannot see: a device that stopped reporting
+      # while its entity still holds a plausible last value, so availability
+      # stays 1 — a closed door reading `off` forever. These heartbeat
       # entities carry values that drift on their own (device temperature, link
       # quality, uptime), so unlike a door contact they update whether or not
       # anyone touches the door — and staleness on them cannot be faked.
@@ -105,20 +115,44 @@ groups:
       # (a Z-Wave stick falling off, Zigbee2MQTT stopping). Revisit the number if
       # the baseline moves; a permanently-firing alert gets ignored, which is
       # worse than no alert.
+      #
+      # 2026-08-23 (#189): the Tesla is excluded, because the Tesla WAS the
+      # alert. Every sustained excursion in retention was one parked car —
+      # 08-20 11:01-17:31 UTC peak 222, and 08-21 20:06 to 08-22 01:06 UTC peak
+      # 209. Diffing hass_entity_available == 0 between quiet and peak returns
+      # 40 newly-zero entities, 38 of them tesla_fleet `blue_moon_*`.
+      # tesla_fleet marks a sleeping vehicle unavailable, which is correct
+      # behaviour: one sleep is worth ~40 against only 30 of headroom between
+      # the 170 baseline and the 200 threshold, and the car slept in 10% of
+      # samples over five days. The rule was guaranteed to fire on an expected
+      # event, which is the exact failure the paragraph above warns about.
+      #
+      # Excluding it, the same five-day window runs 157-171 (p95 166), so 200 is
+      # real headroom rather than a coin flip. The cost is a blind spot: this no
+      # longer notices tesla_fleet or the TeslaMate MQTT entities dropping. A
+      # dedicated vehicle-offline rule is the right cover for that, not widening
+      # this one back out.
       - alert: HomeAssistantUnavailableEntitiesHigh
-        expr: count(hass_entity_available == 0) > 200
+        expr: |
+          count(hass_entity_available{entity!~".*\\.blue_moon_.*"} == 0) > 200
         for: 1h
         labels:
           severity: warning
           host: hapi
           source: homeassistant
         annotations:
-          summary: "Home Assistant: {{ $value }} entities unavailable"
+          summary: "Home Assistant: {{ $value }} entities not reporting"
           description: |
-            {{ $value }} entities report unavailable, against a 2026-08-18
-            baseline of 170. A jump usually means a whole integration is down
-            rather than individual devices.
-            List them:
+            {{ $value }} entities are not reporting, against a 2026-08-18
+            baseline of 170 (157-171 excluding the Tesla, measured 2026-08-23).
+            A jump usually means a whole integration is down rather than
+            individual devices.
+            Break it down by domain first — the bare list is ~170 rows:
+              count by (domain) (hass_entity_available == 0)
+            Then list them:
               hass_entity_available == 0
-            Note this counts `unavailable` only — `unknown` entities are NOT
-            included, see HomeAssistantSafetyEntityStale above.
+            This counts BOTH `unavailable` and `unknown`: the gauge is 0 for
+            either, per its own HELP text ("not in the unavailable or unknown
+            state"). Roughly a third of the standing baseline is `unknown`, so
+            do not read the count as a device-unreachable tally. Vehicle
+            entities are excluded — see the comment on the rule.
