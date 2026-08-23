@@ -6,4 +6,4 @@ resources:
   - external-service.yaml
   - serverstransport.yaml
   - ingress.yaml
-  - certificate.yaml
+  # Certificate auto-created by ingress annotation
