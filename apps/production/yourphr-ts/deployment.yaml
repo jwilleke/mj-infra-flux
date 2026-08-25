@@ -23,7 +23,7 @@ spec:
           # RELEASE-GATED, same contract as the Go image: Flux image-automation picks the highest
           # semver tag (:X.Y.Z), published only on a vX.Y.Z release tag. Pushes to main do NOT deploy.
           # The Angular UI inside is copied from the released product image the Dockerfile pins.
-          image: ghcr.io/jwilleke/yourphr-ts-spike:0.2.1 # {"$imagepolicy": "flux-system:yourphr-ts"}
+          image: ghcr.io/jwilleke/yourphr-ts-spike:0.2.2 # {"$imagepolicy": "flux-system:yourphr-ts"}
           ports:
             - containerPort: 8080
               name: http
