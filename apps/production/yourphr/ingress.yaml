@@ -25,6 +25,10 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: yourphr
+                # CUT-OVER 2026-08-25 (yourphr#543): the TypeScript stack serves the household.
+                # Rollback is this one line back to `yourphr` — the Go Deployment is kept warm on
+                # its own PVC, which the migration never wrote to. Records created on the
+                # TypeScript side after this commit stay there; export them before rolling back.
+                name: yourphr-ts
                 port:
                   number: 8080
