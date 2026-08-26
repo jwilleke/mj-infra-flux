@@ -32,7 +32,7 @@ spec:
           #
           # 3.0.1, not 3.0.0: that release crash-looped on its version read and was rolled back
           # within minutes. The image is still published and must not be deployed.
-          image: ghcr.io/jwilleke/yourphr:3.0.2 # {"$imagepolicy": "flux-system:yourphr"}
+          image: ghcr.io/jwilleke/yourphr:3.1.0 # {"$imagepolicy": "flux-system:yourphr"}
           ports:
             - containerPort: 8080
               name: http
