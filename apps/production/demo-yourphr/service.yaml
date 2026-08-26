@@ -4,8 +4,12 @@ metadata:
   name: demo-yourphr
   namespace: demo-yourphr
 spec:
+  # THE SWAP (jwilleke/yourphr#646). This Service is what the Cloudflare tunnel names, so pointing it
+  # at the TypeScript deployment moves demo.yourphr.org without touching Cloudflare — and pointing it
+  # back is the rollback. The Go deployment keeps running, on its own untouched volume, until the
+  # swap has held for a release cycle.
   selector:
-    app: demo-yourphr
+    app: demo-yourphr-ts
   ports:
     - name: http
       port: 8080
