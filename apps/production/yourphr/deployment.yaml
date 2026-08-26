@@ -19,11 +19,15 @@ spec:
     spec:
       containers:
         - name: yourphr
-          # CI: https://github.com/jwilleke/yourphr/actions/workflows/docker-jwilleke.yaml
-          # RELEASE-GATED: Flux image-automation picks the highest semver tag (:X.Y.Z), published only
-          # on a vX.Y.Z release tag. Pushes to main do NOT deploy. See the deployment contract:
-          # https://github.com/jwilleke/yourphr/blob/main/docs/deployment/deployment-contract.md
-          image: ghcr.io/jwilleke/yourphr:2.10.3 # {"$imagepolicy": "flux-system:yourphr"}
+          # PINNED AND FROZEN (yourphr#652). This is the Go stack, finished at 2.10.3 and kept warm
+          # only as the rollback for the household cut-over (yourphr#588); the Angular app it serves
+          # still backs the yourphr-public-assets ingress. The image was copied by digest to
+          # ghcr.io/jwilleke/yourphr-go, because ghcr.io/jwilleke/yourphr now means the TypeScript
+          # stack from 3.0.0 onward.
+          #
+          # No image-automation marker: nothing should bump a frozen stack, and leaving one here
+          # would have moved this pod onto TypeScript the moment 3.0.0 published.
+          image: ghcr.io/jwilleke/yourphr-go:2.10.3
           ports:
             - containerPort: 8080
               name: http

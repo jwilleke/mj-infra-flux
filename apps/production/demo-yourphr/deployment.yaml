@@ -20,10 +20,16 @@ spec:
       containers:
         - name: demo-yourphr
           # Public, throwaway CMS Blue Button demo instance — no real PHI, sandbox Medicare only.
-          # docs/demo-yourphr-org/implementation-plan.md (mj-infra-flux#147). Shares the ops yourphr
-          # ImagePolicy (flux-system:yourphr); a separate ImageUpdateAutomation path (Phase 5) bumps
-          # this file independently of apps/production/yourphr/deployment.yaml.
-          image: ghcr.io/jwilleke/yourphr:2.10.3 # {"$imagepolicy": "flux-system:yourphr"}
+          # docs/demo-yourphr-org/implementation-plan.md (mj-infra-flux#147).
+          #
+          # PINNED AND FROZEN (yourphr#652). ghcr.io/jwilleke/yourphr now means the TypeScript stack
+          # from 3.0.0 onward; the Go image this instance runs was copied, by digest, to
+          # ghcr.io/jwilleke/yourphr-go. The image-automation marker is GONE on purpose: while it was
+          # here, publishing 3.0.0 would have upgraded this public demo onto a stack that cannot read
+          # its database, within a minute, with nobody pressing anything.
+          #
+          # This instance moves to TypeScript deliberately, at yourphr#646 — not by an automatic bump.
+          image: ghcr.io/jwilleke/yourphr-go:2.10.3
           ports:
             - containerPort: 8080
               name: http

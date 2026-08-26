@@ -28,6 +28,10 @@ spec:
     extract: '$1'
   policy:
     semver:
+      # 3.x is the TypeScript stack (yourphr#652). The Go releases 1.0.0-2.10.3 are still tagged on
+      # this repository, and the range deliberately still admits them: nothing runs them any more —
+      # the frozen deployments pin ghcr.io/jwilleke/yourphr-go by digest — so narrowing it would only
+      # buy a second thing to remember when the next major arrives.
       range: '>=1.0.0'
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
