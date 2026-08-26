@@ -1,0 +1,20 @@
+# Its OWN volume, deliberately (jwilleke/yourphr#646). The Go demo keeps running on
+# /mnt/local-k3s-data/demo-yourphr until the swap is proven, so rollback is repointing one Service
+# rather than restoring a database.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: demo-yourphr-ts-data-pv
+  labels:
+    app: demo-yourphr-ts
+    type: data
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /mnt/local-k3s-data/demo-yourphr-ts
+    type: DirectoryOrCreate

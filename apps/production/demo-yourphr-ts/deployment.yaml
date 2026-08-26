@@ -1,0 +1,78 @@
+# demo.yourphr.org on the TypeScript stack (jwilleke/yourphr#646).
+#
+# WHAT MAKES THIS DEPLOYMENT DIFFERENT from the household one, and why each difference is deliberate:
+#
+#   - NO encryption keys. The demo reset (jwilleke/yourphr#645) refuses an encrypted database,
+#     because the baseline it installs ships plaintext in a public image. Synthetic records only.
+#   - NO image-automation marker yet. The tag is pinned while the swap is being proven; the marker
+#     goes on when the tunnel points here and this becomes the instance that must follow releases.
+#   - Its own PVC. The Go demo keeps its volume untouched, so rollback is a Service selector.
+#
+# SETTINGS ARE NOT HERE. demo.enabled, the admin tour, reset-on-restart and the operator fields live
+# in the config store on the volume (jwilleke/yourphr#472): environment variables are bootstrap and
+# secrets only. See config/app-custom-config.json on this PVC.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-yourphr-ts
+  namespace: demo-yourphr
+  labels:
+    app: demo-yourphr-ts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-yourphr-ts
+  strategy:
+    type: Recreate # one SQLite writer; never two pods on one data dir
+  template:
+    metadata:
+      labels:
+        app: demo-yourphr-ts
+    spec:
+      containers:
+        - name: demo-yourphr-ts
+          image: ghcr.io/jwilleke/yourphr:3.0.1
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            # Bootstrap only: where the data lives, where the UI is, which port.
+            - name: YOURPHR_FAST_STORAGE
+              value: "/opt/yourphr/data"
+            - name: YOURPHR_SLOW_STORAGE
+              value: "/opt/yourphr/data"
+            - name: YOURPHR_WEB_STATIC_DIR
+              value: "/opt/yourphr/web"
+            - name: YOURPHR_WEB_LISTEN_PORT
+              value: "8080"
+          volumeMounts:
+            - name: demo-yourphr-ts-data
+              mountPath: /opt/yourphr/data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+      volumes:
+        - name: demo-yourphr-ts-data
+          persistentVolumeClaim:
+            claimName: demo-yourphr-ts-data

@@ -1,0 +1,13 @@
+# Reachable inside the cluster only, until the tunnel's Service is repointed at this deployment.
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-yourphr-ts
+  namespace: demo-yourphr
+spec:
+  selector:
+    app: demo-yourphr-ts
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

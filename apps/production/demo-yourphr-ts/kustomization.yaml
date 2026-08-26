@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# The public demo on the TypeScript stack (jwilleke/yourphr#646) — the last instance to leave Go.
+#
+# Stood up BESIDE the Go demo on its own volume and Service, not yet named by the Cloudflare tunnel.
+# The swap is repointing the tunnel's Service, and the rollback is repointing it back.
+#
+# NO ENCRYPTION KEYS, deliberately: the demo reset (jwilleke/yourphr#645) refuses an encrypted
+# database, because the baseline it installs ships plaintext inside a public image. This instance
+# holds synthetic records only — that is what makes running it in the clear the right call here and
+# the wrong one anywhere else.
+
+resources:
+  - ./pv.yaml
+  - ./pvc.yaml
+  - ./deployment.yaml
+  - ./service.yaml
+
+labels:
+  - pairs:
+      app.jimwilleke.com/name: demo-yourphr-ts
