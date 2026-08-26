@@ -26,10 +26,13 @@ spec:
           # The product image again (jwilleke/yourphr#652): the TypeScript stack lives in the product
           # repository now and publishes ghcr.io/jwilleke/yourphr, built from one commit with the
           # Angular app it serves. The frozen Go image kept its own name, yourphr-go.
-          # ROLLED BACK, temporarily: 3.0.0 crash-loops. dist/server/main.js reads ../package.json
-          # for the version and the extra directory level made that /opt/yourphr/dist/package.json,
-          # which does not exist. Fixed in 3.0.1; this pin comes off with the marker restored then.
-          image: ghcr.io/jwilleke/yourphr-ts-spike:0.3.0
+          # The product image (jwilleke/yourphr#652): the TypeScript stack lives in the product
+          # repository now and publishes ghcr.io/jwilleke/yourphr, built from one commit with the
+          # Angular app it serves. The frozen Go image kept its own name, yourphr-go.
+          #
+          # 3.0.1, not 3.0.0: that release crash-looped on its version read and was rolled back
+          # within minutes. The image is still published and must not be deployed.
+          image: ghcr.io/jwilleke/yourphr:3.0.1 # {"$imagepolicy": "flux-system:yourphr"}
           ports:
             - containerPort: 8080
               name: http
