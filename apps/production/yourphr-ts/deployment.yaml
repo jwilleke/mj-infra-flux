@@ -23,7 +23,10 @@ spec:
           # RELEASE-GATED, same contract as the Go image: Flux image-automation picks the highest
           # semver tag (:X.Y.Z), published only on a vX.Y.Z release tag. Pushes to main do NOT deploy.
           # The Angular UI inside is copied from the released product image the Dockerfile pins.
-          image: ghcr.io/jwilleke/yourphr-ts-spike:0.3.0 # {"$imagepolicy": "flux-system:yourphr-ts"}
+          # The product image again (jwilleke/yourphr#652): the TypeScript stack lives in the product
+          # repository now and publishes ghcr.io/jwilleke/yourphr, built from one commit with the
+          # Angular app it serves. The frozen Go image kept its own name, yourphr-go.
+          image: ghcr.io/jwilleke/yourphr:3.0.0 # {"$imagepolicy": "flux-system:yourphr"}
           ports:
             - containerPort: 8080
               name: http
