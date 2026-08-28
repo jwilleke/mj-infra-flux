@@ -24,9 +24,15 @@ spec:
     push:
       branch: master
   update:
-    # Scans deployment.yaml in the demo-yourphr dir for the
+    # Scans deployment.yaml in the demo-yourphr-ts dir for the
     # `# {"$imagepolicy": "flux-system:yourphr"}` setter marker.
-    path: ./apps/production/demo-yourphr
+    #
+    # This pointed at ./apps/production/demo-yourphr until yourphr#675. That is the GO demo, whose
+    # image is pinned to yourphr-go:2.10.3 as the rollback and carries no marker — so after the
+    # TypeScript swap (yourphr#646) created demo-yourphr-ts/, this automation had nothing to update
+    # and the new directory had nobody watching it. demo.yourphr.org sat on 3.1.0 while prod moved
+    # to 3.2.0, with no error anywhere: a frozen instance looks exactly like a working one.
+    path: ./apps/production/demo-yourphr-ts
     strategy: Setters
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
