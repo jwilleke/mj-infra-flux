@@ -32,7 +32,15 @@ spec:
     - host: yourphr.nerdsbythehour.com
       http:
         paths:
-          - path: /web/assets/favicon
+          # /assets/favicon, NOT /web/assets/favicon (yourphr#675). The `/web` prefix was the GO
+          # app's URL layout; the TypeScript stack serves the built Angular app at the root, and
+          # index.html asks for `assets/favicon/...`. So from the 2026-08-25 cut-over until this
+          # commit this bypass matched nothing a browser requested: the manifest and favicons went
+          # through the main ingress and were 302'd to Authentik — exactly the failure this file
+          # exists to prevent — while the rule itself pointed at a Go pod serving a path nobody
+          # asked for. Verified against the running pod: /assets/favicon/site.webmanifest is 200
+          # application/manifest+json, /web/assets/favicon/favicon.ico is 404.
+          - path: /assets/favicon
             pathType: Prefix
             backend:
               service:
