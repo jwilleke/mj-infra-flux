@@ -26,9 +26,17 @@ spec:
             backend:
               service:
                 # CUT-OVER 2026-08-25 (yourphr#543): the TypeScript stack serves the household.
-                # Rollback is this one line back to `yourphr` — the Go Deployment is kept warm on
-                # its own PVC, which the migration never wrote to. Records created on the
-                # TypeScript side after this commit stay there; export them before rolling back.
+                #
+                # ROLLBACK IS NO LONGER ONE LINE (yourphr#675). The Go Deployment and Service were
+                # deleted once nothing needed them; changing this back to `yourphr` alone now
+                # points at a Service that does not exist. To roll back: restore deployment.yaml
+                # and service.yaml from git history (they ran ghcr.io/jwilleke/yourphr-go:2.10.3,
+                # preserved by digest), re-add them to kustomization.yaml, then change this line.
+                #
+                # The data is still there: PVC `yourphr-data` is kept and the migration never wrote
+                # to it. But it is FROZEN AT THE CUT-OVER — every record added on the TypeScript
+                # side since 2026-08-25 is absent from it, and that gap widens daily. A rollback is
+                # a revert that loses everything since, not a return to a good state.
                 name: yourphr-ts
                 port:
                   number: 8080

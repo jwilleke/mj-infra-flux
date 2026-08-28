@@ -36,6 +36,11 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: yourphr
+                # yourphr-ts, not yourphr (yourphr#675). This still named the GO Service months
+                # after the cut-over, so one production request path was quietly still served by
+                # Go — the last thing keeping that Deployment alive. The TypeScript pod serves
+                # /web/assets/favicon itself (verified 200); the image carries the built Angular
+                # app at /opt/yourphr/web.
+                name: yourphr-ts
                 port:
                   number: 8080

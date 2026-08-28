@@ -1,8 +1,12 @@
+# The Go Deployment and its Service are GONE (yourphr#675). The TypeScript stack serves this
+# instance from ../yourphr-ts and has since the 2026-08-25 cut-over.
+#
+# pvc.yaml STAYS, deliberately and on its own: `yourphr-data` holds the Go database as it stood at
+# the cut-over, and the migration never wrote to it. That volume IS the rollback — a running pod
+# never was. Do not remove it without deciding, out loud, that rolling back is no longer wanted.
 resources:
   - ./namespace.yaml
   - ./pvc.yaml
-  - ./deployment.yaml
-  - ./service.yaml
   - ./authentik-middleware.yaml
   - ./ingress.yaml
   - ./public-assets-ingress.yaml
