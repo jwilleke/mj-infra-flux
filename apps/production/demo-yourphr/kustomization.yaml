@@ -5,11 +5,15 @@ kind: Kustomization
 # (yourphr#438, yourphr#433). Empty DB, sandbox Medicare only, no Authentik, no real PHI — never
 # bind the ops yourphr-data PVC. Plan: docs/demo-yourphr-org/implementation-plan.md (mj-infra-flux#147).
 
+# The Go demo is GONE (yourphr#675, yourphr#677). What remains here is what the demo needs
+# regardless of which stack serves it: the namespace, and the Service the cloudflared tunnel
+# targets — whose selector is `app: demo-yourphr-ts`. The workload lives in ../demo-yourphr-ts.
+#
+# The directory keeps its name because the namespace and the Service are named demo-yourphr and
+# renaming either would take demo.yourphr.org down for the sake of tidiness.
+
 resources:
   - ./namespace.yaml
-  - ./pv.yaml
-  - ./pvc.yaml
-  - ./deployment.yaml
   - ./service.yaml
   - ./sandbox-credentials.sops.yaml
 
