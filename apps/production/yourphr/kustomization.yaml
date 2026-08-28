@@ -1,12 +1,20 @@
-# The Go Deployment and its Service are GONE (yourphr#675). The TypeScript stack serves this
-# instance from ../yourphr-ts and has since the 2026-08-25 cut-over.
+# Nothing Go is left here (yourphr#675). The TypeScript stack serves this instance from
+# ../yourphr-ts and has since the 2026-08-25 cut-over; the Deployment, Service and PVC are gone.
 #
-# pvc.yaml STAYS, deliberately and on its own: `yourphr-data` holds the Go database as it stood at
-# the cut-over, and the migration never wrote to it. That volume IS the rollback — a running pod
-# never was. Do not remove it without deciding, out loud, that rolling back is no longer wanted.
+# The Go database was NOT simply deleted. Its PV reclaim policy was Delete, so removing the claim
+# destroys the data — and that data is real patient records. It was archived to the NAS first, and
+# the archive was verified to hold what the migration counted:
+#
+#   /mnt/tank/jims/data/archive/yourphr-backup/2026-08-28-yourphr-go-2.10.3-final-preserved.db
+#     sqlite3 .backup, so the 36 MB WAL is checkpointed in rather than lost to a file copy
+#     PRAGMA integrity_check: ok
+#     20,068 live fhir_* records, 3 users, 8 sources — the same 20,068 the migration verified
+#   …-final-config.tar.gz   the instance config and JWT issuer key
+#   …-final.sha256          checksums of both
+#
+# Restoring from that is a deliberate operation, not a one-line Ingress flip. See ingress.yaml.
 resources:
   - ./namespace.yaml
-  - ./pvc.yaml
   - ./authentik-middleware.yaml
   - ./ingress.yaml
   - ./public-assets-ingress.yaml
