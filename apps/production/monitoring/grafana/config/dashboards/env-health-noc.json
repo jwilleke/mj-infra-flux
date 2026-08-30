@@ -15,7 +15,7 @@
   "title": "Environment Health",
   "uid": "env-health-noc",
   "schemaVersion": 39,
-  "version": 5,
+  "version": 6,
   "refresh": "30s",
   "time": {
     "from": "now-5m",
@@ -531,7 +531,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "kube_deployment_status_replicas_available{deployment=\"yourphr\",namespace=\"yourphr\"}",
+          "expr": "kube_deployment_status_replicas_available{deployment=\"yourphr-ts\",namespace=\"yourphr\"}",
           "instant": true,
           "legendFormat": "yourphr",
           "refId": "A"
