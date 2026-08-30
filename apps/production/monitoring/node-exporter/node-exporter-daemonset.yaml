@@ -64,6 +64,12 @@ spec:
         - name: textfile
           mountPath: /host/textfile
           readOnly: true
+        # mj-infra-flux#192: --collector.systemd needs the host's dbus socket
+        # to talk to systemd; without this mount it fails on every scrape and
+        # node_systemd_unit_state never populates.
+        - name: dbus-socket
+          mountPath: /var/run/dbus/system_bus_socket
+          readOnly: true
         securityContext:
           runAsNonRoot: true
           runAsUser: 65534
@@ -92,3 +98,7 @@ spec:
         hostPath:
           path: /var/lib/node_exporter/textfile
           type: DirectoryOrCreate
+      - name: dbus-socket
+        hostPath:
+          path: /var/run/dbus/system_bus_socket
+          type: Socket
