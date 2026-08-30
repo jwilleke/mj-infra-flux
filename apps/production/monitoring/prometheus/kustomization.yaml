@@ -34,6 +34,8 @@ configMapGenerator:
       - config/alerting-rules.alertmanager.yaml
       # Loki-independent storage/backup alerts (mj-infra-flux#74)
       - config/alerting-rules.storage-backup.yaml
+      # nas-backup-rsync monitoring backstop, independent of its GitHub-issue alerting path (deby#50)
+      - config/alerting-rules.nas-backup-rsync.yaml
       # Loki-independent Docker container liveness alerts (mj-infra-flux#76)
       - config/alerting-rules.docker.yaml
       # NetAlertX /metrics scrape + alert rules (deby#27)

@@ -1,0 +1,62 @@
+groups:
+  - name: deby_nas_backup_rsync
+    interval: 30s
+    rules:
+
+      # deby#50 — Loki-independent monitoring for the nas-backup-rsync job
+      # (tank -> deby nas-backup pool). Previously its ONLY alerting path was
+      # the job itself curling a GitHub issue creation call directly; if that
+      # curl silently failed (expired token, network blip, GitHub API
+      # hiccup), a real failure produced no signal anywhere. These rules fire
+      # off a node-exporter textfile metric written by the job itself
+      # (jwilleke/deby: bin/nas-backup-rsync.sh ->
+      # /var/lib/node_exporter/textfile/nas-backup-rsync.prom), independent
+      # of the GitHub API call succeeding.
+      #
+      # Metric contract (host producer must emit exactly these):
+      #   deby_nas_backup_rsync_last_success_timestamp_seconds  unix ts, only advances on a fully clean run
+      #   deby_nas_backup_rsync_last_attempt_timestamp_seconds  unix ts, advances every run
+      #   deby_nas_backup_rsync_last_run_failed_modules         count of modules that failed the last run
+
+      # Warn on any single missed or failed run: either tonight's run had
+      # one or more failed modules, or more than a day has passed since the
+      # last success (catches the job not running at all — timer disabled,
+      # host down at the scheduled time, etc.).
+      - alert: NasBackupRsyncMissedOrFailed
+        expr: |
+          max(deby_nas_backup_rsync_last_run_failed_modules) > 0
+          or (time() - max(deby_nas_backup_rsync_last_success_timestamp_seconds) > 1 * 86400 + 3600)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "nas-backup-rsync missed or failed its last run"
+          description: |
+            Either the most recent run had failed module(s)
+            ({{ with query "max(deby_nas_backup_rsync_last_run_failed_modules)" }}{{ . | first | value }}{{ end }}
+            failed), or the last successful run was
+            {{ with query "time() - max(deby_nas_backup_rsync_last_success_timestamp_seconds)" }}{{ . | first | value | humanizeDuration }}{{ end }}
+            ago (threshold ~1d). Check on the host:
+              journalctl -u nas-backup-rsync.service -e
+              tail -50 /var/log/nas-backup-rsync.log
+              gh issue list -R jwilleke/deby --search "nas-backup-rsync"
+
+      # Escalate to critical once more than 2 nightly runs in a row have
+      # failed or not happened at all — the same 2-day staleness threshold
+      # already used for BackupDebyStale (alerting-rules.storage-backup.yaml),
+      # kept consistent across both host backup jobs.
+      - alert: NasBackupRsyncStale
+        expr: |
+          time() - max(deby_nas_backup_rsync_last_success_timestamp_seconds) > 2 * 86400
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "nas-backup-rsync has no successful run in >2 days"
+          description: |
+            Last successful nas-backup-rsync run was
+            {{ with query "time() - max(deby_nas_backup_rsync_last_success_timestamp_seconds)" }}{{ . | first | value | humanizeDuration }}{{ end }}
+            ago (threshold 2d, more than 2 missed/failed nightly runs). Check on the host:
+              systemctl status nas-backup-rsync.service nas-backup-rsync.timer
+              journalctl -u nas-backup-rsync.service -e
+              gh issue list -R jwilleke/deby --search "nas-backup-rsync"
