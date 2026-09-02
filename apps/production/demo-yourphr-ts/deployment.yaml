@@ -32,7 +32,7 @@ spec:
     spec:
       containers:
         - name: demo-yourphr-ts
-          image: ghcr.io/jwilleke/yourphr:3.3.0 # {"$imagepolicy": "flux-system:yourphr"}
+          image: ghcr.io/jwilleke/yourphr:3.4.0 # {"$imagepolicy": "flux-system:yourphr"}
           ports:
             - containerPort: 8080
               name: http
