@@ -65,6 +65,9 @@ spec:
               value: "true"
             - name: INSTANCE_DATA_FOLDER
               value: "/app/data"
+            # ngdpbase#631: the system principal — the name the server acts under at boot and from timers. Required; the app refuses to boot without it.
+            - name: NGDPBASE_SYSTEM_USER
+              value: "system"
             - name: SESSION_SECRET
               valueFrom:
                 secretKeyRef:

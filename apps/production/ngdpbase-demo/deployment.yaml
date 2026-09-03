@@ -43,6 +43,9 @@ spec:
             # search index and the custom config store all live under it.
             - name: INSTANCE_DATA_FOLDER
               value: "/app/data"
+            # ngdpbase#631: the system principal — the name the server acts under at boot and from timers. Required; the app refuses to boot without it.
+            - name: NGDPBASE_SYSTEM_USER
+              value: "system"
             # NGDPBASE_SESSION_SECRET, not SESSION_SECRET — only the six keys
             # listed in ConfigurationManager.getProperty() have env overrides,
             # and this is the name it looks for.
