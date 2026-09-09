@@ -1,0 +1,62 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: maps-app
+  namespace: flux-system
+spec:
+  image: docker.io/freikin/dawarich
+  interval: 30m
+  # Docker Hub, not GHCR like the other apps here. The repository is PUBLIC so
+  # it is scanned anonymously, but Docker Hub rate-limits anonymous pulls far
+  # more aggressively than GHCR — hence 30m rather than the 10m used elsewhere.
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: maps-app
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: maps-app
+  filterTags:
+    # Upstream publishes `latest`, release-candidate tags (1.10.0-rc.1) and
+    # plain semver. Match only plain semver so an rc is never deployed and
+    # `latest` — which is what stranded this app on a July image — can never
+    # be selected again.
+    pattern: '^(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+    extract: '$version'
+  policy:
+    semver:
+      # Auto-update minor and patch within the current major. A major bump
+      # requires widening this range by hand.
+      range: ">=1.0.0 <2.0.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: maps-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump maps to {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans the app dir for the `# {"$imagepolicy": "flux-system:maps-app"}`
+    # marker. Both maps-app and maps-sidekiq run the same image and carry the
+    # marker, so both are bumped together — they must stay in lockstep or the
+    # web and worker halves run different code against one database.
+    path: ./apps/production/maps
+    strategy: Setters

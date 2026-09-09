@@ -10,6 +10,7 @@ resources:
   - geohazardwatch-policy.yaml
   - ngdpbase-demo-policy.yaml  # stock ngdpbase base image; geohazardwatch layers on it but tracks its own tag (ngdpbase#1026)
   - owntracks-policy.yaml
+  - maps-policy.yaml  # Dawarich; Docker Hub not GHCR, semver-only filter so `latest`/rc tags can never be selected (mj-infra-flux#208)
   # geohazardwatch-ghcr.sops.yaml removed 2026-05-16 — ghcr package made
   # public after the fluxcdbot PAT decommission (2026-05-15); the
   # ImageRepository now scans anonymously, no pull secret.

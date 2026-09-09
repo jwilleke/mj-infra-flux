@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: freikin/dawarich:latest # {"$imagepolicy": "flux-system:maps-app"}
+          image: freikin/dawarich:1.10.0 # {"$imagepolicy": "flux-system:maps-app"}
           imagePullPolicy: IfNotPresent
           command: ["web-entrypoint.sh"]
           args: ["bin/rails", "server", "-p", "3000", "-b", "::"]
