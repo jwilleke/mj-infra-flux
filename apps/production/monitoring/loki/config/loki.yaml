@@ -55,6 +55,13 @@ ruler:
   # /alerting/list/api/v2/alerts, not /api/v2/alerts. Loki appends
   # /api/v{1,2}/alerts to this base URL.
   alertmanager_url: http://alertmanager.monitoring:9093/alerting/list
+  # Source link in alert emails. Loki builds it as external_url +
+  # /explore?left={queries:[{expr, datasource}]}; with both empty it was a bare
+  # relative /explore link that opened nothing (jwilleke/mjs-ha#117). The UID is
+  # Grafana's Loki datasource (provisioning/datasources/loki.yaml), derived from
+  # its name, so it is stable.
+  external_url: https://grafana.nerdsbythehour.com
+  datasource_uid: P8E80F9AEF21F6940
   enable_alertmanager_v2: true
   enable_api: true
   ring:
