@@ -25,87 +25,38 @@ groups:
               -H "Authorization: Bearer $TOKEN" \
               http://192.168.68.20:8123/api/prometheus
 
-      # A safety-relevant entity's DEVICE has stopped reporting.
+      # Home Assistant's own alarm panel has gone.
       #
-      # Supersedes HomeAssistantSafetyEntityStale, which watched last_updated on
-      # the door contacts themselves and was a false positive by construction.
-      # HA's last_updated only advances when state or attributes CHANGE, so a
-      # closed door that stays closed never updates however healthy the sensor
-      # is. Every exterior door trivially passed 6h overnight. Verified
-      # 2026-08-21: four contacts alerting, all four devices demonstrably alive
-      # (ds_garage_man linkquality 0.2h old, ds_front_door battery 0.6h,
-      # garage_all_in_one uptime 0.0h). See #182.
+      # This file used to carry two per-device rules as well: door contacts
+      # unavailable (HomeAssistantSafetyEntityUnavailable) and a stale device
+      # heartbeat (HomeAssistantSafetyDeviceHeartbeatStale). Both were removed
+      # 2026-09-16 (mjs-ha#92). Dead devices are now caught INSIDE Home
+      # Assistant by one routine, templates/template_silent_devices.yaml in
+      # mjs-ha, which watches 41 devices (every enabled Alarmo sensor among
+      # them) by last_seen, Z-Wave node status or availability, and pushes and
+      # Telegrams. The Prometheus copies watched five doors, used different
+      # limits, and false-fired on office_stairs_door_device_temperature.
       #
-      # CORRECTION 2026-08-23 (#189): the original rule's reasoning, preserved
-      # below, rested on a false premise. It rejected hass_entity_available
-      # because "that reads 1 for `unknown`". It does not. From the live
-      # endpoint on HA 2026.8.2:
-      #   # HELP hass_entity_available Entity is available (not in the
-      #   #      unavailable or unknown state)
-      # The gauge is 0 for BOTH `unavailable` and `unknown`, so signal 1 does
-      # not hand out a false all-clear when a dead device flips to `unknown`
-      # across an HA restart (the patio bulbs, mjs-ha#69).
-      #
-      # Both signals are still used, but signal 2 earns its place for a
-      # different reason than the one recorded here: it covers the case no
-      # availability gauge can see, a device that stops reporting while its
-      # entity holds a plausible last value. Availability alone is not enough,
-      # and staleness alone cries wolf.
-
-      # Signal 1 — the integration says the device is gone.
-      # Zigbee2MQTT availability is enabled (active 10m, passive 1500m) and
-      # ESPHome marks entities unavailable on API disconnect, so this is a real
-      # verdict from the integration rather than an inference.
-      - alert: HomeAssistantSafetyEntityUnavailable
+      # What stays here is what Home Assistant cannot report about itself: the
+      # scrape being down (HA gone), an integration dropping wholesale, and
+      # this: the Alarmo panel entity itself unavailable, which the silent
+      # devices routine does not watch.
+      - alert: HomeAssistantAlarmPanelUnavailable
         expr: |
-          hass_entity_available{entity=~"alarm_control_panel\\.alarmo|binary_sensor\\.(ds_front_door_contact|patio_door_contact|ds_garage_man_contact|office_stairs_door_contact|garage_all_in_one_garage_door_closed_switch)"} == 0
+          hass_entity_available{entity="alarm_control_panel.alarmo"} == 0
         for: 15m
         labels:
           severity: critical
           host: hapi
           source: homeassistant
         annotations:
-          summary: "HA safety entity {{ $labels.entity }} is unavailable"
+          summary: "Home Assistant alarm panel is unavailable"
           description: |
-            {{ $labels.entity }} ({{ $labels.friendly_name }}) is reported
-            unavailable. These are the alarm panel and the door contacts it arms
-            on — an unavailable one means the alarm may be arming over a sensor
-            that cannot report an opening.
-            Check the device battery and mesh first (Zigbee / ESPHome), then
-            .storage/core.restore_state for the last known value.
-
-      # Signal 2 — the device's own heartbeat stopped.
-      # Catches the case signal 1 cannot see: a device that stopped reporting
-      # while its entity still holds a plausible last value, so availability
-      # stays 1 — a closed door reading `off` forever. These heartbeat
-      # entities carry values that drift on their own (device temperature, link
-      # quality, uptime), so unlike a door contact they update whether or not
-      # anyone touches the door — and staleness on them cannot be faked.
-      #
-      # 24h, not 6h: the slowest observed heartbeat is
-      # office_stairs_door_device_temperature at ~10h, and Zigbee2MQTT's own
-      # passive availability timeout is 25h. A battery contact cannot be
-      # declared dead faster than it reports; a shorter window would only
-      # reintroduce false positives.
-      - alert: HomeAssistantSafetyDeviceHeartbeatStale
-        expr: |
-          (time() - hass_last_updated_time_seconds{entity=~"sensor\\.(ds_front_door_device_temperature|patio_door_device_temperature|ds_garage_man_linkquality|office_stairs_door_device_temperature|garage_all_in_one_system_uptime)"}) > 86400
-        for: 30m
-        labels:
-          severity: critical
-          host: hapi
-          source: homeassistant
-        annotations:
-          summary: "HA safety device heartbeat {{ $labels.entity }} stale for over 24h"
-          description: |
-            {{ $labels.entity }} ({{ $labels.friendly_name }}) has not reported
-            in over 24 hours. This is the liveness heartbeat for one of the
-            devices behind the alarm's door contacts, so the contact itself is
-            probably not reporting either — even if it still reads a plausible
-            state.
-            Check the device battery and mesh (Zigbee / ESPHome). If the device
-            is fine, confirm this entity still exists and was not renamed: a
-            heartbeat entity that vanishes silently disables this alert.
+            alarm_control_panel.alarmo has been unavailable or unknown for 15
+            minutes while Home Assistant itself is up. The alarm cannot arm,
+            disarm or trigger.
+            Check: ssh 192.168.68.20 'ha core logs' for alarmo errors, and
+            whether custom_components/alarmo loaded.
 
       # Bulk entity health. The baseline is high and mostly dashboard cruft, so
       # this is a change detector, not a correctness check.
