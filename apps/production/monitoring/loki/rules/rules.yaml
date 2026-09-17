@@ -348,3 +348,87 @@ groups:
       #     device: nvr
       #   annotations:
       #     summary: "Protect/NVR reported a storage or recording-stream issue"
+
+  # Home Assistant OS logs (jwilleke/mjs-ha#117). Shipped by the Syslog add-on
+  # on the Pi through deby rsyslog/fluent-bit as source="homeassistant"
+  # (jwilleke/mjs-ha#116; the Pi side is documented in mjs-ha docs/logging.md).
+  #
+  # Scope, per the jwilleke/mjs-ha#92 split: Home Assistant reports its own dead
+  # devices by push and Telegram. These rules cover what HA cannot tell anyone
+  # about itself: its notifications not being delivered, and errors that only
+  # appear in its log.
+  #
+  # Core lines are matched on the raw JSON `"ident":"homeassistant"` rather than
+  # `| json`, so a 24 h window stays cheap to evaluate.
+  - name: home_assistant_logs
+    interval: 1m
+    rules:
+
+      # Every push to Jim failed from 2026-09-16 to 09-17 because notify.phone_jsw
+      # still named a retired phone, and nothing noticed: the failure path was
+      # the notification itself. Critical, because alarm and irrigation-watchdog
+      # pushes go this way. Arrives by email, which does not depend on HA.
+      - alert: HomeAssistantNotificationDeliveryFailing
+        expr: 'sum(count_over_time({source="homeassistant"} |= "Error sending notification" [15m])) > 0'
+        labels:
+          severity: critical
+        annotations:
+          summary: "Home Assistant cannot deliver push notifications"
+          description: |
+            Home Assistant logged "Error sending notification" in the last 15
+            minutes, so alarm, watchdog and device pushes may not be arriving.
+            Usual cause: a notify alias in configuration.yaml names a phone
+            that was replaced (see mjs-ha docs/Notifications.md).
+            Grafana → Explore → Loki:
+              {source="homeassistant"} |= "Error sending notification"
+
+      # A service call against a safety-relevant entity that was unavailable:
+      # the irrigation relays, locks, the garage cover, the Alarmo panel or the
+      # siren. The Front irrigation valve dropping off Z-Wave on 2026-09-17
+      # 09:19-09:22 UTC logged exactly this. Other entities (lamps) are left out.
+      - alert: HomeAssistantSafetyEntityUnavailableOnCall
+        expr: 'sum(count_over_time({source="homeassistant"} |= "Referenced entities" |~ "(switch\\.irrigationcontrol|lock\\.|cover\\.garage_all_in_one|alarm_control_panel\\.alarmo|siren\\.)" [10m])) > 0'
+        labels:
+          severity: warning
+        annotations:
+          summary: "Home Assistant acted on a safety device that was unavailable"
+          description: |
+            A service call referenced an irrigation relay, lock, garage cover,
+            the Alarmo panel or the siren while it was missing or unavailable,
+            so the action did not happen. Grafana → Explore → Loki:
+              {source="homeassistant"} |= "Referenced entities"
+
+      # PROVISIONAL THRESHOLDS, set 2026-09-17 from about 3 hours of shipped logs:
+      # roughly 3 core ERROR/CRITICAL lines an hour, almost all at restarts.
+      # Review against a week of data around 2026-09-24 (jwilleke/mjs-ha#117).
+      #
+      # Acute: something started failing repeatedly.
+      - alert: HomeAssistantErrorBurst
+        expr: 'sum(count_over_time({source="homeassistant"} |= `"ident":"homeassistant"` |~ " (ERROR|CRITICAL) \\(" [1h])) > 20'
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Home Assistant core is logging errors in a burst"
+          description: |
+            More than 20 ERROR/CRITICAL lines from Home Assistant core in the
+            last hour (baseline about 3). Grafana → Explore → Loki:
+              {source="homeassistant"} |= `"ident":"homeassistant"` |~ " (ERROR|CRITICAL) \("
+
+  # Chronic errors, like jwilleke/mjs-ha#68's 48 untargeted calls a day, never
+  # burst. A 24 h window evaluated every 15 minutes is enough and cheaper.
+  - name: home_assistant_logs_daily
+    interval: 15m
+    rules:
+      - alert: HomeAssistantErrorsSustained
+        expr: 'sum(count_over_time({source="homeassistant"} |= `"ident":"homeassistant"` |~ " (ERROR|CRITICAL) \\(" [24h])) > 60'
+        labels:
+          severity: warning
+        annotations:
+          summary: "Home Assistant core logged more than 60 errors in 24 hours"
+          description: |
+            Sustained ERROR/CRITICAL lines from Home Assistant core over the
+            last day: a recurring fault rather than a burst. Provisional
+            threshold; see the comment above HomeAssistantErrorBurst.
+            Grafana → Explore → Loki, then count by logger:
+              {source="homeassistant"} |= `"ident":"homeassistant"` |~ " (ERROR|CRITICAL) \("
