@@ -14,6 +14,10 @@ global:
   smtp_auth_password_file: '/config/secrets/resend_api_key'
   smtp_require_tls: true
 
+# Both files land in /config via the alertmanager-config configMap.
+templates:
+  - '/config/*.tmpl'
+
 route:
   # The (default) notification destination
   receiver: "on_call_operator_default"

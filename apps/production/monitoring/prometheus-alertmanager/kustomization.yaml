@@ -7,6 +7,9 @@ configMapGenerator:
   - name: alertmanager-config
     files:
       - ./config/alertmanager.yaml
+      # Overrides the default email button link (jwilleke/mjs-ha#117);
+      # alertmanager.yaml loads it via templates: /config/*.tmpl
+      - ./config/grafana-links.tmpl
 
 secretGenerator:
   - name: alertmanager-secrets

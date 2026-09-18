@@ -1,0 +1,15 @@
+{{/*
+Alertmanager has no UI of its own here: --web.external-url points at Grafana's
+alert page, and there is no ingress to the Service (see alertmanager-service.yaml).
+
+The default email template builds its "View in AlertManager" button as
+  {{ .ExternalURL }}/#/alerts?receiver={{ .Receiver | urlquery }}
+and Grafana renders that hash suffix as an EMPTY rule list ("You haven't created
+any rules yet"), while the same URL without it lists every rule. Overriding this
+one template - the only thing in the default email that uses it - sends the
+button to the working page. Found on jwilleke/mjs-ha#117.
+
+Per-alert "Source" links are separate: they come from the rule engine
+(Prometheus, or Loki's ruler.external_url + datasource_uid) and are not affected.
+*/}}
+{{ define "__alertmanagerURL" }}https://grafana.nerdsbythehour.com/alerting/list/{{ end }}
