@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: sidekiq
-          image: docker.io/freikin/dawarich:1.14.5 # {"$imagepolicy": "flux-system:maps-app"}
+          image: docker.io/freikin/dawarich:1.15.0 # {"$imagepolicy": "flux-system:maps-app"}
           imagePullPolicy: IfNotPresent
           command: ["sidekiq-entrypoint.sh"]
           args: ["sidekiq"]
