@@ -32,7 +32,7 @@ spec:
           #
           # 3.0.1, not 3.0.0: that release crash-looped on its version read and was rolled back
           # within minutes. The image is still published and must not be deployed.
-          image: ghcr.io/jwilleke/yourphr:3.10.2 # {"$imagepolicy": "flux-system:yourphr"}
+          image: ghcr.io/jwilleke/yourphr:3.11.0 # {"$imagepolicy": "flux-system:yourphr"}
           ports:
             - containerPort: 8080
               name: http
@@ -48,12 +48,12 @@ spec:
               value: "/opt/yourphr/web"
             - name: SPIKE_WEB_LISTEN_PORT
               value: "8080"
-            # At-rest keys are NOT here (yourphr#796, option A, 2026-09-29): both
-            # YOURPHR_DATABASE_ENCRYPTION_KEY and YOURPHR_BACKUP_ENCRYPTION_KEY live in
-            # /opt/yourphr/data/.env on the PVC, read by the app at start (yourphr#630). An env
-            # entry here would OUTRANK that file. Off-cluster copy: Jim's private/creds. Lose the
-            # .env and the existing database will not open; a brand-new empty volume would start
-            # unencrypted, so put the .env on it before the first start.
+              # At-rest keys are NOT here (yourphr#796, option A, 2026-09-29): both
+              # YOURPHR_DATABASE_ENCRYPTION_KEY and YOURPHR_BACKUP_ENCRYPTION_KEY live in
+              # /opt/yourphr/data/.env on the PVC, read by the app at start (yourphr#630). An env
+              # entry here would OUTRANK that file. Off-cluster copy: Jim's private/creds. Lose the
+              # .env and the existing database will not open; a brand-new empty volume would start
+              # unencrypted, so put the .env on it before the first start.
           volumeMounts:
             - name: yourphr-ts-data
               mountPath: /opt/yourphr/data
