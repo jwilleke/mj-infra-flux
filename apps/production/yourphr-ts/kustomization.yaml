@@ -6,10 +6,6 @@ resources:
   - ./pvc.yaml
   - ./deployment.yaml
   - ./service.yaml
-  # At-rest keys for the database and for backups (bootstrap + secret: env only, never the config
-  # store — yourphr#472). REQUIRED, not optional: a spike that boots without its database key stores
-  # the migrated tokens in the clear, so the pod must refuse to start instead.
-  - ./yourphr-ts-keys.sops.yaml
 
 labels:
   - pairs:

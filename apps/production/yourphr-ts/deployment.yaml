@@ -48,21 +48,12 @@ spec:
               value: "/opt/yourphr/web"
             - name: SPIKE_WEB_LISTEN_PORT
               value: "8080"
-            # At-rest keys. REQUIRED (no `optional: true`): if the Secret is missing the pod must
-            # fail to schedule its container rather than boot and store tokens in the clear. The
-            # database key is what makes the migrated Go tokens safer here than they were there
-            # (yourphr#584); the backup key is separate on purpose — the copy that travels and the
-            # copy that stays must not fall together.
-            - name: SPIKE_DATABASE_ENCRYPTION_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: yourphr-ts-keys
-                  key: SPIKE_DATABASE_ENCRYPTION_KEY
-            - name: SPIKE_BACKUP_ENCRYPTION_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: yourphr-ts-keys
-                  key: SPIKE_BACKUP_ENCRYPTION_KEY
+            # At-rest keys are NOT here (yourphr#796, option A, 2026-09-29): both
+            # YOURPHR_DATABASE_ENCRYPTION_KEY and YOURPHR_BACKUP_ENCRYPTION_KEY live in
+            # /opt/yourphr/data/.env on the PVC, read by the app at start (yourphr#630). An env
+            # entry here would OUTRANK that file. Off-cluster copy: Jim's private/creds. Lose the
+            # .env and the existing database will not open; a brand-new empty volume would start
+            # unencrypted, so put the .env on it before the first start.
           volumeMounts:
             - name: yourphr-ts-data
               mountPath: /opt/yourphr/data
