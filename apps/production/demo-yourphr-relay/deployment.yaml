@@ -29,7 +29,7 @@ spec:
               name: metrics # in-cluster Prometheus scrape only; NOT routed via the public tunnel
           envFrom:
             # YOURPHR_RELAY_SECRET — gates /pending. Distinct value from the prod relay's secret
-            # (never shared across ops/demo). See relay-secret.sops.yaml.
+            # (never shared across ops/demo). Synced from OpenBao.
             - secretRef:
                 name: demo-yourphr-relay
           resources:

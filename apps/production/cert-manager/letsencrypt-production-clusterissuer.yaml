@@ -18,8 +18,8 @@ spec:
       name: letsencrypt-production-issuer-secret-key
     solvers:
       # DNS-01 challenge via Cloudflare. The cloudflare-api-token Secret is
-      # SOPS-encrypted in apps/production/cert-manager/cloudflare-api-token.sops.yaml
-      # and Flux-managed since b993868.
+      # synced from OpenBao by cloudflare-api-token.externalsecret.yaml.
+      # stuff.nerdsbythehour.com does not use this issuer.
       - dns01:
           cloudflare:
             apiTokenSecretRef:

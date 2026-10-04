@@ -20,7 +20,7 @@ resources:
   - ./public-assets-ingress.yaml
   # Admin-only sandbox provider credentials, consumed by the backend's env-based sandbox seeding
   # so /sandbox connects with zero typing and the secret never reaches the browser (yourphr#291).
-  - ./sandbox-credentials.sops.yaml
+  - ./sandbox-credentials.externalsecret.yaml
 
 labels:
   - pairs:

@@ -12,7 +12,7 @@ resources:
   - maps-app-data-pv.yaml
   - maps-app-data-pvc.yaml
   - maps-configmap.yaml
-  - maps-secret.sops.yaml
+  - maps-secret.externalsecret.yaml
   - maps-db-deployment.yaml
   - maps-db-service.yaml
   - maps-redis-deployment.yaml

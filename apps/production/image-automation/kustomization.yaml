@@ -14,4 +14,4 @@ resources:
   # geohazardwatch-ghcr.sops.yaml removed 2026-05-16 — ghcr package made
   # public after the fluxcdbot PAT decommission (2026-05-15); the
   # ImageRepository now scans anonymously, no pull secret.
-  - flux-system-git-auth.sops.yaml
+  - flux-system-git-auth.externalsecret.yaml

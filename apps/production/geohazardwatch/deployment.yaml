@@ -72,7 +72,7 @@ spec:
                   key: session-secret
                   optional: true
             # Authentik client credentials for the agent-ingest flow
-            # (mj-infra-flux#124, ngdpbase#822) — secret via ngdpbase-ingest-creds.sops.yaml
+            # (mj-infra-flux#124, ngdpbase#822) — secret via ngdpbase-ingest-creds.externalsecret.yaml
             - name: NGDPBASE_CLIENT_ID
               valueFrom:
                 secretKeyRef:

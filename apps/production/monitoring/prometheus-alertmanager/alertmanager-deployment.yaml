@@ -50,7 +50,7 @@ spec:
           configMap:
             defaultMode: 420
             name: alertmanager-config
-        # populated by secretGenerator in kustomization.yaml
+        # populated by alertmanager-secrets.externalsecret.yaml
         - name: alertmanager-secrets
           secret:
             secretName: alertmanager-secrets

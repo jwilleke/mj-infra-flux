@@ -2,10 +2,7 @@ resources:
   - certificate.yaml
   - all.yaml
 
-secretGenerator:
-  # db
-  - name: webhook-token
-    envs:
-      - .env.secret.webhook-token.encrypted
-
+# webhook-token is an ExternalSecret in infrastructure/prod/secret-stores.
+# This path is reconciled by infra-configs, which has no decryption and runs
+# before ESO, so the Secret cannot be generated here.
 namespace: flux-system

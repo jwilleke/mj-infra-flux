@@ -9,4 +9,4 @@ resources:
   - postgresql-pvc.yaml
   - postgresql-statefulset.yaml
   - postgresql-service.yaml
-  - postgresql-secret.yaml
+  - postgresql-secret.externalsecret.yaml
