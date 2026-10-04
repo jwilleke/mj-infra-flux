@@ -1,0 +1,116 @@
+# External Secrets Operator, pinned, no Helm and no HelmRelease.
+#
+# Upstream ships a static Helm-rendered manifest as a release asset. Vendored
+# here so Flux does not fetch it at reconcile time:
+#
+#   ver=v2.11.0
+#   curl -fsSL -o external-secrets-${ver}.yaml \
+#     https://github.com/external-secrets/external-secrets/releases/download/${ver}/external-secrets.yaml
+#   sha256 c427124642886d240af8f28d294714a168d920ef8e5d55db14600e00ed0cfb80
+#
+# The upstream file targets namespace `default`. The namespace transformer
+# below moves namespaced objects and RoleBinding subjects. It does not rewrite
+# container args or ValidatingWebhookConfiguration clientConfig, so those are
+# patched explicitly. Webhook failurePolicy is Fail: a wrong namespace here
+# rejects every ExternalSecret.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: external-secrets
+resources:
+  - namespace.yaml
+  - external-secrets-v2.11.0.yaml
+patches:
+  - target:
+      kind: Deployment
+      name: external-secrets-cert-controller
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/args
+        value:
+          - certcontroller
+          - --crd-requeue-interval=5m
+          - --service-name=external-secrets-webhook
+          - --service-namespace=external-secrets
+          - --secret-name=external-secrets-webhook
+          - --secret-namespace=external-secrets
+          - --metrics-addr=:8080
+          - --healthz-addr=:8081
+          - --loglevel=info
+          - --zap-time-encoding=epoch
+          - --enable-partial-cache=true
+  - target:
+      kind: Deployment
+      name: external-secrets-webhook
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/args
+        value:
+          - webhook
+          - --port=10250
+          - --dns-name=external-secrets-webhook.external-secrets.svc
+          - --cert-dir=/tmp/certs
+          - --check-interval=5m
+          - --metrics-addr=:8080
+          - --healthz-addr=:8081
+          - --loglevel=info
+          - --zap-time-encoding=epoch
+  - target:
+      kind: Deployment
+      name: external-secrets-cert-controller
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests: { cpu: 10m, memory: 48Mi }
+          limits: { memory: 192Mi }
+  - target:
+      kind: Deployment
+      name: external-secrets-webhook
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests: { cpu: 10m, memory: 48Mi }
+          limits: { memory: 192Mi }
+  # This Deployment already sets requests. replace, because add would fail.
+  - target:
+      kind: Deployment
+      name: external-secrets
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests: { cpu: 10m, memory: 48Mi }
+          limits: { memory: 192Mi }
+  - target:
+      kind: Deployment
+      name: external-secrets
+    patch: |-
+      - op: add
+        path: /spec/template/metadata/annotations
+        value:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "8080"
+          prometheus.io/path: /metrics
+  - target:
+      kind: ValidatingWebhookConfiguration
+      name: secretstore-validate
+    patch: |-
+      - op: replace
+        path: /webhooks/0/clientConfig/service/namespace
+        value: external-secrets
+      - op: replace
+        path: /webhooks/1/clientConfig/service/namespace
+        value: external-secrets
+  - target:
+      kind: ValidatingWebhookConfiguration
+      name: externalsecret-validate
+    patch: |-
+      - op: replace
+        path: /webhooks/0/clientConfig/service/namespace
+        value: external-secrets
+labels:
+  - pairs:
+      app.jwilleke.com/name: external-secrets
+      app.jwilleke.com/tenant: everyone
+    includeSelectors: false

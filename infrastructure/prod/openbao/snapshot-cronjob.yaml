@@ -1,0 +1,76 @@
+# Nightly raft snapshot onto the NAS path. nas-backup-rsync (host job,
+# not in this repo) is what copies /mnt/tank off this node. See README.md.
+# Auth is the kubernetes role raft-snapshot. No OpenBao token in the pod.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: openbao-snapshot
+  namespace: openbao
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: openbao-snapshot
+  namespace: openbao
+spec:
+  # UTC. Kubernetes CronJobs do not use the host timezone. Move this if
+  # nas-backup-rsync runs at a different hour and would copy a partial file.
+  schedule: "17 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          serviceAccountName: openbao-snapshot
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 3003
+            runAsGroup: 3003
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: snapshot
+              image: quay.io/openbao/openbao:2.6.4
+              env:
+                - name: BAO_ADDR
+                  value: http://openbao.openbao.svc.cluster.local:8200
+              command:
+                - /bin/sh
+                - -ec
+                - |
+                  JWT=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+                  BAO_TOKEN=$(bao write -field=token auth/kubernetes/login role=raft-snapshot jwt="$JWT")
+                  export BAO_TOKEN
+                  f=/snapshots/openbao-$(date -u +%Y%m%dT%H%M%SZ).snap
+                  bao operator raft snapshot save "$f"
+                  echo "saved $f ($(wc -c < "$f") bytes)"
+                  find /snapshots -name 'openbao-*.snap' -mtime +30 -delete
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+              volumeMounts:
+                - name: snapshots
+                  mountPath: /snapshots
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: snapshots
+              hostPath:
+                # Directory, not DirectoryOrCreate. NFS often creates the
+                # path as root and then 3003 cannot write. Jim creates it.
+                path: /mnt/tank/jims/data/systems/openbao-snapshots
+                type: Directory
+            - name: tmp
+              emptyDir: {}

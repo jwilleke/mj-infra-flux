@@ -1,0 +1,14 @@
+# deby overlay. No namespace transformer here: the internal CA root has to
+# stay in the cert-manager namespace (ClusterIssuer looks for it there).
+# The base sets namespace openbao on its own resources.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base/openbao
+  - pv.yaml
+  - pvc.yaml
+  - internal-ca.yaml
+  - middleware-lan-only.yaml
+  - ingress.yaml
+  - snapshot-cronjob.yaml
+# There is no openbao-unseal-key manifest. It is created by hand. See README.md.

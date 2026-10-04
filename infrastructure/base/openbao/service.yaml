@@ -1,0 +1,34 @@
+# Client-facing Service. ESO and the Ingress use this.
+apiVersion: v1
+kind: Service
+metadata:
+  name: openbao
+  namespace: openbao
+  labels:
+    app: openbao
+spec:
+  selector:
+    app: openbao
+  ports:
+    - name: http
+      port: 8200
+      targetPort: 8200
+---
+# Headless Service for the StatefulSet stable DNS (raft cluster_addr).
+apiVersion: v1
+kind: Service
+metadata:
+  name: openbao-internal
+  namespace: openbao
+  labels:
+    app: openbao
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app: openbao
+  ports:
+    - name: http
+      port: 8200
+    - name: cluster
+      port: 8201

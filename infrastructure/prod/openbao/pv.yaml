@@ -1,0 +1,22 @@
+# Static hostPath PV, same shape as apps/production/database/postgresql-pv.yaml.
+# /mnt/local-k3s-data is not copied by any Job in this repo. The raft snapshot
+# CronJob is the off-node copy. See README.md.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: openbao-data-pv
+  labels:
+    app: openbao
+    type: data
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /mnt/local-k3s-data/openbao/data
+    type: DirectoryOrCreate

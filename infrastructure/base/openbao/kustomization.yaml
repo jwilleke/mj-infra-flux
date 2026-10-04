@@ -1,0 +1,16 @@
+# OpenBao base. Upstream publishes a Helm chart only. A single-node raft
+# server is small enough to own as plain manifests.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: openbao
+resources:
+  - namespace.yaml
+  - serviceaccount.yaml
+  - configmap.yaml
+  - statefulset.yaml
+  - service.yaml
+labels:
+  - pairs:
+      app.jwilleke.com/name: openbao
+      app.jwilleke.com/tenant: mj
+    includeSelectors: false

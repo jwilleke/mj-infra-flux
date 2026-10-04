@@ -1,0 +1,35 @@
+# stuff.nerdsbythehour.com is the OpenBao UI and API for humans and the CLI.
+# ESO does not use this Ingress. It calls
+# http://openbao.openbao.svc.cluster.local:8200.
+#
+# No Authentik forward-auth. OpenBao logs in to Authentik with OIDC, and a
+# forward-auth wall on /v1 would break token clients.
+# No Cloudflare, no public DNS, no Let's Encrypt. The name is LAN DNS only
+# (UDM / internal resolver -> 192.168.68.71). The leaf cert comes from
+# internal-ca.yaml.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openbao
+  namespace: openbao
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.middlewares: openbao-lan-only@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - stuff.nerdsbythehour.com
+      secretName: openbao-tls
+  rules:
+    - host: stuff.nerdsbythehour.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: openbao
+                port:
+                  number: 8200

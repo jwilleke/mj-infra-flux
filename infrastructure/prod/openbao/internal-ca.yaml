@@ -1,0 +1,57 @@
+# Internal CA for stuff.nerdsbythehour.com. No Let's Encrypt and no Cloudflare.
+# Chain: self-signed Issuer -> root CA Certificate -> CA ClusterIssuer -> leaf.
+# The ClusterIssuer reads its CA secret from the cert-manager namespace, so
+# the root Certificate lives there, not in openbao.
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: deby-selfsigned
+  namespace: cert-manager
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: deby-internal-root-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: deby-internal-root-ca
+  secretName: deby-internal-root-ca
+  duration: 87600h
+  renewBefore: 8760h
+  subject:
+    organizations:
+      - nerdsbythehour
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: deby-selfsigned
+    kind: Issuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: deby-internal-ca
+spec:
+  ca:
+    secretName: deby-internal-root-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: openbao-tls
+  namespace: openbao
+spec:
+  secretName: openbao-tls
+  duration: 2160h
+  renewBefore: 360h
+  dnsNames:
+    - stuff.nerdsbythehour.com
+  issuerRef:
+    name: deby-internal-ca
+    kind: ClusterIssuer
+    group: cert-manager.io

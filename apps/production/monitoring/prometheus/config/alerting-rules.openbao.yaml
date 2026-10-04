@@ -1,0 +1,31 @@
+groups:
+  - name: openbao
+    interval: 30s
+    rules:
+      # OpenBao keeps the vault_ metric prefix. Absence does not page: the
+      # scrape target shows down on its own, and this must not fire during
+      # the window before the first bootstrap.
+      - alert: OpenBaoSealed
+        expr: vault_core_unsealed == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "OpenBao on deby is sealed"
+          description: |
+            vault_core_unsealed is 0. The static unseal key in Secret
+            openbao/openbao-unseal-key is missing, wrong, or the pod cannot
+            read it. App Secret refreshes are paused. Existing Secrets stay
+            (ExternalSecret deletionPolicy Retain). Break-glass steps are in
+            infrastructure/prod/openbao/README.md.
+      - alert: OpenBaoScrapeDown
+        expr: up{job="openbao"} == 0
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus cannot scrape OpenBao"
+          description: |
+            up{job="openbao"} is 0. The process is down or the metrics
+            listener is unreachable. Sealed-state alerting is blind until
+            this recovers.

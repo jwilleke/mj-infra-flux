@@ -6,8 +6,16 @@ metadata:
 spec:
   interval: 10m0s
   # infra-configs can contain some infra changes we assume in apps:
+  # infra-controllers installs the ExternalSecret CRD.
+  # secret-stores applies the ClusterSecretStore (wait: false, so a sealed
+  # OpenBao does not block this). openbao itself is deliberately not in
+  # this list: apps must keep reconciling while the store is down.
+  # decryption stays until every secret under apps/production is an
+  # ExternalSecret. Removing it earlier applies ciphertext.
   dependsOn:
     - name: infra-configs
+    - name: infra-controllers
+    - name: secret-stores
   sourceRef:
     kind: GitRepository
     name: flux-system

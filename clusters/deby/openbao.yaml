@@ -1,0 +1,27 @@
+# OpenBao is its own Flux Kustomization, not an entry under apps/production.
+# apps consumes secrets from OpenBao, so OpenBao must not be reconciled as
+# part of apps, and a sealed OpenBao must not block apps.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: openbao
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  dependsOn:
+    - name: infra-configs
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./infrastructure/prod/openbao
+  prune: true
+  # Only the StatefulSet. A not-yet-issued leaf Certificate must not mark
+  # this Kustomization failed. The probe treats sealed and uninitialized as
+  # ready so the first `bao operator init` can run.
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: StatefulSet
+      name: openbao
+      namespace: openbao
+  wait: true
+  timeout: 5m0s

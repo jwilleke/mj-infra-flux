@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openbao-config
+  namespace: openbao
+data:
+  config.hcl: |
+    ui            = true
+    disable_mlock = true
+    cluster_name  = "deby"
+
+    listener "tcp" {
+      address         = "[::]:8200"
+      cluster_address = "[::]:8201"
+      # TLS terminates at Traefik. ESO uses this in-cluster HTTP listener.
+      # deby is one node, so that hop does not leave the host.
+      tls_disable = true
+      # Trust X-Forwarded-For only from the k3s pod network, where Traefik
+      # runs. externalTrafficPolicy Local keeps the real client IP.
+      # See infrastructure/base/configs/traefik-client-ip/helmchartconfig.yaml.
+      x_forwarded_for_authorized_addrs = "10.42.0.0/16"
+      telemetry {
+        unauthenticated_metrics_access = true
+      }
+    }
+
+    storage "raft" {
+      path    = "/openbao/data"
+      node_id = "openbao-0"
+    }
+
+    # Auto-unseal from one static 32-byte key, mounted from the hand-created
+    # Secret openbao-unseal-key. That Secret is never in Git.
+    # Rotation: set previous_key* to the old key and current_key* to the new
+    # one, then restart.
+    seal "static" {
+      current_key_id = "deby-2026-10"
+      current_key    = "file:///openbao/unseal/key"
+    }
+
+    telemetry {
+      prometheus_retention_time = "60s"
+      disable_hostname          = true
+    }
