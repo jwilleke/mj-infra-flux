@@ -54,7 +54,7 @@ No DNS record needs to be created by hand, and no firewall port is opened.
 All activation steps completed 2026-06-05 (mj-infra-flux#104 + #105):
 
 1. __Image__ — `ghcr.io/jwilleke/yourphr-relay:main` ✅
-2. __Secret__ — `relay-secret.sops.yaml` committed + decrypted by Flux ✅
+2. __Secret__ — ExternalSecret `yourphr-relay` synced from OpenBao `kv/deby/yourphr/yourphr-relay` ✅
 3. __Tunnel hostname__ — `relay.nerdsbythehour.com` Public Hostname added in Cloudflare dashboard ✅
 4. __Enabled__ — `./yourphr-relay` wired into `apps/production/kustomization.yaml` ✅
 

@@ -28,21 +28,9 @@ The tunnel itself is configured in the Cloudflare Zero Trust dashboard, not here
 
 ## Secret rotation
 
-The tunnel token lives in `.env.secret.cloudflared.encrypted` (SOPS / age). To rotate:
+The tunnel token is OpenBao path `kv/deby/cloudflared/cloudflared-token`, key `TUNNEL_TOKEN`. ExternalSecret `cloudflared-token` refreshes the Kubernetes Secret. Write the new value with the procedure in `infrastructure/prod/openbao/README.md`. Do not commit the token.
 
-```bash
-# from the repo root, on a machine with the age private key
-echo "TUNNEL_TOKEN=<new-token>" > apps/production/cloudflared/.env.secret.cloudflared
-./scripts/encrypt-env-files.sh apps/production/cloudflared/
-rm apps/production/cloudflared/.env.secret.cloudflared
-git add apps/production/cloudflared/.env.secret.cloudflared.encrypted
-git commit -m "chore(cloudflared): rotate tunnel token"
-git push
-```
-
-Flux reconciles → kustomize-controller decrypts → Secret refreshes → Deployment rolls.
-
-To force an immediate roll after rotation:
+To force an immediate roll after ESO has refreshed the Secret:
 
 ```bash
 flux reconcile kustomization apps --with-source

@@ -118,39 +118,17 @@ example at <https://github.com/fluxcd/flux2-kustomize-helm-example>
 
 ### Secrets
 
-Using [sops](https://github.com/getsops/sops) + [age](https://github.com/FiloSottile/age).
-
-#### Encrypting
-
-TLDR: put .env files in a dirctory and then run `/scripts/encrypt-env-files.sh <dir>` on the dir containing the .env file and it will save `.env*.encrypted` files that you can reference in kustomization files like:
-
-```yaml
-secretGenerator:
-  # db
-  - name: db-creds
-    envs:
-      - .env.secret.db.encrypted
-```
-
-Per <https://fluxcd.io/flux/guides/mozilla-sops/#encrypting-secrets-using-age>
-
-#### Decrypting
-
-The flux+kustomize knows how to decrypt SOPS secrets via secret generator. So we just have to have a `sops-age` secret in the `flux-system` namespace in the cluster.
-
-See `/infrastructure/configs/create-sops-age-decryption-secret.sh`
-
-Per <https://fluxcd.io/flux/guides/mozilla-sops/#encrypting-secrets-using-age>
+Git holds no secret values. OpenBao is the store. External Secrets Operator syncs paths under `kv/deby/` into Kubernetes Secrets. The runbook, including the unseal key and bootstrap order, is `infrastructure/prod/openbao/README.md`.
 
 ### Image Pull Secrets
 
-Image Pull Secrets (to [Pull an Image from a Private Registry](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/)) using `.dockerconfigjson` secrets are kinda just like json secrets. Run:
+GHCR pull credentials live at `kv/deby/jimsmcp/ghcr-jimsmcp`. From a workstation that already has `BAO_TOKEN` and a gitignored `scripts/.env.secret.github`:
 
 ```sh
 ./scripts/create-image-pull-secret-ghcr.sh
 ```
 
-Per <https://fluxcd.io/flux/components/kustomize/kustomizations/#kustomize-secretgenerator>
+The script writes the docker config into OpenBao and prints nothing secret. ESO refreshes Secret `jimsmcp/ghcr-jimsmcp`.
 
 ### Image Updates & Image Scanning
 

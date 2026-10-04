@@ -132,7 +132,7 @@ sudo kubectl exec -n database postgresql-0 -- psql -U postgres -c "SELECT datnam
 
 ## Security Notes
 
-- __Password Management__: Update passwords in `postgresql-secret.yaml`
+- __Password Management__: `postgres-password` and `teslamate-password` live in OpenBao at `kv/deby/database/postgresql`. ExternalSecret `postgresql-secret` syncs them. A password change also needs `ALTER USER` in PostgreSQL. See `infrastructure/prod/openbao/README.md`.
 - __User Isolation__: Each app has its own database user
 - __Network Isolation__: Only accessible within cluster (ClusterIP)
 - __Data Persistence__: PersistentVolume with Retain policy

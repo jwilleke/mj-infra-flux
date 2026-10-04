@@ -36,10 +36,10 @@ Saving these hostnames auto-creates the DNS records (proxied CNAMEs to the tunne
 
 ## Secrets
 
-Two SOPS-encrypted secrets, both distinct from and never shared with the ops `yourphr`/`yourphr-relay` values:
+Two OpenBao secrets, both distinct from and never shared with the ops `yourphr`/`yourphr-relay` values. See `infrastructure/prod/openbao/README.md`.
 
-- `relay-secret.sops.yaml` (in `../demo-yourphr-relay/`) — `YOURPHR_RELAY_SECRET`, gates the relay's `/pending` endpoint. Self-generated (`openssl rand -base64 32`) — purely internal, no operator/CMS involvement needed.
-- `sandbox-credentials.sops.yaml` — `YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_ID` / `YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_SECRET`. Operator-supplied, CMS-registered sandbox app credentials — __sandbox only, never production Blue Button keys__.
+- `kv/deby/demo-yourphr/demo-yourphr-relay` — `YOURPHR_RELAY_SECRET`, gates the relay's `/pending` endpoint. Self-generated (`openssl rand -base64 32`) — purely internal, no operator/CMS involvement needed.
+- `kv/deby/demo-yourphr/demo-yourphr-sandbox-credentials` — `YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_ID` / `YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_SECRET`. Operator-supplied, CMS-registered sandbox app credentials — __sandbox only, never production Blue Button keys__.
 
 ## Wiping the demo database
 

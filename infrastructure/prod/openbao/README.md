@@ -267,5 +267,21 @@ Left as cluster-only Secrets, still not in Git: `netalertx-api-token`,
 
 `/.env.secret.mcp-authentik.encrypted` is a laptop secret, not a cluster
 one. The bootstrap loads it into `kv/deby/workstation/mcp-authentik` when
-`sops` and the file are both present. After that, `scripts/update-mcp-config.sh`
-reads OpenBao. Log in with OIDC first (`BAO_ADDR`, `BAO_CACERT`).
+`sops` and the file are both present. Load it from a checkout that still
+has the file before Phase 2 deletes it. After that,
+`scripts/update-mcp-config.sh` reads OpenBao. Log in with OIDC first
+(`BAO_ADDR`, `BAO_CACERT`). See `MCP-SETUP.md`.
+
+## SOPS is removed in Phase 3
+
+`clusters/deby/apps.yaml` has no `decryption` block. The age helper scripts
+are gone. After the `apps` Kustomization has reconciled this phase, delete
+the out-of-band Secret:
+
+```sh
+kubectl -n flux-system delete secret sops-age
+```
+
+Do that only after the live values have been rotated. Git history still
+holds the old ciphertext, and the age key still opens it. Destroy the age
+key only after those rotations.

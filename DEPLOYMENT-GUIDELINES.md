@@ -39,43 +39,22 @@ See `apps/production/` for reference implementations:
 
 ## Secret Management
 
-__NEVER commit secrets in plaintext to git.__
+__NEVER commit secrets to git, encrypted or plaintext.__
 
-### Approved Methods
+Secrets live in OpenBao. External Secrets Operator copies them into Kubernetes Secrets. The runbook is `infrastructure/prod/openbao/README.md`.
 
-1. __SOPS + Age (Preferred)__
+The only bootstrap secret is `openbao-unseal-key`, created by hand and never committed.
 
-   ```bash
-   # Encrypt secrets with SOPS
-   ./scripts/encrypt-env-files.sh <directory>
-   ```
-
-2. __Cluster-only Secrets__
-
-   ```bash
-   # Create secret directly in cluster (not in git)
-   kubectl create secret generic my-secret -n my-namespace \
-     --from-literal=key="value"
-   ```
-
-3. __Helm valuesFrom__ (for Helm deployments)
-
-   ```yaml
-   valuesFrom:
-     - kind: Secret
-       name: my-secret
-       valuesKey: key
-       targetPath: path.to.value
-   ```
+Helm charts that already use `valuesFrom` keep reading the Kubernetes Secret ESO creates. They do not get a second copy of the value in git.
 
 ### What NOT to Do
 
-❌ Plaintext secrets in YAML files
-❌ Secrets in git history
-❌ Hardcoded passwords
-❌ API keys in manifests
+- Plaintext secrets in YAML files
+- Encrypted secrets in git
+- Hardcoded passwords
+- API keys in manifests
 
-See `SECURITY-INCIDENT.md` for lessons learned from actual incident.
+See `SECURITY-INCIDENT.md` for lessons learned from an actual incident.
 
 ## File Structure
 
@@ -140,4 +119,4 @@ Key principles:
 - [Kustomize Documentation](https://kustomize.io/)
 - [Flux Kustomization](https://fluxcd.io/flux/components/kustomize/)
 - [Kubernetes Documentation](https://kubernetes.io/docs/)
-- [SOPS Guide](https://fluxcd.io/flux/guides/mozilla-sops/)
+- [OpenBao runbook](infrastructure/prod/openbao/README.md)

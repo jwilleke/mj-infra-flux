@@ -55,11 +55,11 @@ That is the intended trade — config belongs in this repo, not in a volume that
 
 ## Secrets
 
-> __Not in git.__ Unlike `demo-yourphr` and `geohazardwatch`, this app ships __no SOPS-encrypted secret file__. Both Secrets below were created by hand with `kubectl` and exist only in the cluster.
+> __Not in git, and not in OpenBao.__ Unlike `demo-yourphr` and `geohazardwatch`, this app ships no ExternalSecret. Both Secrets below were created by hand with `kubectl` and exist only in the cluster.
 >
 > They survive pod restarts, image bumps and node reboots — ordinary Kubernetes state. They do __not__ survive deleting the namespace or rebuilding the cluster, and `flux bootstrap` alone will not restore them: the pod fails to start until they are recreated by hand.
 >
-> That is a deliberate trade for a disposable demo — recovery is the two commands below — but it means this app is __not__ self-contained in git the way its neighbours are. If that stops being acceptable, encrypt them into `resend-smtp.sops.yaml` and `secrets.sops.yaml` here and list both in `kustomization.yaml`, matching `../demo-yourphr/sandbox-credentials.sops.yaml`.
+> That is a deliberate trade for a disposable demo — recovery is the two commands below — but it means this app is __not__ self-contained in git the way its neighbours are. If that stops being acceptable, put the values in OpenBao and add ExternalSecrets, matching `../demo-yourphr/sandbox-credentials.externalsecret.yaml`. See `infrastructure/prod/openbao/README.md`. Do not commit a secret file.
 
 Two, both distinct from every other instance. Create them __before__ this app first reconciles: `ngdpbase-demo-resend` and the `admin-password` key are deliberately not `optional`, so the pod will not start without them.
 

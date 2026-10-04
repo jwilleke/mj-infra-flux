@@ -153,4 +153,4 @@ __This has been completed.__ Previously, secrets were stored in plaintext in `he
 
 - [Flux HelmRelease valuesFrom](https://fluxcd.io/flux/components/helm/helmreleases/#values-overrides)
 - [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
-- [SOPS for Flux](https://fluxcd.io/flux/guides/mozilla-sops/) (future enhancement)
+- [OpenBao runbook](../../../infrastructure/prod/openbao/README.md)

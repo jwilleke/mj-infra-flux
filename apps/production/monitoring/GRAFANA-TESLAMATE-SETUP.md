@@ -179,14 +179,7 @@ Or re-import the dashboard and select the correct data source.
    traefik.ingress.kubernetes.io/router.middlewares: authentik-authentik-forwardauth@kubernetescrd
    ```
 
-3. __Change PostgreSQL password__:
-
-   ```bash
-   # Update teslamate-secret.yaml with new password
-   kubectl edit secret teslamate-secret -n teslamate
-
-   # Update Grafana datasource to use new password
-   ```
+3. __Change PostgreSQL password__ in OpenBao at `kv/deby/teslamate/teslamate-secret` (`database-password`) and run `ALTER USER` for the `teslamate` role. ExternalSecret `teslamate-secret` refreshes the Kubernetes Secret. Then update the Grafana datasource. Do not rotate `encryption-key` unless you are ready to re-link the Tesla account. See `infrastructure/prod/openbao/README.md`.
 
 ## Useful Grafana Features
 

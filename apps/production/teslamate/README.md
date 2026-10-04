@@ -50,20 +50,12 @@ sudo kubectl apply -k apps/production/teslamate/
 
 ### Security
 
-__Secrets__ (`teslamate-secret.yaml`):
+__Secrets__ (ExternalSecret `teslamate-secret`, OpenBao `kv/deby/teslamate/teslamate-secret`):
 
 - `encryption-key`: Encrypts sensitive Tesla API credentials
 - `database-password`: PostgreSQL password
 
-__IMPORTANT__: Update these before production use!
-
-```bash
-# Generate encryption key
-openssl rand -base64 32
-
-# Update secret
-kubectl edit secret teslamate-secret -n teslamate
-```
+See `infrastructure/prod/openbao/README.md`. Replacing `encryption-key` makes existing TeslaMate ciphertext unreadable. Re-link the Tesla account after a rotation. `database-password` must match the `teslamate` role in PostgreSQL.
 
 ### Authentik Protection
 
