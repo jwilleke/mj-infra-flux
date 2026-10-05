@@ -47,6 +47,9 @@ configMapGenerator:
       # Home Assistant /api/prometheus scrape + alert rules (mjs-ha#72)
       - config/scrape-configs.homeassistant.yaml
       - config/alerting-rules.homeassistant.yaml
+      # clara host node-exporter scrape + alert rules (clara#1)
+      - config/scrape-configs.clara.yaml
+      - config/alerting-rules.clara.yaml
       # coinpoet and tayle configs removed
 
 labels:

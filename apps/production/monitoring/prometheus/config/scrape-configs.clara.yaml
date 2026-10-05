@@ -1,0 +1,17 @@
+scrape_configs:
+  # clara — Intel NUC 9, Debian 13 host (jwilleke/clara#1).
+  # Endpoint: http://192.168.68.24:9100/metrics, Debian prometheus-node-exporter
+  # package, no auth (LAN only). prometheus-node-exporter-collectors adds APT
+  # (apt_upgrades_pending, node_reboot_required) and NVMe textfile metrics.
+  # The generic Node* rules in alerting-rules.service-health.yaml cover
+  # memory/CPU/disk for this target automatically.
+  - job_name: "clara-node"
+    static_configs:
+      - targets: ["192.168.68.24:9100"]
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - target_label: host
+        replacement: clara
+      - target_label: source
+        replacement: node-exporter

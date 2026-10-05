@@ -1,0 +1,52 @@
+groups:
+  - name: clara
+    interval: 1m
+    rules:
+      # clara unreachable. On 2026-10-05 GNOME's idle suspend took the host off
+      # the network and nothing noticed (jwilleke/clara#1). Suspend is now
+      # masked, so a down scrape means power, network or a crash.
+      - alert: ClaraDown
+        expr: up{job="clara-node"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          host: clara
+          source: node-exporter
+        annotations:
+          summary: "clara (192.168.68.24) is unreachable"
+          description: |
+            Prometheus cannot scrape node-exporter on clara at 192.168.68.24:9100
+            for 5 minutes. The host may be off, hung, or off the network.
+            There is no remote console — check the NUC in person if ping fails.
+            Check: ping 192.168.68.24; ssh clara@192.168.68.24 'systemctl status prometheus-node-exporter'
+
+      # A kernel/libc update was installed by unattended-upgrades and is waiting
+      # for a reboot. Reboots are manual on clara by design.
+      - alert: ClaraRebootRequired
+        expr: node_reboot_required{job="clara-node"} == 1
+        for: 24h
+        labels:
+          severity: warning
+          host: clara
+          source: node-exporter
+        annotations:
+          summary: "clara needs a reboot to finish applying updates"
+          description: |
+            /var/run/reboot-required has existed on clara for over 24h.
+            Schedule a reboot with the operator (no remote console).
+            Check: ssh clara@192.168.68.24 'cat /var/run/reboot-required.pkgs'
+
+      # Upgrades are pending for days: unattended-upgrades is failing or the
+      # pending packages are outside its allowed origins.
+      - alert: ClaraUpdatesPending
+        expr: sum(apt_upgrades_pending{job="clara-node"}) > 0
+        for: 3d
+        labels:
+          severity: warning
+          host: clara
+          source: node-exporter
+        annotations:
+          summary: "clara has {{ $value }} APT upgrade(s) pending for 3+ days"
+          description: |
+            unattended-upgrades should apply security and stable updates daily.
+            Check: ssh clara@192.168.68.24 'apt list --upgradable; sudo tail -50 /var/log/unattended-upgrades/unattended-upgrades.log'
