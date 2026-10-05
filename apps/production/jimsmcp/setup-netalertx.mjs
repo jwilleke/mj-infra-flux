@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Provision the Authentik forward-auth Application + Proxy Provider for NetAlertX
- * (deby#24). Self-contained: decrypts AUTHENTIK_BASE_URL/TOKEN from the SOPS env
- * (same source as src/authentik.ts) and drives the /api/v3 REST API directly with
+ * (deby#24). Reads AUTHENTIK_BASE_URL/TOKEN from OpenBao
+ * kv/deby/workstation/mcp-authentik and drives the /api/v3 REST API directly with
  * global fetch — avoids the CJS/ESM mismatch when importing the compiled client.
  * Idempotent: exits cleanly if the `netalertx` application already exists.
  *
@@ -10,25 +10,12 @@
  * (forward_domain mode) authenticates. See apps/production/netalertx-proxy/.
  */
 import { execSync } from 'node:child_process';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
-
-const repoDir = join(homedir(), 'Documents', 'mj-infra-flux');
-const encryptedFile = join(repoDir, '.env.secret.mcp-authentik.encrypted');
-const ageKeyFile = join(repoDir, 'home-infra-private.agekey');
 
 function loadConfig() {
-  const decrypted = execSync(
-    `SOPS_AGE_KEY_FILE="${ageKeyFile}" sops decrypt --input-type dotenv --output-type dotenv "${encryptedFile}"`,
-    { encoding: 'utf8' }
-  );
-  const cfg = {};
-  for (const line of decrypted.split('\n')) {
-    const [k, ...rest] = line.split('=');
-    const v = rest.join('=').trim();
-    if (k === 'AUTHENTIK_BASE_URL') cfg.baseUrl = v;
-    if (k === 'AUTHENTIK_TOKEN') cfg.token = v;
-  }
+  const data = JSON.parse(
+    execSync('bao kv get -format=json kv/deby/workstation/mcp-authentik', { encoding: 'utf8' })
+  ).data.data;
+  const cfg = { baseUrl: data.AUTHENTIK_BASE_URL, token: data.AUTHENTIK_TOKEN };
   if (!cfg.baseUrl || !cfg.token) throw new Error('Missing AUTHENTIK_BASE_URL or AUTHENTIK_TOKEN');
   return cfg;
 }

@@ -5,7 +5,7 @@ namespace: teslamate
 
 resources:
   - namespace.yaml
-  - teslamate-secret.yaml
+  - teslamate-secret.externalsecret.yaml
   - teslamate-deployment.yaml
   - teslamate-service.yaml
   - teslamate-authentik-middleware.yaml

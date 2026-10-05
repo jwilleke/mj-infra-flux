@@ -8,7 +8,7 @@ Not all of cert-manager is in Flux's hands. Two distinct ownership domains:
 | --- | --- | --- |
 | cert-manager __workload__ (Deployment, cainjector, webhook, CRDs, RBAC) | this directory (`apps/base/cert-manager/`) — manifests + `overlays/prod/` | __No.__ Never wired into a Flux Kustomization. Hand-applied at cluster bootstrap (2024-02, 477+ d ago). Still running fine. |
 | __ClusterIssuers__ (`letsencrypt-{staging,production}`) | `apps/production/cert-manager/letsencrypt-*-clusterissuer.yaml` | __Yes__ (moved 2026-05-22 in mj-infra-flux#81). |
-| Cloudflare API token Secret (DNS-01 solver auth) | `apps/production/cert-manager/cloudflare-api-token.sops.yaml` | __Yes__ (moved 2026-05-22 in mj-infra-flux#77 item 1). |
+| Cloudflare API token Secret (DNS-01 solver auth) | `apps/production/cert-manager/cloudflare-api-token.externalsecret.yaml` | __Yes__ (moved 2026-05-22 in mj-infra-flux#77 item 1; synced from OpenBao). |
 
 Why the split: #81 resolved the declarative-config drift (ClusterIssuers + their Secret) without touching the running workload — separate concern. Bringing the workload itself into Flux is a future cleanup; the workload predates the GitOps repo, so careful sequencing required.
 

@@ -65,12 +65,9 @@ __Do not set `APPLICATION_PROTOCOL` back to `http`__ — that was an earlier, in
 
 ## Secrets
 
-`maps-secret.sops.yaml` is __encrypted__ (`postgres-password` and `secret-key-base`, both freshly random — `openssl rand -base64 32` / `-hex 64`), using the same age recipient as `owntracks/recorder-basic-auth.sops.yaml` and `authentik/authentik-secrets.sops.yaml` (`age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj` — verified against `home-infra-private.agekey`, the same key `sops-age`/Flux decrypts with on `deby`). To rotate either value later:
+`postgres-password` and `secret-key-base` live in OpenBao at `kv/deby/maps/maps-secret`. ExternalSecret `maps-secret` syncs them. See `infrastructure/prod/openbao/README.md`.
 
-```bash
-# from apps/production/maps/
-sops maps-secret.sops.yaml   # opens decrypted in $EDITOR, re-encrypts on save
-```
+Rotating `postgres-password` also needs `ALTER USER` in the maps database. Rotating `secret-key-base` logs every Dawarich session out.
 
 ## Manual steps still needed (outside this repo / outside GitOps)
 

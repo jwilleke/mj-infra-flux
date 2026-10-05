@@ -14,34 +14,33 @@ __Location:__ `apps/production/jimsmcp/`
 
 Provides full API access to Authentik for automated user, group, and application management.
 
-__Configuration:__ Encrypted with SOPS+Age
-__Encrypted File:__ `.env.secret.mcp-authentik.encrypted`
+__Configuration:__ OpenBao path `kv/deby/workstation/mcp-authentik`
+
+Keys: `AUTHENTIK_BASE_URL`, `AUTHENTIK_TOKEN`.
 
 ## Setup Instructions
 
 ### Prerequisites
 
-1. __SOPS installed:__
+1. __OpenBao CLI login__ from this workstation. The API is LAN-only. Trust the internal CA first (`infrastructure/prod/openbao/README.md`).
 
    ```bash
-   # Already installed at /usr/local/bin/sops
-   sops --version
+   export BAO_ADDR=https://stuff.nerdsbythehour.com
+   export BAO_CACERT="$HOME/deby-internal-root-ca.crt"
+   bao login -method=oidc
    ```
 
-2. __Age key file:__
-   - Private key: `home-infra-private.agekey` (git-ignored)
-   - Public key: `age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj`
-   - The private key is also stored in Kubernetes secret: `flux-system/sops-age`
-
-3. __jq installed:__
+2. __jq installed:__
 
    ```bash
    sudo apt install jq
    ```
 
+3. __kubectl__ that can reach the cluster, if `bao` is not installed locally. `scripts/update-mcp-config.sh` uses `kubectl exec` into `openbao-0`.
+
 ### Initial Setup
 
-Run the update script to decrypt credentials and configure MCP:
+Run the update script. It reads OpenBao and writes the local MCP config. It does not print the token.
 
 ```bash
 ./scripts/update-mcp-config.sh
@@ -49,19 +48,16 @@ Run the update script to decrypt credentials and configure MCP:
 
 This script:
 
-1. Decrypts `.env.secret.mcp-authentik.encrypted` using SOPS+Age
+1. Reads `kv/deby/workstation/mcp-authentik`
 2. Extracts `AUTHENTIK_BASE_URL` and `AUTHENTIK_TOKEN`
-3. Updates `~/.config/claude-code/mcp.json` with the configuration
-4. Sets proper permissions (600) on the config file
+3. Updates `~/.config/claude-code/mcp.json`
+4. Sets permissions `600` on that file
+
+The encrypted file `.env.secret.mcp-authentik.encrypted` is not in this branch. Load it into OpenBao from an older checkout before Phase 2, using `scripts/openbao-bootstrap.sh`. See `infrastructure/prod/openbao/README.md`.
 
 ### Restart Claude Code
 
-After running the update script, restart Claude Code to load the MCP servers:
-
-```bash
-# Close and reopen Claude Code
-# Or restart the MCP servers if Claude Code supports it
-```
+After running the update script, restart Claude Code to load the MCP servers.
 
 ## Configuration Details
 
@@ -69,99 +65,32 @@ After running the update script, restart Claude Code to load the MCP servers:
 
 `~/.config/claude-code/mcp.json`
 
-__Note:__ This file contains decrypted credentials and is __not committed to git__.
+__Note:__ This file contains credentials and is __not committed to git__.
 
-### Encrypted Credentials
+### OpenBao path
 
-`.env.secret.mcp-authentik.encrypted` (committed to git)
+`kv/deby/workstation/mcp-authentik`
 
 Contains:
 
 - `AUTHENTIK_BASE_URL` - Authentik instance URL
 - `AUTHENTIK_TOKEN` - API token with full access
 
-__Encryption:__ SOPS with Age encryption
-__Public Key:__ age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj
-
-### Decrypting Manually
-
-To view the encrypted credentials:
-
-```bash
-export SOPS_AGE_KEY_FILE="$(pwd)/home-infra-private.agekey"
-sops decrypt --input-type dotenv --output-type dotenv .env.secret.mcp-authentik.encrypted
-```
-
 ## Security Notes
 
-### ✅ Secure Practices
-
-1. __Private key never committed:__ `.agekey` files are in `.gitignore`
-2. __Credentials encrypted at rest:__ SOPS encryption in git
-3. __Decrypted config protected:__ `mcp.json` has 600 permissions
-4. __API token scope limited:__ Token has necessary permissions only
-
-### ⚠️ Important Reminders
-
-- __Never commit__ `home-infra-private.agekey` to git
-- __Never commit__ unencrypted `.env` files
-- __Rotate tokens__ periodically (every 90-180 days)
-- __Backup the age key__ securely (it's in Kubernetes secret)
-
-### Extracting Age Key from Kubernetes
-
-If you need to restore the age key:
-
-```bash
-kubectl get secret -n flux-system sops-age -o jsonpath='{.data.age\.agekey}' | base64 -d > home-infra-private.agekey
-chmod 600 home-infra-private.agekey
-```
+- The token is not in git.
+- `mcp.json` is mode `600`.
+- Rotate the token in Authentik, write the new value to OpenBao, then re-run `scripts/update-mcp-config.sh`.
+- Do not extract `flux-system/sops-age`. That Secret is removed after Phase 3 reconciles.
 
 ## Updating Credentials
 
 ### Rotate Authentik API Token
 
-1. __Create new token in Authentik:__
-   - Go to: <https://auth.nerdsbythehour.com>
-   - Navigate to Directory → Tokens
-   - Create new token with API intent
-   - Copy the token
-
-2. __Update encrypted file:__
-
-   ```bash
-   # Create temp env file
-   cat > /tmp/mcp-authentik.env <<EOF
-   AUTHENTIK_BASE_URL=https://auth.nerdsbythehour.com
-   AUTHENTIK_TOKEN=your-new-token-here
-   EOF
-
-   # Encrypt it
-   export SOPS_AGE_KEY_FILE="$(pwd)/home-infra-private.agekey"
-   sops encrypt \
-     --age age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj \
-     --input-type dotenv \
-     --output-type dotenv \
-     /tmp/mcp-authentik.env > .env.secret.mcp-authentik.encrypted
-
-   # Remove plaintext
-   rm /tmp/mcp-authentik.env
-   ```
-
-3. __Update MCP config:__
-
-   ```bash
-   ./scripts/update-mcp-config.sh
-   ```
-
-4. __Commit the new encrypted file:__
-
-   ```bash
-   git add .env.secret.mcp-authentik.encrypted
-   git commit -m "Rotate Authentik MCP token"
-   ```
-
-5. __Revoke old token in Authentik__
+1. Create a new token in Authentik at <https://auth.nerdsbythehour.com> (Directory, Tokens, API intent).
+2. Write `AUTHENTIK_BASE_URL` and `AUTHENTIK_TOKEN` to `kv/deby/workstation/mcp-authentik` with the file-based `bao kv put` procedure in `infrastructure/prod/openbao/README.md`. Do not commit the token.
+3. Run `./scripts/update-mcp-config.sh`.
+4. Revoke the old token in Authentik.
 
 ## Available MCP Tools
 
@@ -212,52 +141,28 @@ After setup, Claude Code can use these Authentik MCP tools:
 1. Check config syntax:
 
    ```bash
-   cat ~/.config/claude-code/mcp.json | jq .
+   jq . ~/.config/claude-code/mcp.json
    ```
 
-2. Verify credentials are decrypted:
+2. Refresh from OpenBao:
 
    ```bash
    ./scripts/update-mcp-config.sh
    ```
 
-3. Check SOPS can decrypt:
-
-   ```bash
-   export SOPS_AGE_KEY_FILE="$(pwd)/home-infra-private.agekey"
-   sops decrypt .env.secret.mcp-authentik.encrypted
-   ```
-
 ### Authentication Errors
 
-1. Verify token is valid:
-
-   ```bash
-   TOKEN=$(sops decrypt --extract '["AUTHENTIK_TOKEN"]' .env.secret.mcp-authentik.encrypted)
-   curl -H "Authorization: Bearer $TOKEN" https://auth.nerdsbythehour.com/api/v3/core/users/
-   ```
-
-2. Check token permissions in Authentik admin interface
+Confirm the token in Authentik, then re-run `./scripts/update-mcp-config.sh`. Check token permissions in the Authentik admin interface.
 
 ### Permission Denied Errors
 
-1. Check config file permissions:
-
-   ```bash
-   ls -l ~/.config/claude-code/mcp.json
-   # Should be: -rw------- (600)
-   ```
-
-2. Check age key permissions:
-
-   ```bash
-   ls -l home-infra-private.agekey
-   # Should be: -rw------- (600)
-   ```
+```bash
+ls -l ~/.config/claude-code/mcp.json
+# Should be: -rw------- (600)
+```
 
 ## References
 
 - [Authentik MCP Server](https://github.com/cdmx-in/authentik-mcp)
 - [Model Context Protocol](https://modelcontextprotocol.io/)
-- [SOPS Documentation](https://github.com/getsops/sops)
-- [Age Encryption](https://github.com/FiloSottile/age)
+- [OpenBao runbook](infrastructure/prod/openbao/README.md)

@@ -15,7 +15,7 @@ kind: Kustomization
 resources:
   - ./namespace.yaml
   - ./service.yaml
-  - ./sandbox-credentials.sops.yaml
+  - ./sandbox-credentials.externalsecret.yaml
 
 labels:
   - pairs:

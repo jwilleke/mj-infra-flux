@@ -28,7 +28,7 @@ spec:
             - containerPort: 9090
               name: metrics # in-cluster Prometheus scrape only; NOT routed via the public tunnel
           envFrom:
-            # YOURPHR_RELAY_SECRET — gates /pending. See relay-secret.sops.yaml.example.
+            # YOURPHR_RELAY_SECRET — gates /pending. Synced from OpenBao.
             - secretRef:
                 name: yourphr-relay
           resources:

@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: openbao
+  namespace: openbao
+  labels:
+    app: openbao
+spec:
+  serviceName: openbao-internal
+  replicas: 1
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: openbao
+  template:
+    metadata:
+      labels:
+        app: openbao
+      # No prometheus.io annotations. /v1/sys/metrics needs ?format=prometheus,
+      # which the pod-annotation scrape cannot pass. See
+      # apps/production/monitoring/prometheus/config/scrape-configs.openbao.yaml.
+    spec:
+      serviceAccountName: openbao
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 3003
+        runAsGroup: 3003
+        fsGroup: 3003
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: fix-perms
+          image: docker.io/library/busybox:1.37
+          command: ["sh", "-c", "chown -R 3003:3003 /openbao/data && chmod 0700 /openbao/data"]
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+            capabilities:
+              drop: ["ALL"]
+              add: ["CHOWN", "FOWNER"]
+          volumeMounts:
+            - name: data
+              mountPath: /openbao/data
+      containers:
+        - name: openbao
+          image: quay.io/openbao/openbao:2.6.4
+          imagePullPolicy: IfNotPresent
+          command: ["bao", "server", "-config=/openbao/config/config.hcl"]
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: BAO_API_ADDR
+              value: "http://$(POD_IP):8200"
+            - name: BAO_CLUSTER_ADDR
+              value: "http://openbao-0.openbao-internal.openbao.svc.cluster.local:8201"
+            - name: BAO_ADDR
+              value: "http://127.0.0.1:8200"
+            - name: SKIP_SETCAP
+              value: "true"
+          ports:
+            - name: http
+              containerPort: 8200
+            - name: cluster
+              containerPort: 8201
+          # Ready while sealed or uninitialized, so the first bao operator init
+          # and a sealed restart do not wedge the probe. Alert on sealed state.
+          readinessProbe:
+            httpGet:
+              path: /v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204
+              port: 8200
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204
+              port: 8200
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: config
+              mountPath: /openbao/config
+              readOnly: true
+            - name: unseal-key
+              mountPath: /openbao/unseal
+              readOnly: true
+            - name: data
+              mountPath: /openbao/data
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: openbao-config
+        - name: unseal-key
+          secret:
+            secretName: openbao-unseal-key
+            defaultMode: 0440
+        - name: data
+          persistentVolumeClaim:
+            claimName: openbao-data
+        - name: tmp
+          emptyDir: {}

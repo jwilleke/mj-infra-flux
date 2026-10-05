@@ -5,9 +5,17 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m0s
-  # infra-configs can contain some infra changes we assume in apps:
+  # infra-configs can contain some infra changes we assume in apps.
+  # infra-controllers installs the ExternalSecret CRD.
+  # secret-stores applies the ClusterSecretStore (wait: false, so a sealed
+  # OpenBao does not block this). openbao itself is deliberately not in
+  # this list: apps must keep reconciling while the store is down.
+  # Every secret under apps/production is an ExternalSecret. There is no
+  # decryption provider. Git holds no ciphertext for Flux to unwrap.
   dependsOn:
     - name: infra-configs
+    - name: infra-controllers
+    - name: secret-stores
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -16,14 +24,3 @@ spec:
   prune: true
   wait: true
   timeout: 5m0s
-  # Originally added in #58, reverted in #59 because legacy prometheus +
-  # transmission encrypted files used the unavailable age1nur86… recipient.
-  # All encrypted files under apps/production are now aligned to age1sr8j…
-  # (transmission via a736401, prometheus self-scrape file deleted as unused
-  # in bedcce0, alertmanager re-encrypted in 35ba6ed). Re-enabling so that
-  # alertmanager's gmail_app_password actually decrypts at apply time —
-  # otherwise SMTP auth gets the ciphertext as the password and silently fails.
-  decryption:
-    provider: sops
-    secretRef:
-      name: sops-age

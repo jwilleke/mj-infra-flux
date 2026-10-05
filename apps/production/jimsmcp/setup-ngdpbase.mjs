@@ -18,34 +18,23 @@
  *   - That synthetic user's name resets on each grant; email persists after PATCH
  *   - The custom scope mapping overrides name/preferred_username with stable values
  *
- * Outputs the four ngdpbase server-side config values and the CC credential for the SOPS secret.
+ * Outputs the four ngdpbase server-side config values and the CC credential.
+ * Put client-id and client-secret into OpenBao at
+ * kv/deby/geohazardwatch/ngdpbase-ingest-creds. Do not write a SOPS file.
  *
  * Usage:
  *   node apps/production/jimsmcp/setup-ngdpbase.mjs
  *
- * Prerequisite: SOPS-encrypted env at <repo>/.env.secret.mcp-authentik.encrypted
- * with AUTHENTIK_BASE_URL and AUTHENTIK_TOKEN.
+ * Prerequisite: `bao login -method=oidc` (BAO_ADDR, BAO_CACERT). The token is
+ * kv/deby/workstation/mcp-authentik (AUTHENTIK_BASE_URL, AUTHENTIK_TOKEN).
  */
 import { execSync } from 'node:child_process';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
-
-const repoDir = join(homedir(), 'Documents', 'mj-infra-flux');
-const encryptedFile = join(repoDir, '.env.secret.mcp-authentik.encrypted');
-const ageKeyFile = join(repoDir, 'home-infra-private.agekey');
 
 function loadConfig() {
-  const decrypted = execSync(
-    `SOPS_AGE_KEY_FILE="${ageKeyFile}" sops decrypt --input-type dotenv --output-type dotenv "${encryptedFile}"`,
-    { encoding: 'utf8' }
-  );
-  const cfg = {};
-  for (const line of decrypted.split('\n')) {
-    const [k, ...rest] = line.split('=');
-    const v = rest.join('=').trim();
-    if (k === 'AUTHENTIK_BASE_URL') cfg.baseUrl = v;
-    if (k === 'AUTHENTIK_TOKEN') cfg.token = v;
-  }
+  const data = JSON.parse(
+    execSync('bao kv get -format=json kv/deby/workstation/mcp-authentik', { encoding: 'utf8' })
+  ).data.data;
+  const cfg = { baseUrl: data.AUTHENTIK_BASE_URL, token: data.AUTHENTIK_TOKEN };
   if (!cfg.baseUrl || !cfg.token) throw new Error('Missing AUTHENTIK_BASE_URL or AUTHENTIK_TOKEN');
   return cfg;
 }
@@ -251,7 +240,7 @@ async function main() {
   console.log(`  token-endpoint: ${tokenEndpoint}`);
   console.log(`  audience:       ${providerClientId}`);
 
-  console.log('\n── CC credential → SOPS secret ngdpbase-ingest-creds.sops.yaml ──────────────');
+  console.log('\n── CC credential → OpenBao kv/deby/geohazardwatch/ngdpbase-ingest-creds ──');
   console.log(`  client-id:      ${providerClientId}`);
   console.log(`  client-secret:  ${providerClientSecret}`);
 

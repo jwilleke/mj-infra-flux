@@ -47,6 +47,9 @@ configMapGenerator:
       # Home Assistant /api/prometheus scrape + alert rules (mjs-ha#72)
       - config/scrape-configs.homeassistant.yaml
       - config/alerting-rules.homeassistant.yaml
+      # OpenBao metrics need ?format=prometheus, so they are not a pod-annotation job.
+      - config/scrape-configs.openbao.yaml
+      - config/alerting-rules.openbao.yaml
       # coinpoet and tayle configs removed
 
 labels:

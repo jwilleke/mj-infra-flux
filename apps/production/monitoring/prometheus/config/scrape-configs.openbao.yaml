@@ -1,0 +1,9 @@
+scrape_configs:
+  # OpenBao /v1/sys/metrics requires ?format=prometheus. The pod-annotation
+  # job cannot pass query params, so this target is static.
+  - job_name: openbao
+    metrics_path: /v1/sys/metrics
+    params:
+      format: ["prometheus"]
+    static_configs:
+      - targets: ["openbao.openbao.svc.cluster.local:8200"]

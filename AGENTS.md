@@ -120,7 +120,7 @@ __Goals:__
 - Maintain a production-grade Kubernetes infrastructure using GitOps principles
 - Ensure all services are highly available and properly secured
 - Use Kustomize for all deployments (Helm only when absolutely necessary)
-- Never commit secrets to git (use SOPS + Age encryption)
+- Never commit secrets to git (OpenBao + External Secrets; see infrastructure/prod/openbao/README.md)
 - Document everything thoroughly for future maintenance
 
 ## Current Status
@@ -144,11 +144,11 @@ mj-infra-flux/
 │   ├── production/        # Production deployments (16 applications)
 │   └── lib/               # Shared libraries (mariadb, etc.)
 ├── infrastructure/
-│   ├── base/configs/      # Infrastructure configs (webhook, sops)
+│   ├── base/configs/      # Infrastructure configs (webhook)
 │   └── prod/              # Production infrastructure
 ├── clusters/
 │   └── production/        # Flux system components
-├── scripts/               # Utility scripts (secret encryption, bootstrapping)
+├── scripts/               # Utility scripts (OpenBao bootstrap)
 ├── .claude/               # Claude Code configurations
 │   ├── commands/          # Custom slash commands
 │   └── mcp.json           # MCP server configuration
@@ -194,27 +194,9 @@ __Good Kustomize Examples:__
 
 ### 2. Secret Management
 
-__NEVER commit secrets in plaintext to git. This is non-negotiable.__
+__NEVER commit secrets to git, encrypted or plaintext. This is non-negotiable.__
 
-__Approved methods (in priority order):__
-
-1. __SOPS + Age encryption__ (PREFERRED)
-
-   ```bash
-   # Store secrets in .env files
-   # Encrypt with: ./scripts/encrypt-env-files.sh <directory>
-   # Only commit .env*.encrypted files to git
-   ```
-
-2. __Cluster-only Kubernetes Secrets__
-
-   ```bash
-   # Create directly in cluster (NOT in git)
-   kubectl create secret generic my-secret -n namespace --from-literal=key="value"
-   # Document in README how to recreate it
-   ```
-
-3. __Helm valuesFrom__ (only if using Helm)
+Secrets live in OpenBao. External Secrets Operator syncs them into Kubernetes Secrets. The runbook is `infrastructure/prod/openbao/README.md`. The only bootstrap secret is `openbao-unseal-key`, created by hand and never committed.
 
 __Reference:__ `SECURITY-INCIDENT.md` documents a real security incident caused by improper secret handling.
 
@@ -343,12 +325,8 @@ kubectl apply -k apps/production/myapp/
 ### Secret Management
 
 ```bash
-# Encrypt secrets with SOPS + Age
-./scripts/encrypt-env-files.sh apps/production/myapp/
-
-# Create cluster-only secret
-kubectl create secret generic my-secret -n namespace \
-  --from-literal=key="value"
+# Read a secret from OpenBao. Do not commit the output.
+kubectl -n openbao exec -it openbao-0 -- bao kv get kv/deby/<namespace>/<name>
 ```
 
 ### Debugging
@@ -383,12 +361,12 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 - __Exception:__ Existing Helm charts (e.g., Authentik) acceptable
 - __Documentation:__ `DEPLOYMENT-GUIDELINES.md`
 
-### SOPS + Age for Secrets
+### OpenBao for Secrets
 
-- __Decision:__ Use SOPS + Age encryption for all secrets in git
-- __Rationale:__ Security, audit trail, GitOps compatibility
-- __Alternative:__ Cluster-only secrets for highly sensitive data
-- __Documentation:__ `SECURITY-INCIDENT.md` (lessons learned)
+- __Decision:__ OpenBao is the store. External Secrets Operator syncs Kubernetes Secrets. Git holds no secret values.
+- __Rationale:__ One store, Kubernetes auth for workloads, no ciphertext in git
+- __Exception:__ The unseal key is a hand-created Secret and is never committed
+- __Documentation:__ `infrastructure/prod/openbao/README.md`
 
 ### Port Range for Applications
 
@@ -560,9 +538,9 @@ __Authentication Flow:__
 
 __Secrets Management:__
 
-- SOPS + Age encryption for secrets in git
-- Cluster-only secrets for highly sensitive data
-- Never commit plaintext secrets (see SECURITY-INCIDENT.md)
+- OpenBao, synced by External Secrets Operator
+- The unseal key is cluster-only and never committed
+- Never commit secret values (see SECURITY-INCIDENT.md)
 
 ### Resource Ownership
 
@@ -591,7 +569,7 @@ Exception: When image requires root (document why in README).
 - Work directly on `master` branch (small repo, sole maintainer)
 - Use descriptive commit messages with "why" not just "what"
 - End commits with Claude Code attribution
-- Never commit secrets, age keys, or unencrypted .env files
+- Never commit secrets, age keys, or .env files
 
 ## Agent Guidelines
 
@@ -630,8 +608,7 @@ Exception: When image requires root (document why in README).
 # Apply changes
 kubectl apply -k apps/production/myapp/
 
-# Encrypt secrets
-./scripts/encrypt-env-files.sh apps/production/myapp/
+# Secrets live in OpenBao. See infrastructure/prod/openbao/README.md.
 
 # Force Flux sync
 flux reconcile kustomization flux-system --with-source

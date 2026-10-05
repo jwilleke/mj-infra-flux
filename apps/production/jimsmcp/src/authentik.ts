@@ -3,9 +3,6 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
-import { readFileSync } from 'fs';
-import { homedir } from 'os';
-import { join } from 'path';
 import { execSync } from 'child_process';
 
 export interface AuthentikConfig {
@@ -30,40 +27,23 @@ export class AuthentikClient {
 
   private loadConfig(): AuthentikConfig {
     try {
-      // Try to load from encrypted env file using SOPS
-      const repoDir = join(homedir(), 'Documents', 'mj-infra-flux');
-      const encryptedFile = join(repoDir, '.env.secret.mcp-authentik.encrypted');
-      const ageKeyFile = join(repoDir, 'home-infra-private.agekey');
-
-      // Decrypt using SOPS
-      const decrypted = execSync(
-        `SOPS_AGE_KEY_FILE="${ageKeyFile}" sops decrypt --input-type dotenv --output-type dotenv "${encryptedFile}"`,
+      // Workstation token lives in OpenBao, not in git.
+      // bao login -method=oidc, with BAO_ADDR and BAO_CACERT set.
+      const raw = execSync(
+        'bao kv get -format=json kv/deby/workstation/mcp-authentik',
         { encoding: 'utf8' }
       );
-
+      const data = JSON.parse(raw).data.data as Record<string, string>;
       const config: AuthentikConfig = {
-        baseUrl: '',
-        token: '',
+        baseUrl: data.AUTHENTIK_BASE_URL || '',
+        token: data.AUTHENTIK_TOKEN || '',
       };
-
-      // Parse the decrypted env content
-      decrypted.split('\n').forEach(line => {
-        const [key, ...valueParts] = line.split('=');
-        const value = valueParts.join('=').trim();
-        if (key === 'AUTHENTIK_BASE_URL') {
-          config.baseUrl = value;
-        } else if (key === 'AUTHENTIK_TOKEN') {
-          config.token = value;
-        }
-      });
-
       if (!config.baseUrl || !config.token) {
-        throw new Error('Missing AUTHENTIK_BASE_URL or AUTHENTIK_TOKEN in encrypted config');
+        throw new Error('Missing AUTHENTIK_BASE_URL or AUTHENTIK_TOKEN in kv/deby/workstation/mcp-authentik');
       }
-
       return config;
     } catch (error) {
-      throw new Error(`Failed to load Authentik config: ${error}`);
+      throw new Error(`Failed to load Authentik config from OpenBao: ${error}`);
     }
   }
 

@@ -447,23 +447,15 @@ To enable the `stocks_get_price` tool, you need to set the `ALPHA_VANTAGE_KEY` e
 
 #### Option 1: Local Development (.env file)
 
-1. Create a `.env.secret.stocks` file in the jimsmcp directory:
+1. Keep the key in a local, gitignored env file. Do not commit it and do not encrypt it into the repo.
 
 ```bash
 cd /home/jim/Documents/mj-infra-flux/apps/production/jimsmcp
-echo "ALPHA_VANTAGE_KEY=your_api_key_here" > .env.secret.stocks
-```
-
-1. Encrypt it with SOPS:
-
-```bash
-./scripts/encrypt-env-files.sh apps/production/jimsmcp/
-```
-
-1. Load the environment before running jimsmcp:
-
-```bash
-export ALPHA_VANTAGE_KEY=$(cat .env.secret.stocks)
+umask 077
+printf 'ALPHA_VANTAGE_KEY=%s\n' 'your_api_key_here' > .env.secret.stocks
+set -a
+source .env.secret.stocks
+set +a
 npm run dev
 ```
 

@@ -8,9 +8,9 @@ resources:
   - ingress.yaml
   # Certificate auto-created by ingress annotation
   - cronjob-import.yaml
-  # ngdpbase-ingest-creds: copied from apps/production/jimsmcp/ (mj-infra-flux#124);
-  # the top-level `namespace:` transform re-homes it from jimsmcp to geohazardwatch
-  - ngdpbase-ingest-creds.sops.yaml
+  # ngdpbase-ingest-creds comes from OpenBao. The namespace transform below
+  # places the ExternalSecret in geohazardwatch.
+  - ngdpbase-ingest-creds.externalsecret.yaml
 
 # Image automation (ImageRepository / ImagePolicy / ImageUpdateAutomation)
 # lives in apps/production/image-automation/ — those resources are in the

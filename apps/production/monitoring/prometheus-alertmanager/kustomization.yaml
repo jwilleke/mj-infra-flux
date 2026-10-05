@@ -1,6 +1,7 @@
 resources:
   - ./alertmanager-deployment.yaml
   - ./alertmanager-service.yaml
+  - ./alertmanager-secrets.externalsecret.yaml
 
 configMapGenerator:
   # the alertmanager's config:
@@ -10,11 +11,6 @@ configMapGenerator:
       # Overrides the default email button link (jwilleke/mjs-ha#117);
       # alertmanager.yaml loads it via templates: /config/*.tmpl
       - ./config/grafana-links.tmpl
-
-secretGenerator:
-  - name: alertmanager-secrets
-    envs:
-      - .env.secret.alertmanager.encrypted
 
 labels:
   - pairs:

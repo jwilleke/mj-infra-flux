@@ -52,8 +52,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthentikClient = void 0;
 var axios_1 = require("axios");
-var os_1 = require("os");
-var path_1 = require("path");
 var child_process_1 = require("child_process");
 var AuthentikClient = /** @class */ (function () {
     function AuthentikClient() {
@@ -68,34 +66,21 @@ var AuthentikClient = /** @class */ (function () {
     }
     AuthentikClient.prototype.loadConfig = function () {
         try {
-            // Try to load from encrypted env file using SOPS
-            var repoDir = (0, path_1.join)((0, os_1.homedir)(), 'Documents', 'mj-infra-flux');
-            var encryptedFile = (0, path_1.join)(repoDir, '.env.secret.mcp-authentik.encrypted');
-            var ageKeyFile = (0, path_1.join)(repoDir, 'home-infra-private.agekey');
-            // Decrypt using SOPS
-            var decrypted = (0, child_process_1.execSync)("SOPS_AGE_KEY_FILE=\"".concat(ageKeyFile, "\" sops decrypt --input-type dotenv --output-type dotenv \"").concat(encryptedFile, "\""), { encoding: 'utf8' });
+            // Workstation token lives in OpenBao, not in git.
+            // bao login -method=oidc, with BAO_ADDR and BAO_CACERT set.
+            var raw = (0, child_process_1.execSync)('bao kv get -format=json kv/deby/workstation/mcp-authentik', { encoding: 'utf8' });
+            var data = JSON.parse(raw).data.data;
             var config_1 = {
-                baseUrl: '',
-                token: '',
+                baseUrl: data.AUTHENTIK_BASE_URL || '',
+                token: data.AUTHENTIK_TOKEN || '',
             };
-            // Parse the decrypted env content
-            decrypted.split('\n').forEach(function (line) {
-                var _a = line.split('='), key = _a[0], valueParts = _a.slice(1);
-                var value = valueParts.join('=').trim();
-                if (key === 'AUTHENTIK_BASE_URL') {
-                    config_1.baseUrl = value;
-                }
-                else if (key === 'AUTHENTIK_TOKEN') {
-                    config_1.token = value;
-                }
-            });
             if (!config_1.baseUrl || !config_1.token) {
-                throw new Error('Missing AUTHENTIK_BASE_URL or AUTHENTIK_TOKEN in encrypted config');
+                throw new Error('Missing AUTHENTIK_BASE_URL or AUTHENTIK_TOKEN in kv/deby/workstation/mcp-authentik');
             }
             return config_1;
         }
         catch (error) {
-            throw new Error("Failed to load Authentik config: ".concat(error));
+            throw new Error("Failed to load Authentik config from OpenBao: ".concat(error));
         }
     };
     /**

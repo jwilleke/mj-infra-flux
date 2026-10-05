@@ -12,6 +12,6 @@ resources:
   - visual-configmap.yaml
   - recorder-deployment.yaml
   - recorder-service.yaml
-  - recorder-basic-auth.sops.yaml
+  - recorder-basic-auth.externalsecret.yaml
   - recorder-middleware.yaml
   - recorder-ingress.yaml

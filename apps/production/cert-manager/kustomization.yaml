@@ -3,8 +3,8 @@ kind: Kustomization
 
 # cert-manager declarative config that needs to be Flux-reconciled.
 #
-# In scope: the cloudflare-api-token Secret (migrated 2026-05-22 in
-# mj-infra-flux#77 item 1) AND the two ClusterIssuers that reference it
+# In scope: the cloudflare-api-token ExternalSecret (OpenBao; was SOPS)
+# AND the two ClusterIssuers that reference it
 # (migrated 2026-05-22 in mj-infra-flux#81 — live spec preserved byte-identical;
 # the old apps/base/cert-manager/base/other/letsencrypt-*-clusterissuer.yaml
 # manifests declared HTTP-01 only and never matched live state).
@@ -15,6 +15,6 @@ kind: Kustomization
 # apps/base/cert-manager/README-cert-manager.md.
 
 resources:
-  - ./cloudflare-api-token.sops.yaml
+  - ./cloudflare-api-token.externalsecret.yaml
   - ./letsencrypt-staging-clusterissuer.yaml
   - ./letsencrypt-production-clusterissuer.yaml
