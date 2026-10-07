@@ -36,6 +36,16 @@ spec:
           ports:
             - containerPort: 8080
               name: http
+          # The SMART relay's shared secret (yourphr#870). ngdpbase's Kubernetes pattern for a secret:
+          # a flat Secret bag injected with envFrom (ngdpbase docs/guides/bootstrap-developer-guide.md,
+          # "How values reach each implementation"). It is the relay's own Secret — the same value the
+          # relay checks on /pending — so the two can never drift and no copy of the value exists.
+          # The relay ADDRESSES are settings, not secrets: Admin -> Configuration
+          # (yourphr.relay.public-url, yourphr.relay.url). Env outranks <data>/.env, so do not also
+          # put YOURPHR_RELAY_SECRET in the volume's .env.
+          envFrom:
+            - secretRef:
+                name: yourphr-relay
           env:
             # BOOTSTRAP ONLY (yourphr#472). Everything that is a setting — session policy, throttle,
             # sync cadence, backup retention, trusted proxies — lives in the config store under the
