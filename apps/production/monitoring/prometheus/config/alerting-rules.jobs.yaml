@@ -1,0 +1,64 @@
+groups:
+  # Kubernetes Job / CronJob health (mj-infra-flux#210).
+  #
+  # A failed Job does not crash-loop, OOM or leave a running pod, so none of
+  # the k3s_cluster_pod_health rules can see it. geohazardwatch-data-refresh
+  # failed three days running at least four times (geohazardwatch#137, #157,
+  # 2026-09-15..17, 2026-09-29..10-01) and each time someone happened to look.
+  # Metrics come from kube-state-metrics, already scraped.
+  - name: k8s_jobs
+    interval: 1m
+    rules:
+
+      # A Job ended in the Failed condition (backoffLimit exhausted, deadline
+      # exceeded). Only failures that STARTED in the last 24h: failed Jobs stay
+      # in the cluster as history (failedJobsHistoryLimit), so without the
+      # window this would fire on week-old failures and never resolve. A
+      # failure that persists is caught by CronJobNoRecentSuccess below.
+      - alert: KubeJobFailed
+        expr: |
+          max by (namespace, job_name) (kube_job_failed{condition="true"}) == 1
+          and on (namespace, job_name)
+          (time() - max by (namespace, job_name) (kube_job_status_start_time)) < 86400
+        for: 1m
+        labels:
+          severity: warning
+          source: kube-state-metrics
+        annotations:
+          summary: "Job {{ $labels.namespace }}/{{ $labels.job_name }} failed"
+          description: |
+            Kubernetes Job {{ $labels.namespace }}/{{ $labels.job_name }} reached the
+            Failed condition. Read its pods' logs before the Job is cleaned up —
+            nothing else keeps them (pod logs are not shipped to Loki):
+              kubectl -n {{ $labels.namespace }} describe job {{ $labels.job_name }}
+              kubectl -n {{ $labels.namespace }} logs job/{{ $labels.job_name }} --all-containers
+
+      # A CronJob has had no successful run for 26h (daily schedule + slack),
+      # or has never succeeded 26h after it was created. Catches repeated
+      # failures AND a CronJob that stops being scheduled at all — a missing
+      # run produces no failed Job, so KubeJobFailed cannot see it.
+      # 26h fits every CronJob in the cluster today (all daily or rarer). If a
+      # more frequent CronJob is added, give it its own rule with a shorter window.
+      - alert: CronJobNoRecentSuccess
+        expr: |
+          (
+            (time() - max by (namespace, cronjob) (kube_cronjob_status_last_successful_time)) > 26 * 3600
+            or
+            (
+              (time() - max by (namespace, cronjob) (kube_cronjob_created)) > 26 * 3600
+              unless on (namespace, cronjob) kube_cronjob_status_last_successful_time
+            )
+          )
+          unless on (namespace, cronjob) (kube_cronjob_spec_suspend == 1)
+        for: 15m
+        labels:
+          severity: warning
+          source: kube-state-metrics
+        annotations:
+          summary: "CronJob {{ $labels.namespace }}/{{ $labels.cronjob }} has not succeeded in 26h"
+          description: |
+            CronJob {{ $labels.namespace }}/{{ $labels.cronjob }} has had no successful
+            run for over 26 hours (or never succeeded). Its runs are failing or it has
+            stopped being scheduled.
+              kubectl -n {{ $labels.namespace }} get cronjob {{ $labels.cronjob }}
+              kubectl -n {{ $labels.namespace }} get jobs --sort-by=.metadata.creationTimestamp

@@ -30,6 +30,8 @@ configMapGenerator:
       - config/alerting-rules.prometheus.yaml
       - config/alerting-rules.service-health.yaml
       - config/alerting-rules.k3s-cluster.yaml
+      # Job / CronJob failure and staleness (mj-infra-flux#210)
+      - config/alerting-rules.jobs.yaml
       # Alertmanager's own delivery-health self-monitoring (mj-infra-flux#136)
       - config/alerting-rules.alertmanager.yaml
       # Loki-independent storage/backup alerts (mj-infra-flux#74)
