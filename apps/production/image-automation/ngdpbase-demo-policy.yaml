@@ -21,7 +21,7 @@ spec:
     semver:
       # Auto-update minor and patch within the current major. A major bump
       # requires widening this range by hand.
-      range: ">=4.0.0 <5.0.0"
+      range: ">=5.0.0 <6.0.0"
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageUpdateAutomation
