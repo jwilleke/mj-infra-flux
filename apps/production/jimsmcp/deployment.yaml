@@ -19,11 +19,9 @@ spec:
         app: jimsmcp
     spec:
       serviceAccountName: jimsmcp
-      imagePullSecrets:
-        - name: ghcr-jimsmcp
       containers:
       - name: jimsmcp
-        image: ghcr.io/jwilleke/jimsmcp:sha-c6ab9cb
+        image: ghcr.io/jwilleke/jimsmcp:sha-6c2916d
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9210
