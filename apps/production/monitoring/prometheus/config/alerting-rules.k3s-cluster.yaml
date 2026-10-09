@@ -54,6 +54,25 @@ groups:
             Last termination of this container was due to memory limits.
             Either bump the container's memory limit or fix the leak.
 
+      # Any kernel OOM kill on a host, counted by node-exporter (mj-infra-flux#224).
+      # PodOOMKilled above only sees a kill that restarts the container. When
+      # the killer picks a child process — e.g. a postgres backend — PID 1
+      # survives, nothing restarts, and Kubernetes has no record: 57 of 68
+      # maps OOM kills in 2026-09 were invisible that way (#191, #208).
+      # max by (instance): deby's node-exporter is scraped as two series.
+      - alert: HostOOMKill
+        expr: |
+          max by (instance) (increase(node_vmstat_oom_kill[15m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "OOM kill on {{ $labels.instance }}"
+          description: |
+            The kernel OOM killer ran on {{ $labels.instance }} in the last
+            15 minutes. If no PodOOMKilled fired alongside, the victim was a
+            child process and the container did not restart. Find it on the host:
+              journalctl -k --since -30min | grep -A2 'Memory cgroup out of memory'
+
       # Node went NotReady — this is a single-node cluster, so this means
       # k3s itself is in trouble (or the host's kubelet/containerd is unhappy).
       - alert: NodeNotReady

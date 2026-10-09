@@ -1268,6 +1268,71 @@
       ]
     },
     {
+      "type": "stat",
+      "title": "OOM kills (24h)",
+      "id": 27,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 20
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (instance) (increase(node_vmstat_oom_kill[24h]))",
+          "instant": false,
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Kernel OOM kills per host over 24h (node_vmstat_oom_kill). Catches kills that never restart a container, so PodOOMKilled and Failed Pods miss them (mj-infra-flux#224).",
+      "interval": "5m"
+    },
+    {
       "type": "row",
       "title": "External Services",
       "id": 30,
@@ -1275,7 +1340,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 24
       },
       "collapsed": false,
       "panels": []
@@ -1293,7 +1358,7 @@
         "h": 3,
         "w": 4,
         "x": 0,
-        "y": 21
+        "y": 25
       },
       "repeat": "service_instance",
       "repeatDirection": "h",
@@ -1378,7 +1443,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 31
       },
       "collapsed": false,
       "panels": []
@@ -1396,7 +1461,7 @@
         "h": 4,
         "w": 4,
         "x": 0,
-        "y": 28
+        "y": 32
       },
       "options": {
         "reduceOptions": {
@@ -1471,7 +1536,7 @@
         "h": 4,
         "w": 4,
         "x": 4,
-        "y": 28
+        "y": 32
       },
       "options": {
         "reduceOptions": {
@@ -1541,7 +1606,7 @@
         "h": 4,
         "w": 4,
         "x": 8,
-        "y": 28
+        "y": 32
       },
       "options": {
         "reduceOptions": {
@@ -1594,7 +1659,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 32
+        "y": 36
       },
       "collapsed": false,
       "panels": []
@@ -1612,7 +1677,7 @@
         "h": 4,
         "w": 4,
         "x": 0,
-        "y": 33
+        "y": 37
       },
       "options": {
         "reduceOptions": {
@@ -1698,7 +1763,7 @@
         "h": 4,
         "w": 4,
         "x": 4,
-        "y": 33
+        "y": 37
       },
       "options": {
         "reduceOptions": {
@@ -1774,7 +1839,7 @@
         "h": 4,
         "w": 4,
         "x": 8,
-        "y": 33
+        "y": 37
       },
       "options": {
         "reduceOptions": {
@@ -1846,7 +1911,7 @@
         "h": 4,
         "w": 4,
         "x": 12,
-        "y": 33
+        "y": 37
       },
       "options": {
         "reduceOptions": {
