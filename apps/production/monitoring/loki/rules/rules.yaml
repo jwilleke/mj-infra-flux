@@ -95,10 +95,9 @@ groups:
 
       # Sustained error logging in one namespace. Baseline (24h, 2026-10-09):
       # every namespace stays under 20 error lines per 10 min except brief
-      # rollout bursts. csi-snapshotter is excluded: it logs ~14 errors per
-      # 5 min constantly until mj-infra-flux#227 is fixed.
+      # rollout bursts.
       - alert: PodErrorRate
-        expr: 'sum by (namespace) (count_over_time({source="k3s", log_level="error", container!="csi-snapshotter"}[10m])) > 25'
+        expr: 'sum by (namespace) (count_over_time({source="k3s", log_level="error"}[10m])) > 25'
         for: 10m
         labels:
           severity: warning
