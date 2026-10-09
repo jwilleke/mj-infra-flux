@@ -36,11 +36,12 @@ kubectl -n geohazardwatch create job --from=cronjob/geohazardwatch-data-refresh 
 
 ## Secrets
 
-A session secret can be created out-of-band (not yet required — image runs in headless install mode with default admin/admin123, change via web UI on first login):
+The deployment reads `NGDPBASE_SESSION_SECRET` from `geohazardwatch-secrets` / `session-secret` (optional, same pattern as `ngdpbase-demo`). That Secret does not exist yet, so ngdpbase uses the secret it generated into `/app/data/.env` on first boot. If you create the Secret, set it to the value already in `/app/data/.env`; any other value signs everyone out on the next restart.
 
 ```bash
 kubectl -n geohazardwatch create secret generic geohazardwatch-secrets \
-  --from-literal=session-secret=$(openssl rand -base64 32)
+  --from-literal=session-secret="$(kubectl -n geohazardwatch exec deploy/geohazardwatch -c geohazardwatch -- \
+    sh -c 'grep ^NGDPBASE_SESSION_SECRET= /app/data/.env | cut -d= -f2-')"
 ```
 
 ## First deploy notes
