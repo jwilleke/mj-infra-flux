@@ -54,8 +54,10 @@ groups:
       # the suspension/IO/hung-task phrases are matched anywhere on the
       # line (no zpool prefix). Companion Prometheus alerts
       # (ZfsPoolUnhealthy / BackupDebyStale) cover the Loki-down case.
+      # rsyslog logs "action ... suspended (module 'builtin:omfwd')" whenever
+      # fluent-bit restarts; that is not a pool, so omfwd lines are dropped.
       - alert: ZfsPoolDegraded
-        expr: 'sum(count_over_time({host="deby", source!="k3s"} |~ "(?i)(zpool.*(degraded|faulted|unavail)|uncorrectable i/o failure|has been suspended|suspended|blocked for more than .* seconds|hung_task)"[5m])) > 0'
+        expr: 'sum(count_over_time({host="deby", source!="k3s"} != "builtin:omfwd" |~ "(?i)(zpool.*(degraded|faulted|unavail)|uncorrectable i/o failure|has been suspended|suspended|blocked for more than .* seconds|hung_task)"[5m])) > 0'
         labels:
           severity: critical
         annotations:
@@ -65,6 +67,48 @@ groups:
             Backup pools (deby-backup, nas-backup) and any others.
             Triggers on DEGRADED/FAULTED/UNAVAIL, pool suspension,
             uncorrectable I/O failure, or kernel hung-task / blocked-task.
+
+  # ───────────────────────────────────────────────────────────────
+  # k3s pod logs (mj-infra-flux#223), shipped by fluent-bit on deby with
+  # source="k3s" and namespace/container labels. log_level is derived from
+  # each line by /etc/fluent-bit/kube_metadata.lua; known-harmless lines are
+  # dropped before Loki (fluent-bit.conf grep filter).
+  # ───────────────────────────────────────────────────────────────
+  - name: k3s_pods
+    interval: 1m
+    rules:
+
+      # Dead-man's switch on the pod-log feed: the tail input stopped, or
+      # fluent-bit is down (HostLogsAbsent covers the journal side).
+      - alert: PodLogsAbsent
+        expr: 'absent_over_time({source="k3s"}[15m]) == 1'
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No k3s pod logs received for >15 min"
+          description: |
+            fluent-bit on deby has shipped no pod log line in 15 minutes.
+            Check on the host:
+              systemctl status fluent-bit
+              sudo journalctl -u fluent-bit -e
+
+      # Sustained error logging in one namespace. Baseline (24h, 2026-10-09):
+      # every namespace stays under 20 error lines per 10 min except brief
+      # rollout bursts. csi-snapshotter is excluded: it logs ~14 errors per
+      # 5 min constantly until mj-infra-flux#227 is fixed.
+      - alert: PodErrorRate
+        expr: 'sum by (namespace) (count_over_time({source="k3s", log_level="error", container!="csi-snapshotter"}[10m])) > 25'
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Namespace {{ $labels.namespace }} is logging errors steadily"
+          description: |
+            More than 25 error lines in 10 minutes from namespace
+            {{ $labels.namespace }}, sustained for 10 minutes.
+            Grafana → "k3s — cluster errors", or Explore → Loki:
+              {source="k3s", namespace="{{ $labels.namespace }}", log_level="error"}
 
   # ───────────────────────────────────────────────────────────────
   # Central syslog Phase 3 (jwilleke/deby#20) — LogQL alerts over

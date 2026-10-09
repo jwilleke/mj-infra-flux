@@ -20,6 +20,7 @@ configMapGenerator:
       - config/dashboards/jimstest-wiki.json
       - config/dashboards/deby-host-errors.json
       - config/dashboards/env-health-noc.json
+      - config/dashboards/k3s-cluster-errors.json
 
 labels:
   - pairs:
