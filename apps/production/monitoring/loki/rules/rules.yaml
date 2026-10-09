@@ -6,7 +6,7 @@ groups:
       # Fires when fluent-bit hasn't shipped any deby record for >10 min.
       # Most common cause: fluent-bit is stopped or Loki is unreachable.
       - alert: HostLogsAbsent
-        expr: 'absent_over_time({host="deby"}[10m]) == 1'
+        expr: 'absent_over_time({host="deby", source!="k3s"}[10m]) == 1'
         for: 5m
         labels:
           severity: critical
@@ -21,7 +21,7 @@ groups:
       # PRIORITY 3/4 (err/warning), so any "error" detected_level here
       # came from a real systemd-priority-3 entry.
       - alert: HostErrorRate
-        expr: 'sum(count_over_time({host="deby", detected_level="error"}[5m])) > 5'
+        expr: 'sum(count_over_time({host="deby", source!="k3s", detected_level="error"}[5m])) > 5'
         for: 5m
         labels:
           severity: warning
@@ -30,12 +30,12 @@ groups:
           description: |
             More than 5 priority-3 journal entries from deby in the last
             5 minutes. Investigate via Grafana → Explore → Loki:
-            {host="deby", detected_level="error"}
+            {host="deby", source!="k3s", detected_level="error"}
 
       # Tripped by a marker line written by backup-deby's OnFailure
       # handler. See deby:systemd/backup-deby-fail.service.
       - alert: BackupDebyFailed
-        expr: 'sum(count_over_time({host="deby"} |= "BACKUP-DEBY-FAILED"[15m])) > 0'
+        expr: 'sum(count_over_time({host="deby", source!="k3s"} |= "BACKUP-DEBY-FAILED"[15m])) > 0'
         labels:
           severity: critical
         annotations:
@@ -55,7 +55,7 @@ groups:
       # line (no zpool prefix). Companion Prometheus alerts
       # (ZfsPoolUnhealthy / BackupDebyStale) cover the Loki-down case.
       - alert: ZfsPoolDegraded
-        expr: 'sum(count_over_time({host="deby"} |~ "(?i)(zpool.*(degraded|faulted|unavail)|uncorrectable i/o failure|has been suspended|suspended|blocked for more than .* seconds|hung_task)"[5m])) > 0'
+        expr: 'sum(count_over_time({host="deby", source!="k3s"} |~ "(?i)(zpool.*(degraded|faulted|unavail)|uncorrectable i/o failure|has been suspended|suspended|blocked for more than .* seconds|hung_task)"[5m])) > 0'
         labels:
           severity: critical
         annotations:

@@ -58,7 +58,7 @@
         {
           "datasource": { "type": "loki", "uid": "${datasource}" },
           "refId": "A",
-          "expr": "sum(count_over_time({host=\"deby\", log_level=\"error\"}[$__range]))"
+          "expr": "sum(count_over_time({host=\"deby\", source!=\"k3s\", log_level=\"error\"}[$__range]))"
         }
       ]
     },
@@ -92,7 +92,7 @@
         {
           "datasource": { "type": "loki", "uid": "${datasource}" },
           "refId": "A",
-          "expr": "sum(count_over_time({host=\"deby\", log_level=\"warning\"}[$__range]))"
+          "expr": "sum(count_over_time({host=\"deby\", source!=\"k3s\", log_level=\"warning\"}[$__range]))"
         }
       ]
     },
@@ -116,7 +116,7 @@
         {
           "datasource": { "type": "loki", "uid": "${datasource}" },
           "refId": "A",
-          "expr": "count(count by (unit) (count_over_time({host=\"deby\", log_level=\"error\", unit=~\".+\"}[$__range])))"
+          "expr": "count(count by (unit) (count_over_time({host=\"deby\", source!=\"k3s\", log_level=\"error\", unit=~\".+\"}[$__range])))"
         }
       ]
     },
@@ -140,7 +140,7 @@
         {
           "datasource": { "type": "loki", "uid": "${datasource}" },
           "refId": "A",
-          "expr": "sum(rate({host=\"deby\"}[5m]))"
+          "expr": "sum(rate({host=\"deby\", source!=\"k3s\"}[5m]))"
         }
       ]
     },
@@ -171,7 +171,7 @@
         {
           "datasource": { "type": "loki", "uid": "${datasource}" },
           "refId": "A",
-          "expr": "topk(10, sum by (unit) (count_over_time({host=\"deby\", log_level=\"error\", unit=~\".+\"}[1m])))",
+          "expr": "topk(10, sum by (unit) (count_over_time({host=\"deby\", source!=\"k3s\", log_level=\"error\", unit=~\".+\"}[1m])))",
           "legendFormat": "{{unit}}"
         }
       ]
@@ -203,7 +203,7 @@
         {
           "datasource": { "type": "loki", "uid": "${datasource}" },
           "refId": "A",
-          "expr": "topk(10, sum by (unit) (count_over_time({host=\"deby\", log_level=\"warning\", unit=~\".+\"}[1m])))",
+          "expr": "topk(10, sum by (unit) (count_over_time({host=\"deby\", source!=\"k3s\", log_level=\"warning\", unit=~\".+\"}[1m])))",
           "legendFormat": "{{unit}}"
         }
       ]
@@ -229,7 +229,7 @@
         {
           "datasource": { "type": "loki", "uid": "${datasource}" },
           "refId": "A",
-          "expr": "{host=\"deby\", log_level=\"error\"} | json | line_format \"{{ if .unit }}[{{.unit}}] {{ end }}{{ .MESSAGE }}\""
+          "expr": "{host=\"deby\", source!=\"k3s\", log_level=\"error\"} | json | line_format \"{{ if .unit }}[{{.unit}}] {{ end }}{{ .MESSAGE }}\""
         }
       ]
     }
