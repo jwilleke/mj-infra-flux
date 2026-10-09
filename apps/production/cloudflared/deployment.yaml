@@ -29,11 +29,16 @@ spec:
             value: "1"
       containers:
         - name: cloudflared
-          image: cloudflare/cloudflared:2026.3.0
+          image: cloudflare/cloudflared:2026.10.0
           imagePullPolicy: IfNotPresent
           args:
             - tunnel
             - --no-autoupdate
+            # 2026.4.0 changed the default from 4 to auto (first family the
+            # resolver returns). The pod network is IPv4-only (10.42.0.0/24),
+            # so keep the pre-2026.4 behaviour explicitly.
+            - --edge-ip-version
+            - "4"
             - --metrics
             - 0.0.0.0:2000
             - run
