@@ -1,0 +1,43 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - https://github.com/cert-manager/cert-manager/releases/download/v1.21.2/cert-manager.yaml
+labels:
+  - pairs:
+      app.jwilleke.com/name: cert-manager
+      app.jwilleke.com/tenant: anyone
+    includeSelectors: true
+patches:
+  - target:
+      kind: Deployment
+      labelSelector: "app.kubernetes.io/component=controller"
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          limits:
+            memory: "192Mi"
+          requests:
+            memory: "96Mi"
+  - target:
+      kind: Deployment
+      labelSelector: "app.kubernetes.io/component=cainjector"
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          limits:
+            memory: "128Mi"
+          requests:
+            memory: "64Mi"
+  - target:
+      kind: Deployment
+      labelSelector: "app.kubernetes.io/component=webhook"
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          limits:
+            memory: "128Mi"
+          requests:
+            memory: "48Mi"

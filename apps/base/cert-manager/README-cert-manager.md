@@ -6,7 +6,7 @@ Not all of cert-manager is in Flux's hands. Two distinct ownership domains:
 
 | Concern | Where it lives | Flux-reconciled? |
 | --- | --- | --- |
-| cert-manager __workload__ (Deployment, cainjector, webhook, CRDs, RBAC) | this directory (`apps/base/cert-manager/`) — manifests + `overlays/prod/` | __No.__ Never wired into a Flux Kustomization. Hand-applied at cluster bootstrap (2024-02, 477+ d ago). Still running fine. |
+| cert-manager __workload__ (Deployment, cainjector, webhook, CRDs, RBAC) | `install/kustomization.yaml` in this directory | __No.__ Never wired into a Flux Kustomization. Hand-applied at cluster bootstrap (2024-02); upgraded by hand (see below). |
 | __ClusterIssuers__ (`letsencrypt-{staging,production}`) | `apps/production/cert-manager/letsencrypt-*-clusterissuer.yaml` | __Yes__ (moved 2026-05-22 in mj-infra-flux#81). |
 | Cloudflare API token Secret (DNS-01 solver auth) | `apps/production/cert-manager/cloudflare-api-token.sops.yaml` | __Yes__ (moved 2026-05-22 in mj-infra-flux#77 item 1). |
 
@@ -14,9 +14,28 @@ Why the split: #81 resolved the declarative-config drift (ClusterIssuers + their
 
 The previous `letsencrypt-{staging,production}-clusterissuer.yaml` files in `base/other/` were __deleted__ because they declared HTTP-01 only and never matched the hand-applied live state (DNS-01 Cloudflare). They were also never reconciled by Flux, so deleting them affects nothing live.
 
-## cert-manager prep
+## Installed version and how to upgrade
 
-kubectl get deployment cert-manager-5ff58bc8db-csx7b -o yaml > deployment.yaml
+Live: __v1.21.2__, upgraded 2026-10-09 from v1.16.3 one minor at a time (1.17.4 → 1.18.6 → 1.19.6 → 1.20.4 → 1.21.2) ahead of the k3s 1.33 → 1.36 upgrade (mj-infra-flux#226). 1.16 supported Kubernetes ≤ 1.32; 1.21 supports 1.33–1.36.
+
+`install/kustomization.yaml` renders exactly what is live: upstream's release `cert-manager.yaml` plus two things the original bootstrap install added, which must be kept:
+
+- __`app.jwilleke.com/{name,tenant}` labels with `includeSelectors: true`.__ They are baked into the Deployment and Service selectors, and selectors are immutable. Applying the plain upstream manifest fails with `field is immutable`.
+- __Memory requests/limits.__ Raised in the 2026-10-09 upgrade (controller 96/192 Mi, cainjector 64/128 Mi, webhook 48/128 Mi) from 64/96, 32/64, 32/64 — 7-day peaks were 78, 54 and 49 MiB.
+
+To upgrade: read upstream's `upgrading-<from>-<to>` notes for every minor in between, then for each minor (latest patch):
+
+```bash
+sed -i 's#/download/v[0-9.]*/#/download/vX.Y.Z/#' apps/base/cert-manager/install/kustomization.yaml
+kubectl kustomize apps/base/cert-manager/install | kubectl diff -f -    # review
+kubectl kustomize apps/base/cert-manager/install | kubectl apply -f -
+for d in cert-manager cert-manager-cainjector cert-manager-webhook; do kubectl -n cert-manager rollout status deploy/$d; done
+kubectl get certificates -A        # all READY True
+```
+
+`kubectl apply` never deletes objects a new release drops. 1.21 dropped the `cert-manager-tokenrequest` Role/RoleBindings; they were deleted by hand after the upgrade.
+
+The controller logs ~80 `ACME client for issuer not initialised/available` errors in the first second after every restart, until it re-verifies the two ACME accounts. That is expected.
 
 Must have externally resolvable host name for this to work.
 
