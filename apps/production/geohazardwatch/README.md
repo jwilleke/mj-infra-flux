@@ -7,7 +7,10 @@ Built on the [`ngdpbase`](https://github.com/jwilleke/ngdpbase) wiki engine with
 ## Architecture
 
 - __Image__: `ghcr.io/jwilleke/geohazardwatch:X.Y.Z` — built and published from the `jwilleke/geohazardwatch` repo. Layered on `ghcr.io/jwilleke/ngdpbase`.
-- __Data volume__: `hostPath /mnt/tank/jims/data/systems/geohazardwatch` mounted at `/app/data`. Holds wiki pages, users, sessions, search index, and the imported geology data.
+- __Storage__: ngdpbase's two-tier layout, split across two hostPath volumes:
+  - __Fast tier__ (`FAST_STORAGE=/app/fast`): `hostPath /mnt/local-k3s-data/geohazardwatch` on deby's local disk (covered by `backup-deby.sh`). Holds config (`config/app-custom-config.json`), the per-instance `.env`, users, persons, roles, sessions, logs, search index, feeds, notifications, and scheduled-job state (`jobs/`). Must be local disk: since ngdpbase#1714 the server refuses to start with job state on NFS.
+  - __Slow tier__ (`SLOW_STORAGE=/app/data`): `hostPath /mnt/tank/jims/data/systems/geohazardwatch` on NFS. Holds pages, attachments, backups, comments, footnotes, and the addon's imported data (`geohazardwatch/`, `ve-geology/`).
+- __Database__: none (`ngdpbase.database.provider` is `none`); everything is files, so job state uses the file backend.
 - __Public path__: Cloudflare Tunnel → cluster Service direct (bypasses Traefik). Wired up separately — see geohazardwatch issues #14-18.
 - __Internal path__: Traefik IngressRoute on `geohazardwatch.nerdsbythehour.com` with a cert-manager Let's Encrypt cert. Used to verify the pod independently of the tunnel.
 
@@ -36,17 +39,17 @@ kubectl -n geohazardwatch create job --from=cronjob/geohazardwatch-data-refresh 
 
 ## Secrets
 
-The deployment reads `NGDPBASE_SESSION_SECRET` from `geohazardwatch-secrets` / `session-secret` (optional, same pattern as `ngdpbase-demo`). That Secret does not exist yet, so ngdpbase uses the secret it generated into `/app/data/.env` on first boot. If you create the Secret, set it to the value already in `/app/data/.env`; any other value signs everyone out on the next restart.
+The deployment reads `NGDPBASE_SESSION_SECRET` from `geohazardwatch-secrets` / `session-secret` (optional, same pattern as `ngdpbase-demo`). That Secret does not exist yet, so ngdpbase uses the secret it generated into `/app/fast/.env` on first boot. If you create the Secret, set it to the value already in `/app/fast/.env`; any other value signs everyone out on the next restart.
 
 ```bash
 kubectl -n geohazardwatch create secret generic geohazardwatch-secrets \
   --from-literal=session-secret="$(kubectl -n geohazardwatch exec deploy/geohazardwatch -c geohazardwatch -- \
-    sh -c 'grep ^NGDPBASE_SESSION_SECRET= /app/data/.env | cut -d= -f2-')"
+    sh -c 'grep ^NGDPBASE_SESSION_SECRET= /app/fast/.env | cut -d= -f2-')"
 ```
 
 ## First deploy notes
 
-- The hostPath `/mnt/tank/jims/data/systems/geohazardwatch` is auto-created (`DirectoryOrCreate`). Confirm permissions allow uid/gid 1000 to write.
+- The slow-tier hostPath `/mnt/tank/jims/data/systems/geohazardwatch` is auto-created (`DirectoryOrCreate`). The fast-tier hostPath `/mnt/local-k3s-data/geohazardwatch` is NOT (`type: Directory`): an empty fast tier boots as a fresh install, so the pod stays in `ContainerCreating` with a mount error until the folder exists. Create it (or restore it from backup) owned by `977:988`, the PUID/PGID the container runs as.
 - Default credentials `admin` / `admin123` — change immediately after first access.
 - Run an initial data import once before relying on the site:
 
