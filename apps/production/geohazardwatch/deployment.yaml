@@ -63,7 +63,16 @@ spec:
               value: "production"
             - name: HEADLESS_INSTALL
               value: "true"
-            - name: INSTANCE_DATA_FOLDER
+            # ngdpbase two-tier storage (.env.example). FAST_STORAGE is
+            # operational data (config, .env, users, sessions, logs, search
+            # index, feeds, job state) and must be local disk: ngdpbase#1714
+            # refuses to start with scheduled-job state on NFS. SLOW_STORAGE
+            # is bulk content (pages, attachments, backups) and stays on NFS.
+            # The per-instance .env lives in FAST_STORAGE, so this var has to
+            # be set here, not in that file.
+            - name: FAST_STORAGE
+              value: "/app/fast"
+            - name: SLOW_STORAGE
               value: "/app/data"
             # NGDPBASE_SESSION_SECRET, not SESSION_SECRET — only the six keys
             # listed in ConfigurationManager.getProperty() have env overrides,
@@ -91,6 +100,8 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /app/data
+            - name: fast
+              mountPath: /app/fast
           resources:
             requests:
               cpu: "100m"
@@ -119,4 +130,11 @@ spec:
           hostPath:
             path: /mnt/tank/jims/data/systems/geohazardwatch
             type: DirectoryOrCreate
+        # Local disk on deby (covered by backup-deby.sh). Directory, not
+        # DirectoryOrCreate: an empty FAST_STORAGE would boot as a fresh
+        # install, so fail loudly if the seeded folder is missing.
+        - name: fast
+          hostPath:
+            path: /mnt/local-k3s-data/geohazardwatch
+            type: Directory
       restartPolicy: Always
