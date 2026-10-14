@@ -46,4 +46,3 @@ The same `HelmChartConfig` turns on Traefik access logs ([jwilleke/mj-infra-flux
 - Headers are always dropped (no cookies, no `Authorization`). Client IP is real because of `externalTrafficPolicy: Local` above.
 
 Query in Grafana/Loki: `{namespace="kube-system", container="traefik"} | json | line_format "{{.log}}" | json` (fluent-bit wraps each container line in a `log` field).
-
