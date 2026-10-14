@@ -36,3 +36,14 @@ arguments were dropped in a follow-up fix — see
 
 A LAN browser loading an ingress-served host should appear in the origin's log with its real
 `192.168.68.x` address rather than `10.42.0.1`.
+
+## Access logs
+
+The same `HelmChartConfig` turns on Traefik access logs ([jwilleke/mj-infra-flux#237](https://github.com/jwilleke/mj-infra-flux/issues/237)):
+
+- JSON, to stdout. The host fluent-bit on `deby` ships `/var/log/containers/*.log` to Loki, so they are queryable in Grafana for Loki's 30-day retention — no volume needed.
+- __Filtered to problem requests:__ status 400–599, retried requests, or anything slower than 2s. The request path includes the query string and YourPHR's search endpoints carry the user's search text there, so fast, successful requests are deliberately not logged.
+- Headers are always dropped (no cookies, no `Authorization`). Client IP is real because of `externalTrafficPolicy: Local` above.
+
+Query in Grafana/Loki: `{namespace="kube-system", container="traefik"} | json | line_format "{{.log}}" | json` (fluent-bit wraps each container line in a `log` field).
+

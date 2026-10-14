@@ -23,7 +23,7 @@ I stole this from [Activescott](https://github.com/activescott/home-infra-k8s-fl
 
 ### Infrastructure
 
-- __[Traefik Ingress](apps/base/traefik-ingress/README.md)__ - Ingress controller configuration
+- __[Traefik (k3s bundled)](infrastructure/base/configs/traefik-client-ip/README.md)__ - HelmChartConfig: client IP, access logs
 - __[MariaDB Library](apps/lib/mariadb/README.md)__ - Shared MariaDB configuration
 
 ### Production Applications

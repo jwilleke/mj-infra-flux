@@ -19,6 +19,15 @@
 # jwilleke/mj-infra-flux#177 — nothing here uses the dashboard day to day.
 # `--api` alone stays: Traefik needs it internally (e.g. `/ping`), and without
 # `.insecure`/`.dashboard` it is not exposed on any entrypoint.
+#
+# Access logs (jwilleke/mj-infra-flux#237): JSON to stdout, which the host
+# fluent-bit on deby tails from /var/log/containers into Loki (30d retention).
+# Filtered to problem requests only — 4xx/5xx, retries, or slower than 2s —
+# because the logged path includes the query string, and YourPHR search
+# endpoints carry the user's search text there. Fast, successful requests are
+# never logged. Headers (cookies, Authorization) are always dropped.
+# This is the only HelmChartConfig for the k3s Traefik: all Traefik values
+# live here, whatever the directory name says.
 apiVersion: helm.cattle.io/v1
 kind: HelmChartConfig
 metadata:
@@ -31,3 +40,16 @@ spec:
     service:
       spec:
         externalTrafficPolicy: Local
+    logs:
+      access:
+        enabled: true
+        format: json
+        filters:
+          statuscodes: "400-599"
+          retryattempts: true
+          minduration: 2s
+        fields:
+          general:
+            defaultmode: keep
+          headers:
+            defaultmode: drop
