@@ -36,10 +36,11 @@ Saving these hostnames auto-creates the DNS records (proxied CNAMEs to the tunne
 
 ## Secrets
 
-Two SOPS-encrypted secrets, both distinct from and never shared with the ops `yourphr`/`yourphr-relay` values:
+One SOPS-encrypted secret, distinct from and never shared with the ops `yourphr`/`yourphr-relay` values:
 
 - `relay-secret.sops.yaml` (in `../demo-yourphr-relay/`) — `YOURPHR_RELAY_SECRET`, gates the relay's `/pending` endpoint. Self-generated (`openssl rand -base64 32`) — purely internal, no operator/CMS involvement needed.
-- `sandbox-credentials.sops.yaml` — `YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_ID` / `YOURPHR_SANDBOX_BLUEBUTTON_CLIENT_SECRET`. Operator-supplied, CMS-registered sandbox app credentials — __sandbox only, never production Blue Button keys__.
+
+The Go-era `sandbox-credentials.sops.yaml` was removed 2026-10-14 ([#236](https://github.com/jwilleke/mj-infra-flux/issues/236)): nothing read it after the Go backend was deleted. Sandbox client ids now live in YourPHR's provider catalog (Admin → Configuration).
 
 ## Wiping the demo database
 
