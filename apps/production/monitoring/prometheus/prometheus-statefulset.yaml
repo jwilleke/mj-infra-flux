@@ -24,7 +24,7 @@ spec:
         - name: prometheus
           # image tags at https://hub.docker.com/r/prom/prometheus/tags
           # TODO: upgrade to v3: https://prometheus.io/docs/prometheus/3.0/migration/ (looks safe)
-          image: prom/prometheus:v3.0.1
+          image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
           args:
             # storage config: https://prometheus.io/docs/prometheus/latest/storage/
             - "--storage.tsdb.retention.time=15d" # reduced from 30d to minimize WAL accumulation and faster recovery
