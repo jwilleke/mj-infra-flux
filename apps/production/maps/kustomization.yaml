@@ -22,3 +22,4 @@ resources:
   - maps-sidekiq-deployment.yaml
   - maps-forwarded-proto-middleware.yaml
   - maps-ingress.yaml
+  - maps-points-thin-cronjob.yaml

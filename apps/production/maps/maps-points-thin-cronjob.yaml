@@ -1,0 +1,108 @@
+# Thin Dawarich location points older than 60 days to one per 60 s per user
+# (mj-infra-flux#208). OwnTracks "Move" mode reports every ~3 s, so live
+# history grows ~17k points/day and drives maps-db size, query memory and the
+# nightly dump. Past 60 days that density is not needed: keep the most
+# accurate point in each user/minute bucket, delete the rest.
+#
+# - Works per user, one day at a time, COMMIT after each day: small
+#   transactions, no long locks, bounded memory. A minute bucket never spans
+#   a day boundary (86400 is a multiple of 60), so each day is independent.
+# - Only days that actually have >1 point in some bucket are visited; the
+#   sparse imported history (2011-2025) is never touched.
+# - Idempotent: re-running deletes nothing new until more data ages past 60d.
+# - Nothing references points by foreign key; tracks/visits keep their rows.
+#   After a large first run, recalculate stats in Dawarich.
+#
+# First run (the 1.3M-row backlog): trigger by hand after a verified backup —
+#   kubectl -n maps create job --from=cronjob/maps-points-thin maps-points-thin-manual
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: maps-points-thin-sql
+data:
+  thin.sql: |
+    \set ON_ERROR_STOP on
+    SELECT 'before: ' || count(*) || ' points' AS info FROM points;
+    DO $$
+    DECLARE
+      cutoff bigint := extract(epoch FROM date_trunc('day', now() - interval '60 days'))::bigint;
+      r record;
+      n bigint;
+      total bigint := 0;
+      days int := 0;
+    BEGIN
+      FOR r IN
+        SELECT user_id, (timestamp / 86400) AS day
+        FROM points
+        WHERE timestamp < cutoff
+        GROUP BY user_id, timestamp / 86400
+        HAVING count(*) > count(DISTINCT timestamp / 60)
+        ORDER BY 1, 2
+      LOOP
+        DELETE FROM points p
+        USING (
+          SELECT id, row_number() OVER (
+                   PARTITION BY timestamp / 60
+                   ORDER BY accuracy NULLS LAST, timestamp, id) AS rn
+          FROM points
+          WHERE user_id = r.user_id
+            AND timestamp >= r.day * 86400
+            AND timestamp <  (r.day + 1) * 86400
+        ) d
+        WHERE p.id = d.id AND d.rn > 1;
+        GET DIAGNOSTICS n = ROW_COUNT;
+        total := total + n;
+        days := days + 1;
+        COMMIT;
+      END LOOP;
+      RAISE NOTICE 'thinned % user-days, deleted % points (cutoff %)', days, total, to_timestamp(cutoff);
+    END $$;
+    VACUUM (ANALYZE) points;
+    SELECT 'after: ' || count(*) || ' points' AS info FROM points;
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: maps-points-thin
+spec:
+  # Sunday 03:30 — clear of the nightly backup-deby run (21:01).
+  schedule: "30 3 * * 0"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 10800
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: thin
+              image: postgres:17.7@sha256:2b6239f32680c308921cf212902f881355c31ae92da0795b4fef29d8f0033021
+              command: ["psql", "-f", "/sql/thin.sql"]
+              env:
+                - name: PGHOST
+                  value: maps-db
+                - name: PGUSER
+                  value: postgres
+                - name: PGDATABASE
+                  value: maps_production
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: maps-secret
+                      key: postgres-password
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+              volumeMounts:
+                - name: sql
+                  mountPath: /sql
+          volumes:
+            - name: sql
+              configMap:
+                name: maps-points-thin-sql
