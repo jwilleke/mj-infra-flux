@@ -9,6 +9,9 @@ spec:
   # RWO data volume + single replica: stop the old pod before starting the new one.
   strategy:
     type: Recreate
+    # Explicit null: server-side apply otherwise keeps the live default
+    # rollingUpdate block, which is invalid with Recreate.
+    rollingUpdate: null
 
   selector:
     matchLabels:
