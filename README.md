@@ -24,7 +24,6 @@ I stole this from [Activescott](https://github.com/activescott/home-infra-k8s-fl
 ### Infrastructure
 
 - __[Traefik Ingress](apps/base/traefik-ingress/README.md)__ - Ingress controller configuration
-- __[Image Scanning Webhook Receiver](infrastructure/base/configs/image-scanning-webhook-receiver/README.md)__ - Webhook receiver for GitHub push events
 - __[MariaDB Library](apps/lib/mariadb/README.md)__ - Shared MariaDB configuration
 
 ### Production Applications
@@ -156,28 +155,9 @@ Per <https://fluxcd.io/flux/components/kustomize/kustomizations/#kustomize-secre
 
 Image scanning for one app setup at `apps/production/tayle/image-scanning` per <https://fluxcd.io/flux/guides/image-update/>
 
-#### Image Updates from Github Web Hooks for Continuous Deployment
+#### Image Updates from Github Web Hooks
 
-A flux webhook receive is set up in `/infrastructure/base/configs/image-scanning-webhook-receiver`. It has configured which ImageRepositories to refresh. More can be added.
-
-Add a webhook to github like:
-
-Get the ReceiverURL by running `kubectl -n flux-system get receiver` it will print it out as its status.
-
-> On GitHub, navigate to your repository and click on the “Add webhook” button under “Settings/Webhooks”. Fill the form with:
-> Payload URL: compose the address using the receiver LB and the generated URL `http://<LoadBalancerAddress>/<ReceiverURL>`
-> Secret: use the token string
->
-> With the above settings, when you push a commit to the repository, the following happens:
->
-> GitHub sends the Git push event to the receiver address
-> Notification controller validates the authenticity of the payload using HMAC
-> Source controller is notified about the changes
-> Source controller pulls the changes into the cluster and updates the GitRepository revision
-> Kustomize controller is notified about the revision change
-> Kustomize controller reconciles all the Kustomizations that reference the GitRepository object
-
-per [webhook-receivers](https://fluxcd.io/flux/guides/webhook-receivers/)
+Removed 2026-10-14. The Flux `Receiver` (`flux-webhook.nerdsbythehour.com`) only refreshed the long-gone `repo-tayle-*` ImageRepositories, had no public DNS or Cloudflare Tunnel route, and never received a request. Image updates rely on each `ImageRepository`'s polling `interval` (1m–1h). If a webhook is ever wanted again, publish it through the Cloudflare Tunnel and point the Receiver at existing ImageRepositories.
 
 ### YAML+Kustomize
 
