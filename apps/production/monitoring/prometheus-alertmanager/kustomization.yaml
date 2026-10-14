@@ -1,6 +1,7 @@
 resources:
   - ./alertmanager-deployment.yaml
   - ./alertmanager-service.yaml
+  - ./alertmanager-pvc.yaml
 
 configMapGenerator:
   # the alertmanager's config:

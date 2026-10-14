@@ -1,0 +1,14 @@
+# Alertmanager's data directory: silences and the notification log.
+# Without it both reset on every restart — silences vanish and firing
+# alerts are re-emailed (mj-infra-flux#238).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: alertmanager-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi

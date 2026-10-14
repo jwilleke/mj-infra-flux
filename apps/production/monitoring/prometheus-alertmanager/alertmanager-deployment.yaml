@@ -6,6 +6,9 @@ metadata:
     app: alertmanager
 spec:
   replicas: 1
+  # RWO data volume + single replica: stop the old pod before starting the new one.
+  strategy:
+    type: Recreate
 
   selector:
     matchLabels:
@@ -17,6 +20,8 @@ spec:
         app: alertmanager
 
     spec:
+      securityContext:
+        fsGroup: 65534  # image runs as nobody; make the data volume writable
       containers:
         - name: alertmanager
           # image tags at https://quay.io/repository/prometheus/alertmanager
@@ -24,6 +29,7 @@ spec:
           args:
             - "--config.file=/config/alertmanager.yaml"
             - "--web.external-url=https://grafana.nerdsbythehour.com/alerting/list"
+            - "--storage.path=/alertmanager"
 
           ports:
             - name: api
@@ -44,6 +50,9 @@ spec:
             - name: alertmanager-secrets
               mountPath: /config/secrets
 
+            - name: alertmanager-data
+              mountPath: /alertmanager
+
       volumes:
         # populated by configMapGenerator in kustomization.yaml
         - name: alertmanager-config-volume
@@ -54,3 +63,7 @@ spec:
         - name: alertmanager-secrets
           secret:
             secretName: alertmanager-secrets
+        # silences + notification log (mj-infra-flux#238)
+        - name: alertmanager-data
+          persistentVolumeClaim:
+            claimName: alertmanager-data
