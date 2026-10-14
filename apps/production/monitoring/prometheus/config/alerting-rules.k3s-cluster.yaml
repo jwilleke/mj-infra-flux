@@ -73,6 +73,32 @@ groups:
             child process and the container did not restart. Find it on the host:
               journalctl -k --since -30min | grep -A2 'Memory cgroup out of memory'
 
+      # A container has sat above 80% of its memory limit for 15 min — early
+      # warning before HostOOMKill / PodOOMKilled. Added for maps-db (#208):
+      # the points table grows ~60 MB/day under a fixed 8Gi limit, and the
+      # previous four limit raises were all made after OOM kills, not before.
+      # Generic on purpose: when added it would already have fired for
+      # yourphr-ts (sustained ~86%, week of the 2026-10-13 YourPHR freezes).
+      - alert: ContainerMemoryNearLimit
+        expr: |
+          max by (namespace, pod, container) (
+            container_memory_working_set_bytes{container!="", container!="POD"}
+          )
+          / on (namespace, pod, container)
+          max by (namespace, pod, container) (
+            kube_pod_container_resource_limits{resource="memory"}
+          ) > 0.80
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.namespace }}/{{ $labels.container }} at {{ $value | humanizePercentage }} of its memory limit"
+          description: |
+            Container {{ $labels.container }} in pod {{ $labels.pod }} has been
+            above 80% of its memory limit for 15 minutes. Raise the limit, or
+            find what grew, before the kernel OOM killer does it for you:
+              k3s kubectl -n {{ $labels.namespace }} top pod {{ $labels.pod }} --containers
+
       # Node went NotReady — this is a single-node cluster, so this means
       # k3s itself is in trouble (or the host's kubelet/containerd is unhappy).
       - alert: NodeNotReady
