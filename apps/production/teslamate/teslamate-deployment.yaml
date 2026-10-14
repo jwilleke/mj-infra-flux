@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: teslamate
-        image: teslamate/teslamate:latest
+        image: teslamate/teslamate:4.3.0@sha256:516fc9f0a14369f541b1a70ff2f65dd9b57c2e01c1f533b6d43b375445404955  # pinned to the digest running 2026-10-14 (#234); upgrade deliberately
         ports:
         - containerPort: 4000
           name: http

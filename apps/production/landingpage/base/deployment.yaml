@@ -20,7 +20,7 @@ spec:
       containers:
       - name: landingpage
         image: landingpage:latest
-        imagePullPolicy: Never  # Built locally, not from registry
+        imagePullPolicy: Never  # Built locally; never pulled, so :latest cannot drift (#234), not from registry
         ports:
         - containerPort: 3000
           name: http

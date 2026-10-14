@@ -18,7 +18,7 @@ spec:
       containers:
       - name: openspeedtest
         image: openspeedtest:latest
-        imagePullPolicy: Never  # Built locally
+        imagePullPolicy: Never  # Built locally; never pulled, so :latest cannot drift (#234)
         ports:
         - containerPort: 80
           name: http

@@ -17,7 +17,7 @@ spec:
       # NFS mount doesn't support chown - run as postgres user (999) without fsGroup
       containers:
       - name: postgresql
-        image: postgres:17
+        image: postgres:17.7@sha256:2b6239f32680c308921cf212902f881355c31ae92da0795b4fef29d8f0033021  # pinned to the digest running 2026-10-14 (#234); upgrade deliberately
         ports:
         - containerPort: 5432
           name: postgres
