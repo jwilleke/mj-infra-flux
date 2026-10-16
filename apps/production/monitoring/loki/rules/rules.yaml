@@ -128,21 +128,19 @@ groups:
       # the `{source="udmpro"}` label set by fluent-bit's
       # record_modifier filter in fluent-bit.conf.
       - alert: UDMProSyslogSilent
-        expr: 'absent_over_time({source="udmpro"}[120m]) == 1'
+        expr: 'absent_over_time({source="udmpro"}[8h]) == 1'
         for: 10m
         labels:
-          severity: critical
+          severity: warning
         annotations:
-          summary: "No UDM Pro syslog received for >120 min"
+          summary: "No UDM Pro syslog received for >8h"
           description: |
-            The UDM Pro CEF stream has not reached Loki in 120 min (fires
-            after 130 min total with the 10m for: window). Re-calibrated
-            2026-07-18 from a 20m/5m threshold that was flapping ~hourly:
-            72h of real data showed gaps up to 83.7 min during quiet
-            overnight periods (67 gaps >20m, 8 gaps >60m), far beyond the
-            ~21m assumed when this rule was first written. 120m/10m gives
-            real margin above the observed max while still catching a
-            genuine pipeline failure within ~2.5h.
+            The UDM Pro CEF stream has not reached Loki in 8h. The stream is
+            UniFi client connect/disconnect/roam events only (~150/day, bursty),
+            so quiet gaps are normal: 14 days to 2026-10-16 showed 9 gaps >=130m,
+            max 248m, and the old 120m/critical threshold fired ~daily on them.
+            8h is ~2x the observed max; a gap that long means the pipeline
+            (UDM, rsyslog or fluent-bit) has stopped, not a quiet network.
             Check on the host:
               systemctl status rsyslog fluent-bit
               sudo tail /var/log/remote/udmpro/udmpro.log
