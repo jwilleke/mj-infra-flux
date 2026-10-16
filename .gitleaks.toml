@@ -1,0 +1,56 @@
+# gitleaks configuration — the default secret rules, plus two for internal hosts.
+#
+# #83: the kit boilerplate linked a wiki on the operator's private network by its
+# real hostname and port, and every synced repo copied it. No default rule looks
+# for hostnames, so nothing caught it. These two rules cover the shapes that
+# actually leaked, WITHOUT naming any host: a rule listing the hostname would
+# publish it again in this public file.
+#
+# Run by the pre-commit hook (staged changes) and by CI (the whole tree).
+# Copied from mjs-project-template for deby#64; repo-specific allowlists are
+# marked below.
+# A false positive belongs in an allowlist below, with a comment saying why.
+
+title = "mj-infra-flux"
+
+[extend]
+useDefault = true
+
+# A URL with an explicit port is almost always a service on somebody's own
+# network — public sites sit on 80/443 and do not print a port. The leaked link
+# had this shape.
+[[rules]]
+id = "internal-host-url"
+description = "URL with an explicit port: likely an internal service address"
+regex = '''(?i)\b(?:https?|wss?)://[a-z0-9][a-z0-9.-]*:[0-9]{2,5}\b'''
+keywords = ["://"]
+
+# Loopback and reserved example hosts name nothing real.
+[[rules.allowlists]]
+regexTarget = "match"
+regexes = [
+  '''(?i)://(?:localhost|127\.0\.0\.1|0\.0\.0\.0):''',
+  '''(?i)://(?:[a-z0-9-]+\.)*example\.(?:com|org|net):''',
+  # Repo-specific (deby#64): this repo describes the infrastructure itself, so
+  # private-range IPs and in-cluster service names are its content, not leaks.
+  '''://(?:10|192\.168|172\.(?:1[6-9]|2[0-9]|3[01]))(?:\.[0-9]{1,3}){2,3}:''',
+  '''(?i)://[a-z0-9-]+(?:\.[a-z0-9-]+)?\.svc(?:\.cluster\.local)?:''',
+  '''(?i)://[a-z0-9-]+:''',
+  '''(?i)://alertmanager\.monitoring:''',
+]
+
+# A file-share URL names a host on a private network by construction. This
+# repo's history carried one (a NAS path) before any scan existed.
+[[rules]]
+id = "file-share-url"
+description = "SMB/NFS/AFP/CIFS URL: names a host on a private network"
+regex = '''(?i)\b(?:smb|nfs|afp|cifs)://[^\s'"<>)]+'''
+keywords = ["smb://", "nfs://", "afp://", "cifs://"]
+
+# Repo-specific (deby#64): an age PUBLIC key is public by design (it is how
+# SOPS encrypts to the cluster). generic-api-key flags it; the private key is
+# git-ignored (*.agekey).
+[[allowlists]]
+description = "age public keys"
+regexTarget = "secret"
+regexes = ['''^age1[0-9a-z]{58}$''']
