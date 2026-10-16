@@ -17,7 +17,7 @@ groups:
             {{ $value }} device(s) on the LAN are not in the NetAlertX known-device
             registry. Inspect and acknowledge at http://netalertx.nerdsbythehour.com
             (or http://192.168.68.71:20211). Query per-device:
-              netalertx_device_status{device_status="new"}
+              netalertx_device_status{device_status="New"}
 
       # NetAlertX container or /metrics endpoint unreachable — scrape failing.
       - alert: NetAlertXScrapeDown
