@@ -33,21 +33,30 @@ groups:
               kubectl -n {{ $labels.namespace }} describe job {{ $labels.job_name }}
               kubectl -n {{ $labels.namespace }} logs job/{{ $labels.job_name }} --all-containers
 
-      # A CronJob has had no successful run for 26h (daily schedule + slack),
-      # or has never succeeded 26h after it was created. Catches repeated
-      # failures AND a CronJob that stops being scheduled at all — a missing
-      # run produces no failed Job, so KubeJobFailed cannot see it.
-      # 26h fits every CronJob in the cluster today (all daily or rarer). If a
-      # more frequent CronJob is added, give it its own rule with a shorter window.
+      # A CronJob's most recent scheduled run has not succeeded 2h after it was
+      # scheduled (failed, still hung, or never succeeded at all), OR scheduling
+      # has stopped: kube-state-metrics' next_schedule_time is 2h in the past.
+      # A missing run produces no failed Job, so KubeJobFailed cannot see it.
+      # Schedule-agnostic (mj-infra-flux#239): the old fixed 26h window false-fired
+      # on weekly CronJobs (maps-points-thin). Assumes runs finish within 2h.
       - alert: CronJobNoRecentSuccess
         expr: |
           (
-            (time() - max by (namespace, cronjob) (kube_cronjob_status_last_successful_time)) > 26 * 3600
-            or
             (
-              (time() - max by (namespace, cronjob) (kube_cronjob_created)) > 26 * 3600
-              unless on (namespace, cronjob) kube_cronjob_status_last_successful_time
+              (
+                max by (namespace, cronjob) (kube_cronjob_status_last_schedule_time)
+                  > max by (namespace, cronjob) (kube_cronjob_status_last_successful_time)
+              )
+              or
+              (
+                max by (namespace, cronjob) (kube_cronjob_status_last_schedule_time)
+                  unless on (namespace, cronjob) kube_cronjob_status_last_successful_time
+              )
             )
+            and on (namespace, cronjob)
+            (time() - max by (namespace, cronjob) (kube_cronjob_status_last_schedule_time)) > 2 * 3600
+            or
+            (time() - max by (namespace, cronjob) (kube_cronjob_next_schedule_time)) > 2 * 3600
           )
           unless on (namespace, cronjob) (kube_cronjob_spec_suspend == 1)
         for: 15m
@@ -55,10 +64,9 @@ groups:
           severity: warning
           source: kube-state-metrics
         annotations:
-          summary: "CronJob {{ $labels.namespace }}/{{ $labels.cronjob }} has not succeeded in 26h"
+          summary: "CronJob {{ $labels.namespace }}/{{ $labels.cronjob }} latest run did not succeed"
           description: |
-            CronJob {{ $labels.namespace }}/{{ $labels.cronjob }} has had no successful
-            run for over 26 hours (or never succeeded). Its runs are failing or it has
-            stopped being scheduled.
+            CronJob {{ $labels.namespace }}/{{ $labels.cronjob }}: its most recent scheduled
+            run has not succeeded within 2h, or it has stopped being scheduled.
               kubectl -n {{ $labels.namespace }} get cronjob {{ $labels.cronjob }}
               kubectl -n {{ $labels.namespace }} get jobs --sort-by=.metadata.creationTimestamp
