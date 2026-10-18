@@ -32,6 +32,27 @@ data:
             - webauthn
           not_configured_action: deny
           webauthn_user_verification: required
+      # Passkey-only login flow, linked from the login page ("Use a security key")
+      - model: authentik_flows.flow
+        identifiers:
+          slug: passkey-login
+        attrs:
+          name: Passkey login
+          title: Sign in with a passkey
+          designation: authentication
+          authentication: require_unauthenticated
+      - model: authentik_flows.flowstagebinding
+        identifiers:
+          target: !Find [authentik_flows.flow, [slug, passkey-login]]
+          stage: !Find [authentik_stages_authenticator_validate.authenticatorvalidatestage, [name, passkey-validation]]
+        attrs:
+          order: 10
+      - model: authentik_flows.flowstagebinding
+        identifiers:
+          target: !Find [authentik_flows.flow, [slug, passkey-login]]
+          stage: !Find [authentik_stages_user_login.userloginstage, [name, default-authentication-login]]
+        attrs:
+          order: 100
       # Offer passkeys from the username field; password login is unchanged.
       # user_fields is restated (same as authentik's default blueprint) because the
       # serializer rejects the entry without it; !Find (not !KeyOf) so the stage
@@ -44,3 +65,4 @@ data:
             - email
             - username
           webauthn_stage: !Find [authentik_stages_authenticator_validate.authenticatorvalidatestage, [name, passkey-validation]]
+          passwordless_flow: !Find [authentik_flows.flow, [slug, passkey-login]]
