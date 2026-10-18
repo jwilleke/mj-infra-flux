@@ -52,6 +52,10 @@ spec:
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-production
 
+    blueprints:
+      configMaps:
+        - authentik-blueprint-passkeys
+
     postgresql:
       enabled: true
       primary:

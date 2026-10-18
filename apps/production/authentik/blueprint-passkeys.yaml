@@ -1,0 +1,40 @@
+# Authentik blueprint: passkey login (WebAuthn autofill on the login page).
+# Mounted into the worker via helmrelease `blueprints.configMaps`; authentik
+# discovers and re-applies it automatically. Only the attrs listed here are
+# managed — everything else on these stages stays as configured in the UI.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-passkeys
+  namespace: authentik
+data:
+  passkeys.yaml: |
+    version: 1
+    metadata:
+      name: mj-passkeys
+      labels:
+        blueprints.goauthentik.io/description: "Passkey autofill on the default login flow"
+    entries:
+      # New WebAuthn registrations must be discoverable passkeys with user verification
+      - model: authentik_stages_authenticator_webauthn.authenticatorwebauthnstage
+        identifiers:
+          name: default-authenticator-webauthn-setup
+        attrs:
+          user_verification: required
+          resident_key_requirement: required
+      # Validation stage used by the identification stage's passkey autofill
+      - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
+        id: passkey-validation
+        identifiers:
+          name: passkey-validation
+        attrs:
+          device_classes:
+            - webauthn
+          not_configured_action: deny
+          webauthn_user_verification: required
+      # Offer passkeys from the username field; password login is unchanged
+      - model: authentik_stages_identification.identificationstage
+        identifiers:
+          name: default-authentication-identification
+        attrs:
+          webauthn_stage: !KeyOf passkey-validation

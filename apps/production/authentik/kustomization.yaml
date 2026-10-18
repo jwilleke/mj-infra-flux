@@ -7,3 +7,4 @@ resources:
   - helmrelease.yaml
   - traefik-middleware.yaml
   - outpost-tls-certificate.yaml
+  - blueprint-passkeys.yaml       # passkey autofill on login, mounted via helmrelease blueprints.configMaps
