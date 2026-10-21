@@ -66,3 +66,105 @@ data:
             - username
           webauthn_stage: !Find [authentik_stages_authenticator_validate.authenticatorvalidatestage, [name, passkey-validation]]
           passwordless_flow: !Find [authentik_flows.flow, [slug, passkey-login]]
+      # Brand custom CSS — whole field is managed here (copied from the UI 2026-10-21).
+      # Edit it in git; UI edits to this brand's custom CSS will be reverted.
+      - model: authentik_brands.brand
+        identifiers:
+          domain: nerdsbythehour
+        attrs:
+          branding_custom_css: |
+            /* SCOPED CSS - Only affects User Dashboard */
+
+            /* 1. Force Grid Layout (Only in Library) */
+            ak-library .pf-l-gallery {
+                display: grid !important;
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+                gap: 1.5rem !important;
+                justify-content: center !important;
+            }
+
+            ak-library .pf-l-gallery > * {
+                width: auto !important;
+            }
+
+            /* 2. Style the Cards (Only in Library) */
+            ak-library .pf-c-card {
+                background-color: rgba(35, 35, 35, 0.85) !important;
+                height: 100% !important;
+                min-height: 180px !important;
+                border-radius: 16px !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                transition: all 0.2s ease-in-out !important;
+
+                /* Center content */
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+
+            /* 3. Hover Effects */
+            ak-library .pf-c-card:hover {
+                transform: translateY(-5px) !important;
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5) !important;
+                border-color: #68b0ff !important;
+                z-index: 10 !important;
+            }
+
+            /* 4. Fix Icons & Text */
+            ak-library .pf-c-card__title img {
+                height: 80px !important;
+                width: 80px !important;
+                object-fit: contain !important;
+                margin-bottom: 15px !important;
+                display: block !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+
+            ak-library .pf-c-card__title-text {
+                font-weight: 700 !important;
+                font-size: 1.2rem !important;
+                color: #ffffff !important;
+                text-align: center !important;
+            }
+
+            ak-library .pf-c-card__body {
+                text-align: center !important;
+                color: #cccccc !important;
+            }
+
+            /* 5. Background Image (Only for User Interface Pages) */
+            ak-interface-user .pf-c-page__main {
+                background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop') !important;
+                background-size: cover !important;
+                background-position: center !important;
+                background-attachment: fixed !important;
+            }
+
+            /* Dark Overlay */
+            ak-interface-user .pf-c-page__main::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.6);
+                z-index: 0;
+            }
+
+            ak-interface-user .pf-c-page__main-section {
+                position: relative !important;
+                z-index: 1 !important;
+            }
+
+            /* 6. Login page: relabel authentik's hardcoded "Use a security key" passwordless link
+                  (managed in mj-infra-flux apps/production/authentik/blueprint-passkeys.yaml) */
+            a[data-ouia-component-id="passwordless"] {
+                font-size: 0 !important;
+            }
+            a[data-ouia-component-id="passwordless"]::after {
+                content: "Sign in with a passkey";
+                font-size: var(--pf-global--FontSize--md, 1rem);
+            }
