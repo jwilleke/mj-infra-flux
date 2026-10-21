@@ -4,8 +4,9 @@ metadata:
   name: geohazardwatch-data-refresh
   namespace: geohazardwatch
 spec:
-  # 04:00 America/New_York (08:00 UTC) — low-traffic
+  # 08:00 America/New_York — the time it has actually run (the old "04:00 / 08:00 UTC" note assumed UTC)
   schedule: "0 8 * * *"
+  timeZone: America/New_York   # explicit: kube-state-metrics assumes UTC otherwise, false-firing CronJobNoRecentSuccess
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 2
   failedJobsHistoryLimit: 3

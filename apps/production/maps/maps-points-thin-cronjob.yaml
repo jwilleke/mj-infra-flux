@@ -67,6 +67,7 @@ metadata:
 spec:
   # Sunday 03:30 — clear of the nightly backup-deby run (21:01).
   schedule: "30 3 * * 0"
+  timeZone: America/New_York   # explicit: kube-state-metrics assumes UTC otherwise, false-firing CronJobNoRecentSuccess
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 2
   failedJobsHistoryLimit: 2
