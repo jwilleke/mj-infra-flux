@@ -6,7 +6,7 @@ metadata:
 spec:
   # 08:00 America/New_York — the time it has actually run (the old "04:00 / 08:00 UTC" note assumed UTC)
   schedule: "0 8 * * *"
-  timeZone: America/New_York   # explicit: kube-state-metrics assumes UTC otherwise, false-firing CronJobNoRecentSuccess
+  timeZone: America/New_York # explicit: kube-state-metrics assumes UTC otherwise, false-firing CronJobNoRecentSuccess
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 2
   failedJobsHistoryLimit: 3
@@ -31,7 +31,7 @@ spec:
                 value: "1"
           containers:
             - name: import
-              image: ghcr.io/jwilleke/geohazardwatch:1.2.274 # {"$imagepolicy": "flux-system:geohazardwatch"}
+              image: ghcr.io/jwilleke/geohazardwatch:1.2.275 # {"$imagepolicy": "flux-system:geohazardwatch"}
               imagePullPolicy: IfNotPresent
               # geohazardwatch#152/#154 migrated to the packaged (npm) addon
               # model — the addon (and its import/ scripts) now installs to
