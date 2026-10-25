@@ -24,18 +24,22 @@ Flow once activated:
 2. Merge to `master` triggers `publish-image.yml` → new `ghcr.io/jwilleke/geohazardwatch:X.Y.Z` on GHCR.
 3. The `ImageRepository` (with `secretRef: ghcr-geohazardwatch`) scans GHCR every 10m and exposes the tag list.
 4. The `ImagePolicy` selects the highest tag matching `>=1.0.0 <2.0.0`.
-5. The `ImageUpdateAutomation` rewrites the `# {"$imagepolicy": "flux-system:geohazardwatch"}`-marked `image:` line in `deployment.yaml` (and `cronjob-import.yaml` if marked) and commits to `master` as `fluxcdbot`.
+5. The `ImageUpdateAutomation` rewrites the `# {"$imagepolicy": "flux-system:geohazardwatch"}`-marked `image:` line in `deployment.yaml` and commits to `master` as `fluxcdbot`.
 6. Flux reconciles → rolling deploy.
 
 Major bumps (e.g., `1.x.x` → `2.0.0`) are NOT auto-deployed — the `ImagePolicy` range must be widened by hand.
 
 ## Data refresh
 
-A nightly `CronJob` (`geohazardwatch-data-refresh`) runs the addon's import scripts at 08:00 UTC and writes JSON snapshots into `/app/data/ve-geology/` on the persistent volume. Re-run on demand:
+The add-on refreshes its own data as ngdpbase scheduled jobs (geohazardwatch#403, ngdpbase#2054); there is no CronJob. Snapshots are written to `/app/data/ve-geology/` on the persistent volume.
 
-```bash
-kubectl -n geohazardwatch create job --from=cronjob/geohazardwatch-data-refresh manual-refresh-$(date +%s)
-```
+| Job | Default schedule |
+| --- | --- |
+| `geohazardwatch.import-volcanoes` | daily 08:00 America/New_York |
+| `geohazardwatch.import-earthquakes` | every 20 min |
+| `geohazardwatch.import-hans` | every 10 min |
+
+Run one on demand from Admin → Scheduled Jobs → Run now. Core catches up a missed slot once after downtime.
 
 ## Secrets
 
@@ -51,11 +55,7 @@ kubectl -n geohazardwatch create secret generic geohazardwatch-secrets \
 
 - The slow-tier hostPath `/mnt/tank/jims/data/systems/geohazardwatch` is auto-created (`DirectoryOrCreate`). The fast-tier hostPath `/mnt/local-k3s-data/geohazardwatch` is NOT (`type: Directory`): an empty fast tier boots as a fresh install, so the pod stays in `ContainerCreating` with a mount error until the folder exists. Create it (or restore it from backup) owned by `977:988`, the PUID/PGID the container runs as.
 - Default credentials `admin` / `admin123` — change immediately after first access.
-- Run an initial data import once before relying on the site:
-
-  ```bash
-  kubectl -n geohazardwatch create job --from=cronjob/geohazardwatch-data-refresh initial-import
-  ```
+- No separate import step: the scheduled jobs fill `/app/data/ve-geology/` on their first slots. To populate it immediately, use Admin → Scheduled Jobs → Run now.
 
 ## Troubleshooting
 

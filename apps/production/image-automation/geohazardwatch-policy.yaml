@@ -48,7 +48,7 @@ spec:
     push:
       branch: master
   update:
-    # Setters scan deployment.yaml / cronjob-import.yaml in the geohazardwatch
+    # Setters scan deployment.yaml in the geohazardwatch
     # app dir for the `# {"$imagepolicy": "flux-system:geohazardwatch"}` marker
     # — that path is unchanged even though this manifest now lives elsewhere.
     path: ./apps/production/geohazardwatch
