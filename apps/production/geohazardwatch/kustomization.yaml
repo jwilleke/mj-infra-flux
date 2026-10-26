@@ -7,7 +7,8 @@ resources:
   - service.yaml
   - ingress.yaml
   # Certificate auto-created by ingress annotation
-  - cronjob-import.yaml
+  # cronjob-import.yaml removed (ngdpbase#2056): the add-on refreshes its data
+  # as core scheduled jobs (geohazardwatch.import-*), ngdpbase#2054.
   # ngdpbase-ingest-creds: copied from apps/production/jimsmcp/ (mj-infra-flux#124);
   # the top-level `namespace:` transform re-homes it from jimsmcp to geohazardwatch
   - ngdpbase-ingest-creds.sops.yaml
