@@ -1,0 +1,55 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: cloudflared
+  namespace: flux-system
+spec:
+  image: docker.io/cloudflare/cloudflared
+  interval: 1h
+  # Public Docker Hub image — scanned anonymously, no pull secret.
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: cloudflared
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: cloudflared
+  filterTags:
+    # Upstream uses calendar versions (2026.10.4) and also publishes `latest`
+    # and per-arch suffix tags; only plain YYYY.M.P release tags are eligible.
+    pattern: '^\d{4}\.\d+\.\d+$'
+  policy:
+    semver:
+      # No upper bound: the "major" is the year, so a year rollover is not a
+      # breaking change and must not stall updates.
+      range: ">=2026.0.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: cloudflared
+  namespace: flux-system
+spec:
+  interval: 1h
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump cloudflared to {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans deployment.yaml in the cloudflared app dir for the
+    # `# {"$imagepolicy": "flux-system:cloudflared"}` marker.
+    path: ./apps/production/cloudflared
+    strategy: Setters
