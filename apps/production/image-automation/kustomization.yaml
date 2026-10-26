@@ -7,8 +7,8 @@ resources:
   - yourphr-policy.yaml
   - yourphr-relay-policy.yaml
   - demo-yourphr-policy.yaml  # shares the yourphr/yourphr-relay ImageRepository+ImagePolicy above; separate ImageUpdateAutomation paths only (mj-infra-flux#147)
-  - geohazardwatch-policy.yaml
-  - ngdpbase-demo-policy.yaml  # stock ngdpbase base image; geohazardwatch layers on it but tracks its own tag (ngdpbase#1026)
+  - geohazardwatch-policy.yaml  # stock ngdpbase image + installed add-on (ngdpbase#2056); own policy, scoped to its app dir
+  - ngdpbase-demo-policy.yaml  # stock ngdpbase image (ngdpbase#1026)
   - owntracks-policy.yaml
   - maps-policy.yaml  # Dawarich; Docker Hub not GHCR, semver-only filter so `latest`/rc tags can never be selected (mj-infra-flux#208)
   # geohazardwatch-ghcr.sops.yaml removed 2026-05-16 — ghcr package made

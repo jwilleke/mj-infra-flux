@@ -52,7 +52,11 @@ spec:
               mountPath: /app/data
       containers:
         - name: geohazardwatch
-          image: ghcr.io/jwilleke/geohazardwatch:1.2.289 # {"$imagepolicy": "flux-system:geohazardwatch"}
+          # Stock ngdpbase image (ngdpbase#2056). The geohazardwatch add-on is not
+          # in the image: core installs it at start from ngdpbase.addons.install
+          # in /app/fast/config/app-custom-config.json (FAST_STORAGE, never YAML)
+          # into /app/fast/addons/geohazardwatch, provenance-checked.
+          image: ghcr.io/jwilleke/ngdpbase:5.32.0 # {"$imagepolicy": "flux-system:geohazardwatch-ngdpbase"}
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

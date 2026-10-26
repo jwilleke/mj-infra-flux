@@ -6,8 +6,7 @@ metadata:
 spec:
   image: ghcr.io/jwilleke/ngdpbase
   interval: 10m
-  # GHCR package is PUBLIC — scanned anonymously, no pull secret needed, same
-  # as the geohazardwatch repository above.
+  # GHCR package is PUBLIC — scanned anonymously, no pull secret needed.
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
@@ -48,6 +47,6 @@ spec:
   update:
     # Scans the app dir for the `# {"$imagepolicy": "flux-system:ngdpbase-demo"}`
     # marker. Scoped to this directory so bumping the demo never touches
-    # geohazardwatch, which layers its own image on the same base.
+    # geohazardwatch, which follows the same image with its own policy.
     path: ./apps/production/ngdpbase-demo
     strategy: Setters

@@ -1,34 +1,38 @@
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
-  name: geohazardwatch
+  # geohazardwatch.com runs the stock ngdpbase image; the geohazardwatch
+  # add-on is installed by core's installer from the site's configuration
+  # (ngdpbase#2056). Modelled on ngdpbase-demo-policy.yaml. New names rather
+  # than repointing the old `geohazardwatch` objects, so a stale latestRef from
+  # the retired ghcr.io/jwilleke/geohazardwatch repository can never be
+  # written back into deployment.yaml while the new one is first scanned.
+  name: geohazardwatch-ngdpbase
   namespace: flux-system
 spec:
-  image: ghcr.io/jwilleke/geohazardwatch
+  image: ghcr.io/jwilleke/ngdpbase
   interval: 10m
   # GHCR package is PUBLIC — scanned anonymously, no pull secret needed.
-  # Was private via secretRef `ghcr-geohazardwatch` until 2026-05-16: the
-  # fluxcdbot ghcr PAT in that secret was decommissioned 2026-05-15, so the
-  # package was made public rather than re-issuing a long-lived token.
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
-  name: geohazardwatch
+  name: geohazardwatch-ngdpbase
   namespace: flux-system
 spec:
   imageRepositoryRef:
-    name: geohazardwatch
+    name: geohazardwatch-ngdpbase
   policy:
     semver:
-      # Auto-update minor and patch within the current major.
-      # Bumping past the next major requires updating this range manually.
-      range: ">=1.0.0 <2.0.0"
+      # Auto-update minor and patch within the current major, from the core
+      # release the switch was made on. A major bump requires widening this
+      # range by hand.
+      range: ">=5.32.0 <6.0.0"
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageUpdateAutomation
 metadata:
-  name: geohazardwatch
+  name: geohazardwatch-ngdpbase
   namespace: flux-system
 spec:
   interval: 10m
@@ -48,8 +52,9 @@ spec:
     push:
       branch: master
   update:
-    # Setters scan deployment.yaml / cronjob-import.yaml in the geohazardwatch
-    # app dir for the `# {"$imagepolicy": "flux-system:geohazardwatch"}` marker
-    # — that path is unchanged even though this manifest now lives elsewhere.
+    # Scans the app dir for the
+    # `# {"$imagepolicy": "flux-system:geohazardwatch-ngdpbase"}` marker.
+    # Scoped to this directory so it never touches ngdpbase-demo, which
+    # follows the same image with its own policy.
     path: ./apps/production/geohazardwatch
     strategy: Setters
