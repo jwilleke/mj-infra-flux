@@ -56,7 +56,7 @@ spec:
           # in the image: core installs it at start from ngdpbase.addons.install
           # in /app/fast/config/app-custom-config.json (FAST_STORAGE, never YAML)
           # into /app/fast/addons/geohazardwatch, provenance-checked.
-          image: ghcr.io/jwilleke/ngdpbase:5.38.0 # {"$imagepolicy": "flux-system:geohazardwatch-ngdpbase"}
+          image: ghcr.io/jwilleke/ngdpbase:5.39.0 # {"$imagepolicy": "flux-system:geohazardwatch-ngdpbase"}
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
