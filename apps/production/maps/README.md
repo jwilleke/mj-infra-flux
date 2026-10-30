@@ -77,13 +77,14 @@ sops maps-secret.sops.yaml   # opens decrypted in $EDITOR, re-encrypts on save
 1. __Add this directory to `apps/production/kustomization.yaml`__ — not done yet, deliberately, since this is a draft.
 2. __Cloudflare Tunnel Public Hostname__: add `maps.nerdsbythehour.com` → `traefik.kube-system.svc.cluster.local:80` (HTTP Host Header `maps.nerdsbythehour.com`) in the Cloudflare dashboard, same as the existing `owntracks.nerdsbythehour.com` entry. Not tracked in this repo.
 3. __LAN DNS__: confirm `maps.nerdsbythehour.com` resolves from inside the LAN too (UDM Pro), same consideration as OwnTracks' on-LAN troubleshooting note.
-4. Decide `APPLICATION_HOSTS` / `DOMAIN` env values once the hostname is live — `DOMAIN` isn't set here yet (only needed for outgoing email links; add if SMTP is configured later).
+4. __`APPLICATION_HOSTS` and `DOMAIN` are not interchangeable.__ `APPLICATION_HOSTS` feeds only Rails host authorization; the mailer host comes from `DOMAIN` alone (`SmtpConfig.mailer_url_options`), which is unset here. Mailer templates raise `Missing host to link to!` without it. Never set `DOMAIN` on its own: with no `SMTP_*` configured, delivery then fails instead, with 25 retries per user. Set both together or neither.
 5. First-run: create the initial Dawarich user account via the app's sign-up page (or `RAILS_ENV=production bin/rails runner ...` exec into the `maps-app` pod, per upstream docs) — no seed user is created by these manifests.
 
 ## Not carried over from upstream compose
 
 - The upstream compose also bind-mounts `dawarich_db_data` (the Postgres data volume) *read-write into the app container* at `/dawarich_db_data`, apparently for backup/admin convenience. Omitted here to avoid two workloads writing the same PV — use `kubectl exec` into `maps-db` for `pg_dump`/`pg_restore` instead.
 - SMTP, OIDC, and Prometheus exporter env vars are left unset (all optional per upstream docs — see `/docs/self-hosting/environment-variables/`). Add to `maps-configmap.yaml` (or the secret, for OIDC client secret) if needed later.
+- Digest emails are off: `monthly_digest_scheduling_job` and `yearly_digest_scheduling_job` are disabled in sidekiq-cron (mj-infra-flux#211). The status lives in Redis, not in any manifest, and survives pod restarts and image upgrades. Re-enable from the Sidekiq Web UI's Cron tab only after SMTP is configured.
 
 ## Upstream references
 
