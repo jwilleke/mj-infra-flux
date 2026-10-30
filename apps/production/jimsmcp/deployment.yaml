@@ -21,7 +21,7 @@ spec:
       serviceAccountName: jimsmcp
       containers:
       - name: jimsmcp
-        image: ghcr.io/jwilleke/jimsmcp:sha-33a4806
+        image: ghcr.io/jwilleke/jimsmcp:sha-08f1ce6
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9210
