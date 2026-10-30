@@ -79,10 +79,15 @@ groups:
       # previous four limit raises were all made after OOM kills, not before.
       # Generic on purpose: when added it would already have fired for
       # yourphr-ts (sustained ~86%, week of the 2026-10-13 YourPHR freezes).
+      # RSS, not working set: working set counts active page cache, which the
+      # kernel reclaims before it OOM-kills, so a healthy Postgres that has
+      # cached its whole database reads as near-limit (maps-db: 86% working
+      # set, 0.6% RSS, 0 OOM kills). RSS excludes shmem/tmpfs, so tmpfs-driven
+      # pressure is left to HostOOMKill / PodOOMKilled.
       - alert: ContainerMemoryNearLimit
         expr: |
           max by (namespace, pod, container) (
-            container_memory_working_set_bytes{container!="", container!="POD"}
+            container_memory_rss{container!="", container!="POD"}
           )
           / on (namespace, pod, container)
           max by (namespace, pod, container) (
@@ -92,11 +97,12 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "{{ $labels.namespace }}/{{ $labels.container }} at {{ $value | humanizePercentage }} of its memory limit"
+          summary: "{{ $labels.namespace }}/{{ $labels.container }} RSS at {{ $value | humanizePercentage }} of its memory limit"
           description: |
-            Container {{ $labels.container }} in pod {{ $labels.pod }} has been
-            above 80% of its memory limit for 15 minutes. Raise the limit, or
-            find what grew, before the kernel OOM killer does it for you:
+            Container {{ $labels.container }} in pod {{ $labels.pod }} has had
+            RSS above 80% of its memory limit for 15 minutes. Raise the limit, or
+            find what grew, before the kernel OOM killer does it for you
+            (top reports working set, which also includes active page cache):
               k3s kubectl -n {{ $labels.namespace }} top pod {{ $labels.pod }} --containers
 
       # Node went NotReady — this is a single-node cluster, so this means
