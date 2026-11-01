@@ -157,8 +157,14 @@ configure_oidc() {
   fi
   bao_capture auth list
   if printf '%s\n' "$BAO_CAPTURE" | grep -q '^oidc/'; then
-    echo "OIDC auth already enabled; leaving it."
-    return 0
+    bao_capture read auth/oidc/config || true
+    if printf '%s\n' "$BAO_CAPTURE" | grep -q oidc_discovery_url; then
+      echo "OIDC auth already configured; leaving it."
+      return 0
+    fi
+  else
+    bao auth enable oidc >/dev/null
+    echo "enabled auth oidc/"
   fi
   if [[ ! "$OIDC_GROUP" =~ ^[A-Za-z0-9_-]+$ ]]; then
     echo "OPENBAO_OIDC_GROUP must match [A-Za-z0-9_-]+" >&2
