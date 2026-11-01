@@ -115,17 +115,21 @@ before `bao operator init`.
 
 ### 1. Key file and snapshot directory
 
-On deby (so the owner uid is 3003). The same folder on a Mac is
-`/Volumes/jims/data/systems/deby/openbao/`. Create it here, not on the Mac.
+On deby, as `jim` (no sudo for the NAS part). The same folder on a Mac is
+`/Volumes/jims/data/systems/deby/openbao/`.
+
+The NAS squashes every client user (files show as `977:988`), so `chown` on
+the share fails with "Operation not permitted" (tested 2026-11-01). That is
+fine: the pod (uid 3003) can still read the file. The trade-off is that
+anyone who can mount the `jims` share can also read the key. Accepted for a
+one-person LAN.
 
 ```bash
-sudo mkdir -p /mnt/tank/jims/data/systems/deby/openbao
-sudo chown 3003:3003 /mnt/tank/jims/data/systems/deby/openbao
-sudo chmod 0700 /mnt/tank/jims/data/systems/deby/openbao
+mkdir -p /mnt/tank/jims/data/systems/deby/openbao
+chmod 0700 /mnt/tank/jims/data/systems/deby/openbao
 umask 077
-sudo openssl rand -out /mnt/tank/jims/data/systems/deby/openbao/unseal.key 32
-sudo chown 3003:3003 /mnt/tank/jims/data/systems/deby/openbao/unseal.key
-sudo chmod 0400 /mnt/tank/jims/data/systems/deby/openbao/unseal.key
+openssl rand -out /mnt/tank/jims/data/systems/deby/openbao/unseal.key 32
+chmod 0400 /mnt/tank/jims/data/systems/deby/openbao/unseal.key
 sudo mkdir -p /mnt/local-k3s-data/openbao-snapshots
 sudo chown 3003:3003 /mnt/local-k3s-data/openbao-snapshots
 sudo chmod 0700 /mnt/local-k3s-data/openbao-snapshots
@@ -211,14 +215,13 @@ Unseal key file lost, LastPass copy still there: decode it back to the NAS path,
 
 ### NAS key lost, LastPass copy OK
 
-Restore the file to `/mnt/tank/jims/data/systems/deby/openbao/unseal.key` (mode `0400`, owner `3003:3003`) and restart the pod. It auto-unseals. No data is lost.
+Restore the file to `/mnt/tank/jims/data/systems/deby/openbao/unseal.key` (mode `0400`; owner is whatever the NAS assigns) and restart the pod. It auto-unseals. No data is lost.
 
 ```bash
 umask 077
 base64 -d > /tmp/unseal.key
-sudo mv /tmp/unseal.key /mnt/tank/jims/data/systems/deby/openbao/unseal.key
-sudo chown 3003:3003 /mnt/tank/jims/data/systems/deby/openbao/unseal.key
-sudo chmod 0400 /mnt/tank/jims/data/systems/deby/openbao/unseal.key
+mv /tmp/unseal.key /mnt/tank/jims/data/systems/deby/openbao/unseal.key
+chmod 0400 /mnt/tank/jims/data/systems/deby/openbao/unseal.key
 kubectl -n openbao delete pod openbao-0
 ```
 
