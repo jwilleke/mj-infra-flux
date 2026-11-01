@@ -1,0 +1,23 @@
+apiVersion: 1
+
+# TeslaMate Postgres. Same name/uid as the previously UI-created datasource so
+# existing dashboards keep working; provisioning takes it over (orgId 1).
+datasources:
+  - name: TeslaMate
+    uid: ccff200d-ead5-48d3-85e0-e664ef96c0e0
+    orgId: 1
+    type: postgres
+    access: proxy
+    url: postgresql.database.svc.cluster.local:5432
+    user: teslamate
+    editable: false
+    jsonData:
+      database: teslamate
+      sslmode: disable
+      postgresVersion: 1500
+      connMaxLifetime: 14400
+      maxIdleConns: 100
+      maxIdleConnsAuto: true
+      maxOpenConns: 100
+    secureJsonData:
+      password: $TESLAMATE_DB_PASSWORD

@@ -6,12 +6,14 @@ resources:
   - ./grafana-ingress.yaml
   - ./grafana-service.yaml
   - ./grafana-statefulset.yaml
+  - ./teslamate-db-externalsecret.yaml
 
 configMapGenerator:
   - name: grafana-datasources
     files:
       - config/provisioning/datasources/prometheus.yaml
       - config/provisioning/datasources/loki.yaml
+      - config/provisioning/datasources/teslamate.yaml
   - name: grafana-dashboard-providers
     files:
       - config/provisioning/dashboards/dashboards.yaml
