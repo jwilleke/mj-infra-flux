@@ -253,6 +253,7 @@ in OpenBao.
 | `kv/ngdpbase/<path>` | the system that issued it | re-issue there, then `bao kv put` |
 | `kv/apps/database/postgresql` (`postgres-password`, `teslamate-password`) | PostgreSQL roles `postgres`, `teslamate` | `ALTER ROLE ... PASSWORD`, then `bao kv put` |
 | `kv/apps/teslamate/teslamate` (`encryption-key`, `database-password`) | TeslaMate; `database-password` = `teslamate-password` | DB pw as above; never rotate `encryption-key` casually |
+| `kv/apps/cert-manager/cloudflare-api-token` (`api-token`) | copied from the live Secret | re-issue at the source, then `bao kv put` |
 
 ## Snapshots
 
