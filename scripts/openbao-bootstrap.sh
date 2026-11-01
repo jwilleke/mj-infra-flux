@@ -147,8 +147,7 @@ enable_audit() {
     echo "file audit device already enabled"
     return 0
   fi
-  bao audit enable file file_path=/openbao/audit/audit.log >/dev/null
-  echo "enabled file audit device at /openbao/audit/audit.log"
+  echo "audit device is declared in the server config (helmrelease.yaml); not enabling via API" >&2
 }
 
 configure_oidc() {
