@@ -43,6 +43,19 @@ spec:
         tag: "2.7.2"
       uid: 3003
       gid: 3003
+      statefulSet:
+        securityContext:
+          pod:
+            runAsNonRoot: true
+            runAsUser: 3003
+            runAsGroup: 3003
+            fsGroup: 3003
+            # The NAS squashes every client to 977:988, so the unseal key on the
+            # NFS mount is group 988 (mode 0440). Without this group the pod
+            # cannot read it and stays sealed.
+            supplementalGroups: [988]
+            seccompProfile:
+              type: RuntimeDefault
       # OnDelete would leave the old pod after a config change.
       updateStrategyType: RollingUpdate
       logLevel: info
