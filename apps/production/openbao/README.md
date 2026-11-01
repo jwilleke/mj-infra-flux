@@ -326,3 +326,11 @@ failing the Flux object.
   (`externalTrafficPolicy: Local`).
 - Snapshot Job cannot log in. Run the bootstrap script so role
   `raft-snapshot` exists.
+
+## Note: minting a root token from the recovery key
+
+OpenBao 2.5.3+ disables the unauthenticated `sys/generate-root` endpoints by
+default (`disable_unauthed_generate_root_endpoints = true` on the listener),
+so `bao operator generate-root` with only the recovery key returns 403. To use
+the recovery key: temporarily set that listener option to `false` in
+`helmrelease.yaml`, reconcile, generate the root token, then revert.
