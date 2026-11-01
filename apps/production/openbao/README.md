@@ -21,7 +21,7 @@ start the cluster.
 | --- | --- |
 | Raft | hostPath PV `/mnt/local-k3s-data/openbao` (`storageClassName: ""`, Retain) |
 | Audit log | hostPath PV `/mnt/local-k3s-data/openbao-audit` |
-| Raft snapshots | `/mnt/local-k3s-data/openbao-snapshots` (CronJob, swept by `backup-deby.sh`) |
+| Raft snapshots | `/mnt/tank/jims/data/systems/deby/openbao/snapshots` (CronJob 02:30 America/New_York, newest 14 kept) |
 | Unseal key file | `/mnt/tank/jims/data/systems/deby/openbao/unseal.key` (NAS `jims` share, mounted read-only) |
 
 `backup-deby.sh` also rsyncs the live raft directory because it lives under
@@ -130,9 +130,8 @@ chmod 0750 /mnt/tank/jims/data/systems/deby/openbao
 umask 077
 openssl rand -out /mnt/tank/jims/data/systems/deby/openbao/unseal.key 32
 chmod 0440 /mnt/tank/jims/data/systems/deby/openbao/unseal.key
-sudo mkdir -p /mnt/local-k3s-data/openbao-snapshots
-sudo chown 3003:3003 /mnt/local-k3s-data/openbao-snapshots
-sudo chmod 0700 /mnt/local-k3s-data/openbao-snapshots
+mkdir -p /mnt/tank/jims/data/systems/deby/openbao/snapshots
+chmod 0770 /mnt/tank/jims/data/systems/deby/openbao/snapshots
 base64 /mnt/tank/jims/data/systems/deby/openbao/unseal.key
 ```
 
@@ -185,7 +184,7 @@ root token once so you can put it in the LastPass note.
 
 - From the LAN or the VPN, open `https://stuff.nerdsbythehour.com` and log in with Authentik.
 - CLI: `BAO_ADDR=https://stuff.nerdsbythehour.com bao login -method=oidc role=mj`
-- `kubectl -n openbao create job --from=cronjob/openbao-snapshot openbao-snapshot-once` and confirm a file under `/mnt/local-k3s-data/openbao-snapshots`.
+- `kubectl -n openbao create job --from=cronjob/openbao-snapshot openbao-snapshot-once` and confirm a file under `/mnt/tank/jims/data/systems/deby/openbao/snapshots`.
 - Prometheus target `openbao` is up. `OpenBaoScrapeDown` fires if the process stays down for 15 minutes. That is expected until the pod is actually up.
 
 ### AppRole for an agent
@@ -229,10 +228,10 @@ kubectl -n openbao delete pod openbao-0
 
 ### deby lost, snapshots OK
 
-Rebuild the host, mount `jims` at `/mnt/tank/jims`, and restore `/mnt/local-k3s-data/openbao-snapshots` from the `backup-deby` pool. Flux reinstalls OpenBao. The new raft directory is empty, so init once (the script prints a new recovery key; you will throw it away), then restore the newest snapshot. The snapshot is sealed with the NAS key, so that key must be the same file. After restore, the fresh init is gone: use the original recovery key from LastPass, not the one from the throwaway init.
+Rebuild the host, mount `jims` at `/mnt/tank/jims`, and copy the newest file from `/mnt/tank/jims/data/systems/deby/openbao/snapshots` on the NAS. Flux reinstalls OpenBao. The new raft directory is empty, so init once (the script prints a new recovery key; you will throw it away), then restore the newest snapshot. The snapshot is sealed with the NAS key, so that key must be the same file. After restore, the fresh init is gone: use the original recovery key from LastPass, not the one from the throwaway init.
 
 ```bash
-SNAP=/mnt/local-k3s-data/openbao-snapshots/openbao-YYYYMMDDTHHMMSSZ.snap
+SNAP=/mnt/tank/jims/data/systems/deby/openbao/snapshots/openbao-YYYYMMDDTHHMMSSZ.snap
 kubectl -n openbao cp "$SNAP" openbao-0:/tmp/restore.snap
 kubectl -n openbao exec openbao-0 -- env BAO_TOKEN="$BAO_TOKEN" bao operator raft snapshot restore -force /tmp/restore.snap
 ```
@@ -265,12 +264,9 @@ in OpenBao.
 
 ## Snapshots
 
-CronJob `openbao-snapshot` at 17:17 UTC writes
-`/mnt/local-k3s-data/openbao-snapshots/openbao-<utc>.snap` and deletes
-files older than 30 days. `backup-deby.sh` runs at 21:01 local and sweeps
-that directory. Kubernetes CronJobs use UTC. If 17:17 UTC is after 21:01
-on the host clock, move `schedule` in `snapshot-cronjob.yaml` so the file
-is closed before the rsync.
+CronJob `openbao-snapshot` runs at 02:30 America/New_York (`timeZone` set)
+and writes `/mnt/tank/jims/data/systems/deby/openbao/snapshots/openbao-<utc>.snap` (mode 0440, group 988). It keeps the
+newest 14 files. The folder is on the NAS, so it survives a lost deby.
 
 The Job logs in with its ServiceAccount. It fails until
 `scripts/openbao-bootstrap.sh` has created the `raft-snapshot` role.

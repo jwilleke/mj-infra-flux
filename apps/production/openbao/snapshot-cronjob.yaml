@@ -1,6 +1,6 @@
-# Nightly raft snapshot on local disk. backup-deby.sh (host job, not in
-# this repo) rsyncs /mnt/local-k3s-data, so this directory is swept with it.
-# Schedule is 17:17 UTC, before backup-deby at 21:01 local in US timezones.
+# Nightly raft snapshot to the NAS (jims share), keeps the newest 14.
+# Same hostPath approach as the unseal key. NFS squashes to 977:988, so the
+# pod needs supplementalGroups [988]; files are chmod 0440.
 # Auth is the kubernetes role raft-snapshot, created by scripts/openbao-bootstrap.sh.
 # Until that role exists the Job fails. No OpenBao token is stored in the pod.
 # Image tag stays in lockstep with server.image.tag in helmrelease.yaml.
@@ -16,7 +16,8 @@ metadata:
   name: openbao-snapshot
   namespace: openbao
 spec:
-  schedule: "17 17 * * *"
+  schedule: "30 2 * * *"
+  timeZone: America/New_York
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
@@ -31,6 +32,7 @@ spec:
             runAsNonRoot: true
             runAsUser: 3003
             runAsGroup: 3003
+            supplementalGroups: [988]
             seccompProfile:
               type: RuntimeDefault
           containers:
@@ -50,8 +52,10 @@ spec:
                   export BAO_TOKEN
                   f=/snapshots/openbao-$(date -u +%Y%m%dT%H%M%SZ).snap
                   bao operator raft snapshot save "$f"
+                  test -s "$f"
+                  chmod 0440 "$f"
                   echo "saved $f ($(wc -c < "$f") bytes)"
-                  find /snapshots -name 'openbao-*.snap' -mtime +30 -delete
+                  ls -1 /snapshots/openbao-*.snap | sort -r | tail -n +15 | while read -r old; do rm -f "$old"; done
               securityContext:
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true
@@ -73,7 +77,7 @@ spec:
               hostPath:
                 # Directory, not DirectoryOrCreate. A missing path fails the
                 # Job instead of creating a root-owned folder. Create it on deby.
-                path: /mnt/local-k3s-data/openbao-snapshots
+                path: /mnt/tank/jims/data/systems/deby/openbao/snapshots
                 type: Directory
             - name: tmp
               emptyDir: {}
