@@ -15,6 +15,6 @@ kind: Kustomization
 # apps/base/cert-manager/README-cert-manager.md.
 
 resources:
-  - ./cloudflare-api-token.sops.yaml
+  - ./cloudflare-api-token-externalsecret.yaml
   - ./letsencrypt-staging-clusterissuer.yaml
   - ./letsencrypt-production-clusterissuer.yaml
