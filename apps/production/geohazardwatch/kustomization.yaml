@@ -11,7 +11,7 @@ resources:
   # as core scheduled jobs (geohazardwatch.import-*), ngdpbase#2054.
   # ngdpbase-ingest-creds: copied from apps/production/jimsmcp/ (mj-infra-flux#124);
   # the top-level `namespace:` transform re-homes it from jimsmcp to geohazardwatch
-  - ngdpbase-ingest-creds.sops.yaml
+  - ./ngdpbase-ingest-creds-externalsecret.yaml
 
 # Image automation (ImageRepository / ImagePolicy / ImageUpdateAutomation)
 # lives in apps/production/image-automation/ — those resources are in the
