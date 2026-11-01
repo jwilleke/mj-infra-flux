@@ -126,10 +126,10 @@ one-person LAN.
 
 ```bash
 mkdir -p /mnt/tank/jims/data/systems/deby/openbao
-chmod 0700 /mnt/tank/jims/data/systems/deby/openbao
+chmod 0750 /mnt/tank/jims/data/systems/deby/openbao
 umask 077
 openssl rand -out /mnt/tank/jims/data/systems/deby/openbao/unseal.key 32
-chmod 0400 /mnt/tank/jims/data/systems/deby/openbao/unseal.key
+chmod 0440 /mnt/tank/jims/data/systems/deby/openbao/unseal.key
 sudo mkdir -p /mnt/local-k3s-data/openbao-snapshots
 sudo chown 3003:3003 /mnt/local-k3s-data/openbao-snapshots
 sudo chmod 0700 /mnt/local-k3s-data/openbao-snapshots
@@ -215,13 +215,13 @@ Unseal key file lost, LastPass copy still there: decode it back to the NAS path,
 
 ### NAS key lost, LastPass copy OK
 
-Restore the file to `/mnt/tank/jims/data/systems/deby/openbao/unseal.key` (mode `0400`; owner is whatever the NAS assigns) and restart the pod. It auto-unseals. No data is lost.
+Restore the file to `/mnt/tank/jims/data/systems/deby/openbao/unseal.key` (mode `0440`, group 988 as the NAS assigns; the pod reads it via supplementalGroups 988) and restart the pod. It auto-unseals. No data is lost.
 
 ```bash
 umask 077
 base64 -d > /tmp/unseal.key
 mv /tmp/unseal.key /mnt/tank/jims/data/systems/deby/openbao/unseal.key
-chmod 0400 /mnt/tank/jims/data/systems/deby/openbao/unseal.key
+chmod 0440 /mnt/tank/jims/data/systems/deby/openbao/unseal.key
 kubectl -n openbao delete pod openbao-0
 ```
 
