@@ -57,6 +57,9 @@ check_markdown() {
 
 # Check both directories
 check_kustomize "${repo_dir}/apps/production"
+check_kustomize "${repo_dir}/apps/production/openbao"
+check_kustomize "${repo_dir}/apps/production/external-secrets"
+check_kustomize "${repo_dir}/apps/production/openbao-secret-store"
 check_kustomize "${repo_dir}/infrastructure/prod/configs"
 check_markdown
 

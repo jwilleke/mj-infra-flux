@@ -1,0 +1,48 @@
+# Static hostPath PVs, same shape as apps/production/database/postgresql-pv.yaml.
+# storageClassName "" binds only to the PVCs that name these volumes.
+# Prune is disabled so removing the Flux path does not delete raft data.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: openbao-data-pv
+  labels:
+    app: openbao
+    type: data
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: openbao
+    name: openbao-data
+  hostPath:
+    path: /mnt/local-k3s-data/openbao
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: openbao-audit-pv
+  labels:
+    app: openbao
+    type: audit
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: openbao
+    name: openbao-audit
+  hostPath:
+    path: /mnt/local-k3s-data/openbao-audit
+    type: DirectoryOrCreate

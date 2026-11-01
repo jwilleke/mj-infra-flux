@@ -52,6 +52,9 @@ configMapGenerator:
       # clara host node-exporter scrape + alert rules (clara#1)
       - config/scrape-configs.clara.yaml
       - config/alerting-rules.clara.yaml
+      # OpenBao /v1/sys/metrics + sealed / scrape-down alerts (mj-infra-flux#257)
+      - config/scrape-configs.openbao.yaml
+      - config/alerting-rules.openbao.yaml
       # coinpoet and tayle configs removed
 
 labels:

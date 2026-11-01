@@ -42,6 +42,12 @@ resources:
   - ./relay-ha       # Public relay for HA; serves the Tesla Fleet API public key via cloudflared (mj-infra-flux#165)
   - ./maps           # Dawarich (self-hosted location history) at maps.nerdsbythehour.com; public, app-auth (same tier as owntracks)
 
+  # OpenBao, External Secrets Operator, and the ClusterSecretStore are
+  # not listed here. They have their own Flux Kustomizations
+  # (clusters/deby/openbao.yaml, external-secrets.yaml,
+  # openbao-secret-store.yaml). apps must not wait on OpenBao.
+  # See apps/production/openbao/README.md.
+
   # Cluster-level Flux image automation (ImageRepository / ImagePolicy /
   # ImageUpdateAutomation, all in flux-system namespace; the inner
   # kustomization deliberately has no `namespace:` directive so they

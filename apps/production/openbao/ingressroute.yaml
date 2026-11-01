@@ -1,0 +1,21 @@
+# UI and API for humans and the bao CLI. ESO calls the in-cluster Service
+# and does not use this route. No Authentik forward-auth: OpenBao logs in
+# to Authentik with OIDC, and a forward-auth wall on /v1 would break clients.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: openbao
+  namespace: openbao
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`stuff.nerdsbythehour.com`)
+      kind: Rule
+      middlewares:
+        - name: lan-only
+      services:
+        - name: openbao
+          port: 8200
+  tls:
+    secretName: openbao-tls

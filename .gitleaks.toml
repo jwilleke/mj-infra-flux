@@ -33,8 +33,9 @@ regexes = [
   '''(?i)://(?:[a-z0-9-]+\.)*example\.(?:com|org|net):''',
   # Repo-specific (deby#64): this repo describes the infrastructure itself, so
   # private-range IPs and in-cluster service names are its content, not leaks.
+  # Pod DNS is pod.service.namespace.svc.cluster.local, more than two labels.
   '''://(?:10|192\.168|172\.(?:1[6-9]|2[0-9]|3[01]))(?:\.[0-9]{1,3}){2,3}:''',
-  '''(?i)://[a-z0-9-]+(?:\.[a-z0-9-]+)?\.svc(?:\.cluster\.local)?:''',
+  '''(?i)://(?:[a-z0-9-]+\.)+svc(?:\.cluster\.local)?:''',
   '''(?i)://[a-z0-9-]+:''',
   '''(?i)://alertmanager\.monitoring:''',
 ]
