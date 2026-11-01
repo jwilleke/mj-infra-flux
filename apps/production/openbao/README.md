@@ -254,6 +254,12 @@ in OpenBao.
 | `kv/apps/database/postgresql` (`postgres-password`, `teslamate-password`) | PostgreSQL roles `postgres`, `teslamate` | `ALTER ROLE ... PASSWORD`, then `bao kv put` |
 | `kv/apps/teslamate/teslamate` (`encryption-key`, `database-password`) | TeslaMate; `database-password` = `teslamate-password` | DB pw as above; never rotate `encryption-key` casually |
 | `kv/apps/owntracks/owntracks-basic-auth` (`users`) | copied from the live Secret | re-issue at the source, then `bao kv put` |
+| `kv/apps/maps/maps-secret` (`postgres-password`, `secret-key-base`) | copied from the live Secret | re-issue at the source, then `bao kv put` |
+| `kv/apps/geohazardwatch/ngdpbase-ingest-creds` (`client-id`, `client-secret`) | copied from the live Secret | re-issue at the source, then `bao kv put` |
+| `kv/apps/demo-yourphr/demo-yourphr-relay` (`YOURPHR_RELAY_SECRET`) | copied from the live Secret | re-issue at the source, then `bao kv put` |
+| `kv/apps/yourphr/yourphr-relay` (`YOURPHR_RELAY_SECRET`) | copied from the live Secret | re-issue at the source, then `bao kv put` |
+| `kv/apps/monitoring/grafana-oauth` (`client-secret`) | copied from the live Secret | re-issue at the source, then `bao kv put` |
+| `kv/apps/cert-manager/cloudflare-api-token` (`api-token`) | copied from the live Secret | re-issue at the source, then `bao kv put` |
 
 ## Snapshots
 
