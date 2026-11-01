@@ -183,6 +183,13 @@ spec:
               current_key    = "file:///openbao/unseal/unseal.key"
             }
 
+            # OpenBao 2.7 refuses audit devices via the API; declare it here.
+            audit "file" "file" {
+              options {
+                file_path = "/openbao/audit/audit.log"
+              }
+            }
+
             telemetry {
               prometheus_retention_time = "60s"
               disable_hostname          = true
