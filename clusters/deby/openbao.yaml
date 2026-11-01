@@ -1,0 +1,24 @@
+# Own Flux Kustomization. Not an entry under apps/production, and apps does
+# not depend on this. A sealed or crash-looping OpenBao must not stall apps.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: openbao
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./apps/production/openbao
+  prune: true
+  # The StatefulSet only. A Certificate that is still issuing, or the
+  # snapshot CronJob, must not mark this failed. The probe treats sealed
+  # and uninitialized as ready so `bao operator init` can run.
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: StatefulSet
+      name: openbao
+      namespace: openbao
+  wait: true
+  timeout: 10m0s

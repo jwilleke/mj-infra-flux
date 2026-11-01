@@ -1,0 +1,14 @@
+# DNS-01 via letsencrypt-production. No public A record is required.
+# The hostname still appears in certificate transparency logs.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: openbao-tls
+  namespace: openbao
+spec:
+  secretName: openbao-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - stuff.nerdsbythehour.com

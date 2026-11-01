@@ -1,0 +1,31 @@
+groups:
+  - name: openbao
+    interval: 30s
+    rules:
+      # OpenBao keeps the vault_ metric prefix. A missing series does not
+      # fire this rule. OpenBaoScrapeDown covers a process that is not up.
+      - alert: OpenBaoSealed
+        expr: vault_core_unsealed == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "OpenBao on deby is sealed"
+          description: |
+            vault_core_unsealed is 0. The static unseal key file
+            /mnt/tank/jims/data/systems/deby/openbao/unseal.key is missing,
+            unreadable, or the wrong key. App Secret refreshes pause.
+            Existing Secrets stay. Break-glass steps are in
+            apps/production/openbao/README.md.
+      - alert: OpenBaoScrapeDown
+        expr: up{job="openbao"} == 0
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus cannot scrape OpenBao"
+          description: |
+            up{job="openbao"} is 0. The process is down or the metrics
+            listener is unreachable. Sealed-state alerting is blind until
+            this recovers. If the NAS mount is down at start, the pod
+            stays Pending because the unseal hostPath is type Directory.

@@ -1,0 +1,79 @@
+# Nightly raft snapshot on local disk. backup-deby.sh (host job, not in
+# this repo) rsyncs /mnt/local-k3s-data, so this directory is swept with it.
+# Schedule is 17:17 UTC, before backup-deby at 21:01 local in US timezones.
+# Auth is the kubernetes role raft-snapshot, created by scripts/openbao-bootstrap.sh.
+# Until that role exists the Job fails. No OpenBao token is stored in the pod.
+# Image tag stays in lockstep with server.image.tag in helmrelease.yaml.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: openbao-snapshot
+  namespace: openbao
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: openbao-snapshot
+  namespace: openbao
+spec:
+  schedule: "17 17 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          serviceAccountName: openbao-snapshot
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 3003
+            runAsGroup: 3003
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: snapshot
+              image: quay.io/openbao/openbao:2.7.2
+              env:
+                - name: BAO_ADDR
+                  value: http://openbao.openbao.svc.cluster.local:8200
+                - name: HOME
+                  value: /tmp
+              command:
+                - /bin/sh
+                - -ec
+                - |
+                  JWT=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+                  BAO_TOKEN=$(bao write -field=token auth/kubernetes/login role=raft-snapshot jwt="$JWT")
+                  export BAO_TOKEN
+                  f=/snapshots/openbao-$(date -u +%Y%m%dT%H%M%SZ).snap
+                  bao operator raft snapshot save "$f"
+                  echo "saved $f ($(wc -c < "$f") bytes)"
+                  find /snapshots -name 'openbao-*.snap' -mtime +30 -delete
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+              volumeMounts:
+                - name: snapshots
+                  mountPath: /snapshots
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: snapshots
+              hostPath:
+                # Directory, not DirectoryOrCreate. A missing path fails the
+                # Job instead of creating a root-owned folder. Create it on deby.
+                path: /mnt/local-k3s-data/openbao-snapshots
+                type: Directory
+            - name: tmp
+              emptyDir: {}

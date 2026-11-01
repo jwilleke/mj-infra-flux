@@ -1,0 +1,176 @@
+# Official chart 0.30.6 (app v2.7.2).
+#
+# Chart "standalone" mode stores on pebbledb, which has no raft snapshot.
+# One raft node is server.ha.raft with replicas: 1. That is the single
+# server this cluster runs.
+#
+# Auto-unseal is the built-in static seal (OpenBao 2.4+). current_key is a
+# file path, not the key bytes, so this ConfigMap holds no secret. The file
+# is the NAS directory mounted read-only below. It is not a Kubernetes Secret
+# and it is not SOPS: k3s encryption at rest is off.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: openbao
+  namespace: openbao
+spec:
+  interval: 30m
+  timeout: 10m
+  chart:
+    spec:
+      chart: openbao
+      version: "0.30.6"
+      sourceRef:
+        kind: HelmRepository
+        name: openbao
+        namespace: flux-system
+      interval: 12h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    injector:
+      enabled: false
+    csi:
+      enabled: false
+    ui:
+      enabled: false
+    server:
+      image:
+        tag: "2.7.2"
+      uid: 3003
+      gid: 3003
+      # OnDelete would leave the old pod after a config change.
+      updateStrategyType: RollingUpdate
+      logLevel: info
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          memory: 512Mi
+      # Ready while sealed or not yet initialized, so the first
+      # `bao operator init` can run and a sealed process is not restarted.
+      # Alert on sealed state; do not treat it as a dead pod.
+      readinessProbe:
+        enabled: true
+        path: "/v1/sys/health?standbyok=true&sealedcode=200&uninitcode=200"
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        failureThreshold: 12
+      livenessProbe:
+        enabled: true
+        path: "/v1/sys/health?standbyok=true&sealedcode=200&uninitcode=200"
+        initialDelaySeconds: 60
+        periodSeconds: 30
+        failureThreshold: 5
+      dataStorage:
+        enabled: false
+      auditStorage:
+        enabled: false
+      extraInitContainers:
+        - name: fix-perms
+          image: docker.io/library/busybox:1.37
+          command:
+            - sh
+            - -c
+            - |
+              set -eu
+              chown -R 3003:3003 /openbao/data /openbao/audit
+              chmod 0700 /openbao/data /openbao/audit
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+              add: ["CHOWN", "FOWNER", "DAC_OVERRIDE"]
+          volumeMounts:
+            - name: data
+              mountPath: /openbao/data
+            - name: audit
+              mountPath: /openbao/audit
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: openbao-data
+        - name: audit
+          persistentVolumeClaim:
+            claimName: openbao-audit
+        - name: unseal
+          hostPath:
+            path: /mnt/tank/jims/data/systems/deby/openbao
+            type: Directory
+      volumeMounts:
+        - name: data
+          mountPath: /openbao/data
+        - name: audit
+          mountPath: /openbao/audit
+        - name: unseal
+          mountPath: /openbao/unseal
+          readOnly: true
+      serviceAccount:
+        create: true
+        name: openbao
+        # No service_registration stanza, so the discovery Role is unused.
+        serviceDiscovery:
+          enabled: false
+      authDelegator:
+        enabled: true
+      service:
+        # One raft node. The main Service selects it. Active/standby
+        # Services need the label that service_registration would set.
+        active:
+          enabled: false
+        standby:
+          enabled: false
+      ha:
+        enabled: true
+        replicas: 1
+        apiAddr: http://openbao.openbao.svc.cluster.local:8200
+        clusterAddr: http://openbao-0.openbao-internal.openbao.svc.cluster.local:8201
+        disruptionBudget:
+          enabled: false
+        raft:
+          enabled: true
+          setNodeId: true
+          # 2.7.2 rejects disable_mlock (cgo is off; mlock is not used).
+          # api_addr and cluster_addr are repeated as BAO_API_ADDR and
+          # BAO_CLUSTER_ADDR. Raft refuses to start without a cluster address.
+          config: |
+            ui = true
+            cluster_name = "deby"
+            api_addr = "http://openbao.openbao.svc.cluster.local:8200"
+            cluster_addr = "http://openbao-0.openbao-internal.openbao.svc.cluster.local:8201"
+
+            listener "tcp" {
+              address         = "[::]:8200"
+              cluster_address = "[::]:8201"
+              tls_disable     = true
+              # Traefik pods are on the k3s pod CIDR. externalTrafficPolicy
+              # Local keeps the real client IP; this lets the audit log see it.
+              x_forwarded_for_authorized_addrs = "10.42.0.0/16"
+              telemetry {
+                unauthenticated_metrics_access = true
+              }
+            }
+
+            storage "raft" {
+              path = "/openbao/data"
+            }
+
+            # 32-byte AES-256-GCM key. Key id is permanent for this key.
+            # Rotation: add previous_key_id / previous_key, point current_* at
+            # the new file, then restart. See the static seal docs.
+            seal "static" {
+              current_key_id = "deby-2026-11"
+              current_key    = "file:///openbao/unseal/unseal.key"
+            }
+
+            telemetry {
+              prometheus_retention_time = "60s"
+              disable_hostname          = true
+            }
