@@ -41,6 +41,9 @@ spec:
                 secretKeyRef:
                   name: grafana-teslamate-db
                   key: TESLAMATE_DB_PASSWORD
+            # Home dashboard on login (applies when no org/team/user home preference is set in the UI/DB)
+            - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
+              value: /var/lib/grafana/dashboards/env-health-noc.json
             - name: GF_SERVER_ROOT_URL
               value: "https://grafana.nerdsbythehour.com"
             - name: GF_AUTH_GENERIC_OAUTH_ENABLED
