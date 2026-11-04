@@ -10,7 +10,7 @@ spec:
   # 0 until cutover: the docker compose container on deby still owns host port
   # 6055. With hostNetwork a second listener would fail to bind (or worse, race
   # it). Set to 1 only after `docker compose down` + the config/ copy (see README).
-  replicas: 0
+  replicas: 1
   # Recreate, not RollingUpdate: hostNetwork means old/new pods would fight
   # over 6052/6055 on the single node.
   strategy:
