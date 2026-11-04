@@ -40,8 +40,8 @@ spec:
           args:
             - dashboard
             - /config
-            - --allow-pairing-source
-            - "192.168.68.20"
+            # --allow-pairing-source is rejected outside --remote-build-only
+            # (exit 2 on 2026.10.2). Pairing state lives in config/, already paired.
           ports:
             - name: http
               containerPort: 6052
