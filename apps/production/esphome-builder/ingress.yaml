@@ -1,0 +1,29 @@
+# Internal-only ingress, same pattern as netalertx-proxy: Authentik forward-auth
+# in front of the app's own password. DNS for esphome.nerdsbythehour.com must
+# point at the private 192.168.68.71, with no port-forward. MCP clients should use
+# http://192.168.68.71:6052/api/mcp directly (forward-auth would block them).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: esphome-builder
+  namespace: esphome-builder
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
+    traefik.ingress.kubernetes.io/router.middlewares: esphome-builder-authentik-forwardauth@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - esphome.nerdsbythehour.com
+      secretName: esphome-nerdsbythehour-com-tls
+  rules:
+    - host: esphome.nerdsbythehour.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: esphome-builder
+                port:
+                  number: 6052

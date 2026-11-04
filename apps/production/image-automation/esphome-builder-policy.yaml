@@ -1,0 +1,56 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: esphome-builder
+  namespace: flux-system
+spec:
+  image: ghcr.io/esphome/esphome
+  interval: 1h
+  # Public GHCR image, scanned anonymously. Upstream pushes nightly -devYYYYMMDD
+  # tags, so the tag list is large; 1h is plenty for monthly releases.
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: esphome-builder
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: esphome-builder
+  filterTags:
+    # Calendar versions (2026.10.2). Also published: `latest`, `stable`, `beta`,
+    # `dev`, bare `2026.10`, `bN` betas and `-devYYYYMMDD` nightlies. Only plain
+    # YYYY.M.P release tags are eligible.
+    pattern: '^\d{4}\.\d+\.\d+$'
+  policy:
+    semver:
+      # Floor at 2026.10.0 (first release with the built-in MCP at /api/mcp).
+      # No upper bound: the "major" is the year.
+      range: ">=2026.10.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: esphome-builder
+  namespace: flux-system
+spec:
+  interval: 1h
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump esphome-builder to {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans the app dir for the `# {"$imagepolicy": "flux-system:esphome-builder"}` marker.
+    path: ./apps/production/esphome-builder
+    strategy: Setters

@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: esphome-builder-auth
+    namespace: esphome-builder
+type: Opaque
+stringData:
+    username: ENC[AES256_GCM,data:rB12CC0=,iv:Vi9bPCgIoM7xY77prJDQJ9mHOnPOYyISwKQ7/kOUVnQ=,tag:bOCjny7Z0JHW33puziOMBQ==,type:str]
+    password: ENC[AES256_GCM,data:gYKj2zBj/Ctr+sX9CvdvJiN+tEIir9Ooqrp4sDHP/lw=,iv:lED2BLv7zuOFaLfyGQG0+jwvtzKemEnkXDwr5rl+b7s=,tag:6uzUv8KEsQh9XS7Xnq+FIg==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBHY20wOHE3M2lzTWpob3c1
+            akdPdU5IRXVOdTM2d3puQzI4Y29IV01MQ2tjCi9Wc1hkNDdycnQzNWtQMXNOajVx
+            V2JweURmdGNSaVhUWUlkQUxLem9hSG8KLS0tIDd1SGw1aWg4ZHd6ZUxTMDdMT1Zm
+            QmNsTHh3MGxEL0dzSW5MMnFvVElwaXMKCYoRIw9l0kNVSVA8XhNdv9lxz6SKQtWb
+            fioDNTlbwWFM5N2rVnY4EMcxO6jMrDW8j1kz+wsOn9RwB8pPQp54TQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1sr8j9p87wuuqfnmharzqqnwj76yyc6mu5j3r5t7sr3j88wzn8exqwy6jhj
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-11-04T09:49:24Z"
+    mac: ENC[AES256_GCM,data:+UXgoUV2QNl7FRIReeeChWvBma2658c2pF4fHhM960ZnoSHNyDxeipu0YWb/J6VvnWjWmu94HJVwX71RHoEM4Z9RwtF+chGgBOeHh6lacLuV3yWk/sMRTaYNAI55MsJsGeDvtYmCR+4Qk7UpCjkXpb5xlCelfR/muF0PzrwhZjs=,iv:fIGUldgOdb0K69vpT+iLVhu0KZk1gtwQz61bmYenYHk=,tag:BYes/qURr9Rsl3BBrtfhKw==,type:str]
+    version: 3.13.1
