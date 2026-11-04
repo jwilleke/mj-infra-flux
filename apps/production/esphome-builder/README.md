@@ -3,7 +3,7 @@
 ESPHome Device Builder on deby, moved from plain Docker (`/home/jim/dockers/esphome-builder`). Tracking issue: mj-infra-flux#280.
 
 - `hostNetwork: true`: mDNS discovery and OTA reach the LAN. The HA ESPHome add-on (192.168.68.20) remote-builds against `192.168.68.71:6055`.
-- 6052: the dashboard and the built-in MCP (`POST /api/mcp`, 2026.10+). It is password-gated with `ESPHOME_USERNAME`/`ESPHOME_PASSWORD` from `esphome-builder-auth.sops.yaml`. The plaintext is in `mjs-network/private/creds/esphome-builder.txt`.
+- 6052: the dashboard and the built-in MCP (`POST /api/mcp`, 2026.10+). It is password-gated with `ESPHOME_USERNAME`/`ESPHOME_PASSWORD` from the `esphome-builder-auth` Secret, synced by `esphome-builder-auth-externalsecret.yaml` from OpenBao `kv/apps/esphome-builder/esphome-builder-auth` (keys `username`, `password`). The plaintext is in `mjs-network/private/creds/esphome-builder.txt`.
 - `esphome.nerdsbythehour.com`: LAN-only ingress behind Authentik (private DNS, like netalertx). MCP clients use `http://192.168.68.71:6052/api/mcp` directly.
 - Data: hostPath `/mnt/local-k3s-data/esphome-builder/{config,cache}`. `config/` holds the peer-link key and the HA pairing, so it must be copied, not recreated.
 - Image: `ghcr.io/esphome/esphome`, bumped by Flux image automation (`image-automation/esphome-builder-policy.yaml`).

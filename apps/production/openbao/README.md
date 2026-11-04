@@ -261,6 +261,7 @@ in OpenBao.
 | `kv/apps/monitoring/grafana-oauth` (`client-secret`) | copied from the live Secret | re-issue at the source, then `bao kv put` |
 | `kv/apps/cert-manager/cloudflare-api-token` (`api-token`) | copied from the live Secret | re-issue at the source, then `bao kv put` |
 | `kv/apps/monitoring/alertmanager-secrets` (`resend_api_key`) | copied from the live Secret | re-issue at the source, then `bao kv put`, then restart alertmanager |
+| `kv/apps/esphome-builder/esphome-builder-auth` (`username`, `password`) | ESPHome dashboard login | `bao kv put`, then restart the esphome-builder deployment |
 
 ## Snapshots
 

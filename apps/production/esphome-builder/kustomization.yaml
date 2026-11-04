@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: esphome-builder
 resources:
   - namespace.yaml
-  - esphome-builder-auth.sops.yaml  # ESPHOME_USERNAME/PASSWORD for the 6052 dashboard (decrypted by the apps Kustomization)
+  - esphome-builder-auth-externalsecret.yaml  # ESPHOME_USERNAME/PASSWORD for the 6052 dashboard, from OpenBao kv/apps/esphome-builder/esphome-builder-auth
   - deployment.yaml
   - service.yaml
   - authentik-middleware.yaml
