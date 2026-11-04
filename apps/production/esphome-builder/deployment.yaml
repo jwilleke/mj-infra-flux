@@ -1,0 +1,103 @@
+# ESPHome Device Builder, moved from plain Docker on deby (mj-infra-flux#280).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: esphome-builder
+  namespace: esphome-builder
+  labels:
+    app: esphome-builder
+spec:
+  # 0 until cutover: the docker compose container on deby still owns host port
+  # 6055. With hostNetwork a second listener would fail to bind (or worse, race
+  # it). Set to 1 only after `docker compose down` + the config/ copy (see README).
+  replicas: 0
+  # Recreate, not RollingUpdate: hostNetwork means old/new pods would fight
+  # over 6052/6055 on the single node.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: esphome-builder
+  template:
+    metadata:
+      labels:
+        app: esphome-builder
+    spec:
+      # On the LAN directly: mDNS device discovery and OTA uploads need it, and
+      # the HA ESPHome add-on (192.168.68.20) dials 192.168.68.71:6055.
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: deby
+      containers:
+        - name: esphome-builder
+          image: ghcr.io/esphome/esphome:2026.10.2 # {"$imagepolicy": "flux-system:esphome-builder"}
+          imagePullPolicy: IfNotPresent
+          # No --remote-build-only: that mode serves no HTTP dashboard (and so no
+          # MCP). In dashboard mode the remote-build receiver still binds 6055
+          # because config/.device-builder.json has no persisted
+          # `_remote_build.enabled: false` (default is enabled).
+          args:
+            - dashboard
+            - /config
+            - --allow-pairing-source
+            - "192.168.68.20"
+          ports:
+            - name: http
+              containerPort: 6052
+              protocol: TCP
+            - name: peer-link
+              containerPort: 6055
+              protocol: TCP
+          env:
+            - name: TZ
+              value: America/New_York
+            # Password gate for the 6052 dashboard and /api/mcp.
+            - name: ESPHOME_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: esphome-builder-auth
+                  key: username
+            - name: ESPHOME_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: esphome-builder-auth
+                  key: password
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: cache
+              mountPath: /cache
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              # Firmware compiles are CPU/RAM heavy.
+              cpu: "4000m"
+              memory: "4Gi"
+          readinessProbe:
+            tcpSocket:
+              port: 6055
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          livenessProbe:
+            tcpSocket:
+              port: 6052
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 5
+      volumes:
+        # Local disk on deby. Directory, not DirectoryOrCreate: an empty config
+        # would boot unpaired (new peer-link key), so fail loudly if the copy of
+        # /home/jim/dockers/esphome-builder/config has not been made.
+        - name: config
+          hostPath:
+            path: /mnt/local-k3s-data/esphome-builder/config
+            type: Directory
+        # PlatformIO toolchains; regenerable.
+        - name: cache
+          hostPath:
+            path: /mnt/local-k3s-data/esphome-builder/cache
+            type: DirectoryOrCreate
+      restartPolicy: Always

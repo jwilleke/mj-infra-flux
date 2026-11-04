@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: esphome-builder
+resources:
+  - namespace.yaml
+  - esphome-builder-auth-externalsecret.yaml  # ESPHOME_USERNAME/PASSWORD for the 6052 dashboard, from OpenBao kv/apps/esphome-builder/esphome-builder-auth
+  - deployment.yaml
+  - service.yaml
+  - authentik-middleware.yaml
+  - ingress.yaml
+
+# Image automation lives in apps/production/image-automation/esphome-builder-policy.yaml.
