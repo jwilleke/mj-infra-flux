@@ -1,0 +1,17 @@
+# LE cert for Cockpit on the deby host itself (port 9091), not Traefik.
+# DNS-01 via letsencrypt-production. A systemd timer on deby
+# (cockpit-cert-sync.timer -> /usr/local/sbin/cockpit-cert-sync) copies the
+# Secret into /etc/cockpit/ws-certs.d/50-deby.{cert,key} and restarts cockpit
+# when it changes.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: deby-cockpit-tls
+  namespace: host-certs
+spec:
+  secretName: deby-cockpit-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - deby.nerdsbythehour.com
