@@ -41,6 +41,7 @@ resources:
   - ./owntracks      # OwnTracks Recorder; phones publish via cloudflared, republishes owntracks/# to MQTT for HA
   - ./relay-ha       # Public relay for HA; serves the Tesla Fleet API public key via cloudflared (mj-infra-flux#165)
   - ./maps           # Dawarich (self-hosted location history) at maps.nerdsbythehour.com; public, app-auth (same tier as owntracks)
+  - ./host-certs       # LE certs for host services (deby Cockpit :9091), synced by systemd timer on host
   - ./esphome-builder  # ESPHome Device Builder on deby, hostNetwork (6052 dashboard+MCP, 6055 HA remote-build); replicas 0 until cutover (mj-infra-flux#280)
 
   # OpenBao, External Secrets Operator, and the ClusterSecretStore are
