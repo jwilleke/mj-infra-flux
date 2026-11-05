@@ -1,0 +1,30 @@
+# Cockpit runs on the deby host (cockpit.socket on :9091, HTTPS), not in the
+# cluster. Selector-less Service + manual Endpoints, same as netalertx-proxy.
+# Host :9091 stays directly usable (deby.nerdsbythehour.com, port 9091).
+apiVersion: v1
+kind: Service
+metadata:
+  name: cockpit-external
+  namespace: cockpit-proxy
+  annotations:
+    traefik.ingress.kubernetes.io/service.serversscheme: "https"
+    traefik.ingress.kubernetes.io/service.serverstransport: cockpit-proxy-insecure-skip-verify@kubernetescrd
+spec:
+  ports:
+    - name: https
+      port: 9091
+      targetPort: 9091
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: cockpit-external
+  namespace: cockpit-proxy
+subsets:
+  - addresses:
+      - ip: 192.168.68.71
+    ports:
+      - name: https
+        port: 9091
+        protocol: TCP

@@ -1,0 +1,9 @@
+# Cockpit serves TLS itself on :9091 (LE cert for deby.nerdsbythehour.com, see
+# host-certs/). Traefik dials it by IP, so the name won't match: skip verify.
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: insecure-skip-verify
+  namespace: cockpit-proxy
+spec:
+  insecureSkipVerify: true

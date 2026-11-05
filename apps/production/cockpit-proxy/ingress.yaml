@@ -1,0 +1,30 @@
+# Internal-only ingress for Cockpit. Authentik forward-auth in front, then
+# Cockpit's own PAM login. Websockets pass through Traefik natively. Cockpit
+# must list this origin: /etc/cockpit/cockpit.conf on deby has
+# Origins = https://cockpit.nerdsbythehour.com ... and
+# ProtocolHeader = X-Forwarded-Proto (see README.md).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cockpit
+  namespace: cockpit-proxy
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
+    traefik.ingress.kubernetes.io/router.middlewares: cockpit-proxy-authentik-forwardauth@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - cockpit.nerdsbythehour.com
+      secretName: cockpit-nerdsbythehour-com-tls
+  rules:
+    - host: cockpit.nerdsbythehour.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cockpit-external
+                port:
+                  number: 9091
