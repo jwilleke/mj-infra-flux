@@ -13,9 +13,14 @@ Dream Machine Pro. It starts read-only.
 - A wrong `Host` header gets 421 (upstream DNS-rebinding protection), and no
   token gets 401.
 
-DNS: no new record. `*.nerdsbythehour.com` already resolves to deby
-(192.168.68.71) through the wildcard, and cert-manager issues the certificate by
-DNS-01.
+DNS: a UniFi local DNS record is required; there is no wildcard and no public
+record. `unifi-mcp.nerdsbythehour.com` is a CNAME to `deby.nerdsbythehour.com`
+(192.168.68.71), the same as `stuff` and `auth`. It was added on 2026-11-16 in
+UniFi Network (Settings, Policy Engine, DNS: Create Entry, type CNAME), or through
+the Integration API with
+`POST /proxy/network/integration/v1/sites/<site-id>/dns/policies` and body
+`{"type":"CNAME_RECORD","enabled":true,"domain":"unifi-mcp.nerdsbythehour.com","targetDomain":"deby.nerdsbythehour.com","ttlSeconds":0}`.
+cert-manager issues the certificate by DNS-01, so it needs no record.
 
 ## Image
 
