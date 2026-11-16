@@ -16,4 +16,5 @@ resources:
   # geohazardwatch-ghcr.sops.yaml removed 2026-05-16 — ghcr package made
   # public after the fluxcdbot PAT decommission (2026-05-15); the
   # ImageRepository now scans anonymously, no pull secret.
+  - unifi-mcp-policy.yaml  # GHCR sirkirby/unifi-network-mcp; patch-only within 0.46.x (0.x minors can change permission defaults)
   - flux-system-git-auth.sops.yaml

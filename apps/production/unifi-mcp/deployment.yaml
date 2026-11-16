@@ -1,0 +1,154 @@
+# UniFi Network MCP server (github.com/sirkirby/unifi-mcp, apps/network).
+# Streamable HTTP on :3000/mcp, bearer-token protected, LAN/VPN only via
+# Traefik (see ingressroute.yaml). Env var names are upstream's documented
+# ones: apps/network/docs/{configuration,transports,permissions}.md.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unifi-mcp
+  namespace: unifi-mcp
+  labels:
+    app: unifi-mcp
+spec:
+  # One replica: Streamable HTTP sessions are held in process memory.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: unifi-mcp
+  template:
+    metadata:
+      labels:
+        app: unifi-mcp
+    spec:
+      automountServiceAccountToken: false
+      # Pin the controller name to the gateway's LAN interface. Public and
+      # UniFi DNS both return 192.168.68.1, 192.168.20.1 and 192.168.101.1
+      # (plus an AAAA) for net.nerdsbythehour.com; pin the LAN one so the
+      # pod never round-robins onto another VLAN interface or IPv6. The name
+      # is kept (not the bare IP) because the UDM serves a Let's Encrypt
+      # *.nerdsbythehour.com certificate, so TLS can be verified by name.
+      hostAliases:
+        - ip: 192.168.68.1
+          hostnames:
+            - net.nerdsbythehour.com
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 3003
+        runAsGroup: 3003
+        fsGroup: 3003
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: unifi-mcp
+          image: ghcr.io/sirkirby/unifi-network-mcp:0.46.0 # {"$imagepolicy": "flux-system:unifi-mcp"}
+          imagePullPolicy: IfNotPresent
+          # Image CMD is `unifi-network-mcp`. As container PID 1 it runs the
+          # HTTP transport only (no stdio), so no `stdin: true` is needed.
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: TZ
+              value: America/New_York
+            - name: HOME
+              value: /tmp
+            # --- MCP HTTP transport ---
+            - name: UNIFI_MCP_HTTP_ENABLED
+              value: "true"
+            - name: UNIFI_MCP_HTTP_TRANSPORT
+              value: streamable-http
+            - name: UNIFI_MCP_HOST
+              value: "0.0.0.0"
+            - name: UNIFI_MCP_PORT
+              value: "3000"
+            # DNS-rebinding protection stays on; Traefik forwards this Host.
+            # Any other Host header gets 421.
+            - name: UNIFI_MCP_ALLOWED_HOSTS
+              value: localhost,127.0.0.1,unifi-mcp.nerdsbythehour.com
+            # Every request must carry `Authorization: Bearer <token>`, else 401.
+            # An empty value refuses startup, so a missing key fails closed.
+            - name: UNIFI_NETWORK_MCP_HTTP_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: unifi-mcp
+                  key: mcp-auth-token
+            # --- Controller ---
+            - name: UNIFI_NETWORK_HOST
+              value: net.nerdsbythehour.com
+            - name: UNIFI_NETWORK_PORT
+              value: "443"
+            # Legacy (/api/s/<site>) short name. The display name is "butler";
+            # the short name of the first site on a console is `default`.
+            # Integration API calls resolve this to the site UUID themselves.
+            - name: UNIFI_NETWORK_SITE
+              value: default
+            - name: UNIFI_NETWORK_VERIFY_SSL
+              value: "true"
+            - name: UNIFI_NETWORK_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: unifi-mcp
+                  key: username
+            - name: UNIFI_NETWORK_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: unifi-mcp
+                  key: password
+            # Inventory reads and Integration API tools. Optional: renames and
+            # fixed IPs use the username/password session.
+            - name: UNIFI_NETWORK_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: unifi-mcp
+                  key: api-key
+                  optional: true
+            # --- READ-ONLY (until Jim OKs writes) ---
+            # Server-side policy gates: every create/update/delete is refused
+            # whatever the client asks. `confirm` keeps preview-then-confirm
+            # for anything a gate later allows.
+            #
+            # To enable the client rename + fixed-IP job ONLY, add (most
+            # specific rule wins, so the three `false` gates stay in force):
+            #   - name: UNIFI_POLICY_NETWORK_CLIENTS_UPDATE
+            #     value: "true"
+            # That category also covers block/unblock, reconnect, forget,
+            # guest authorize and fixed-AP. Never set the mode to `bypass`.
+            - name: UNIFI_NETWORK_TOOL_PERMISSION_MODE
+              value: confirm
+            - name: UNIFI_POLICY_NETWORK_CREATE
+              value: "false"
+            - name: UNIFI_POLICY_NETWORK_UPDATE
+              value: "false"
+            - name: UNIFI_POLICY_NETWORK_DELETE
+              value: "false"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 5
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      restartPolicy: Always
