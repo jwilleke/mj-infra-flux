@@ -1,0 +1,54 @@
+# Public HA relay nginx (deby#69). Was the floating tag 1.29-alpine; now
+# pinned to an exact 1.29.x-alpine tag+digest and bumped by Flux, patch-only.
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: relay-ha-nginx
+  namespace: flux-system
+spec:
+  # Exactly as written in the manifest, so the setter rewrites only tag@digest.
+  image: nginxinc/nginx-unprivileged
+  interval: 6h
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: relay-ha-nginx
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: relay-ha-nginx
+  digestReflectionPolicy: IfNotPresent
+  filterTags:
+    pattern: '^(?P<version>[0-9]+\.[0-9]+\.[0-9]+)-alpine$'
+    extract: '$version'
+  policy:
+    semver:
+      range: ">=1.29.0 <1.30.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: relay-ha
+  namespace: flux-system
+spec:
+  interval: 6h
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump relay-ha images {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans the dir for `# {"$imagepolicy": "flux-system:<name>"}` markers.
+    path: ./apps/production/relay-ha
+    strategy: Setters

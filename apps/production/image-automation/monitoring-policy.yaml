@@ -1,0 +1,213 @@
+# Monitoring stack images (deby#69): Prometheus, Alertmanager, blackbox,
+# node-exporter, Loki, Grafana, OTel Collector. Patch-only within the running
+# minor; widen a range by hand after reading release notes. These were
+# digest-pinned by hand (mj-infra-flux#234); digestReflectionPolicy keeps
+# each bump pinned as tag@digest.
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: prometheus
+  namespace: flux-system
+spec:
+  # Exactly as written in the manifest, so the setter rewrites only tag@digest.
+  image: prom/prometheus
+  interval: 6h
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: prometheus
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: prometheus
+  digestReflectionPolicy: IfNotPresent
+  filterTags:
+    pattern: '^v(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+    extract: '$version'
+  policy:
+    semver:
+      range: ">=3.15.0 <3.16.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: alertmanager
+  namespace: flux-system
+spec:
+  # Exactly as written in the manifest, so the setter rewrites only tag@digest.
+  image: quay.io/prometheus/alertmanager
+  interval: 6h
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: alertmanager
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: alertmanager
+  digestReflectionPolicy: IfNotPresent
+  filterTags:
+    pattern: '^v(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+    extract: '$version'
+  policy:
+    semver:
+      range: ">=0.34.1 <0.35.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: blackbox-exporter
+  namespace: flux-system
+spec:
+  # Exactly as written in the manifest, so the setter rewrites only tag@digest.
+  image: quay.io/prometheus/blackbox-exporter
+  interval: 6h
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: blackbox-exporter
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: blackbox-exporter
+  digestReflectionPolicy: IfNotPresent
+  filterTags:
+    pattern: '^v(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+    extract: '$version'
+  policy:
+    semver:
+      range: ">=0.29.0 <0.30.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: node-exporter
+  namespace: flux-system
+spec:
+  # Exactly as written in the manifest, so the setter rewrites only tag@digest.
+  image: prom/node-exporter
+  interval: 6h
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: node-exporter
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: node-exporter
+  digestReflectionPolicy: IfNotPresent
+  filterTags:
+    pattern: '^v(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+    extract: '$version'
+  policy:
+    semver:
+      range: ">=1.12.1 <1.13.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: loki
+  namespace: flux-system
+spec:
+  # Exactly as written in the manifest, so the setter rewrites only tag@digest.
+  image: grafana/loki
+  interval: 6h
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: loki
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: loki
+  digestReflectionPolicy: IfNotPresent
+  filterTags:
+    pattern: '^(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+    extract: '$version'
+  policy:
+    semver:
+      range: ">=3.7.8 <3.8.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: grafana
+  namespace: flux-system
+spec:
+  # Exactly as written in the manifest, so the setter rewrites only tag@digest.
+  image: grafana/grafana
+  interval: 6h
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: grafana
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: grafana
+  digestReflectionPolicy: IfNotPresent
+  filterTags:
+    pattern: '^(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+    extract: '$version'
+  policy:
+    semver:
+      range: ">=13.2.4 <13.3.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: otel-collector
+  namespace: flux-system
+spec:
+  # Exactly as written in the manifest, so the setter rewrites only tag@digest.
+  image: otel/opentelemetry-collector-contrib
+  interval: 6h
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: otel-collector
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: otel-collector
+  digestReflectionPolicy: IfNotPresent
+  filterTags:
+    pattern: '^(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+    extract: '$version'
+  policy:
+    semver:
+      range: ">=0.162.0 <0.163.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: monitoring
+  namespace: flux-system
+spec:
+  interval: 6h
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump monitoring images {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans the dir for `# {"$imagepolicy": "flux-system:<name>"}` markers.
+    path: ./apps/production/monitoring
+    strategy: Setters

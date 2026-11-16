@@ -1,0 +1,54 @@
+# traefik/whoami (deby#69, follows up mj-infra-flux#234). Patch-only.
+# openspeedtest:latest in the same dir has no semver tags; left manual.
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: whoami
+  namespace: flux-system
+spec:
+  # Exactly as written in the manifest, so the setter rewrites only tag@digest.
+  image: traefik/whoami
+  interval: 6h
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: whoami
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: whoami
+  digestReflectionPolicy: IfNotPresent
+  filterTags:
+    pattern: '^v(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+    extract: '$version'
+  policy:
+    semver:
+      range: ">=1.12.0 <1.13.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: guest-services
+  namespace: flux-system
+spec:
+  interval: 6h
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump guest-services images {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans the dir for `# {"$imagepolicy": "flux-system:<name>"}` markers.
+    path: ./apps/production/guest-services
+    strategy: Setters
