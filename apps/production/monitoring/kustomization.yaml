@@ -11,6 +11,8 @@ resources:
   # node-exporter was orphaned from GitOps (managed out-of-band); wired in
   # for mj-infra-flux#74 so the textfile collector reaches the live cluster.
   - ./node-exporter
+  # 04:45 ET five-line infra status for the morning briefing (deby#69)
+  - ./briefing-status
 
 namespace: monitoring
 

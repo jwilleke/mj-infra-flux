@@ -1,0 +1,59 @@
+# Morning-briefing infra status (jwilleke/deby#69). Runs 04:45 ET, ahead of
+# News-Guy's ~05:10 spoken briefing; writes 5 lines to the briefing-status
+# ConfigMap (key status.md). Read it with:
+#   kubectl -n monitoring get configmap briefing-status -o jsonpath='{.data.status\.md}'
+# Failures surface through KubeJobFailed / CronJobNoRecentSuccess.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: briefing-status
+spec:
+  schedule: "45 4 * * *"
+  timeZone: America/New_York   # explicit: kube-state-metrics assumes UTC otherwise
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 300
+      template:
+        spec:
+          serviceAccountName: briefing-status
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: status
+              image: python:3.13-alpine@sha256:9ef1a599f863231c3d91e941389bfdc4a2d6070557243d54df1a4e57015b960e
+              command: ["python3", "/app/briefing-status.py"]
+              env:
+                - name: POD_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: PYTHONDONTWRITEBYTECODE
+                  value: "1"
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 64Mi
+              volumeMounts:
+                - name: app
+                  mountPath: /app
+                  readOnly: true
+          volumes:
+            - name: app
+              configMap:
+                name: briefing-status-script
