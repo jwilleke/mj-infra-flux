@@ -103,17 +103,16 @@ spec:
                   name: unifi-mcp
                   key: api-key
                   optional: true
-            # --- READ-ONLY (until Jim OKs writes) ---
+            # --- WRITES: client updates only (Jim approved 2026-11-16) ---
             # Server-side policy gates: every create/update/delete is refused
-            # whatever the client asks. `confirm` keeps preview-then-confirm
-            # for anything a gate later allows.
+            # whatever the client asks, except the `clients` update category
+            # below (most specific rule wins). `confirm` keeps
+            # preview-then-confirm for those calls.
             #
-            # To enable the client rename + fixed-IP job ONLY, add (most
-            # specific rule wins, so the three `false` gates stay in force):
-            #   - name: UNIFI_POLICY_NETWORK_CLIENTS_UPDATE
-            #     value: "true"
-            # That category also covers block/unblock, reconnect, forget,
-            # guest authorize and fixed-AP. Never set the mode to `bypass`.
+            # `clients` update covers rename, fixed IP / local DNS, block/
+            # unblock, reconnect, forget, guest authorize and fixed-AP. To go
+            # back to read-only, delete UNIFI_POLICY_NETWORK_CLIENTS_UPDATE.
+            # Never set the mode to `bypass`.
             - name: UNIFI_NETWORK_TOOL_PERMISSION_MODE
               value: confirm
             - name: UNIFI_POLICY_NETWORK_CREATE
@@ -122,6 +121,8 @@ spec:
               value: "false"
             - name: UNIFI_POLICY_NETWORK_DELETE
               value: "false"
+            - name: UNIFI_POLICY_NETWORK_CLIENTS_UPDATE
+              value: "true"
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
