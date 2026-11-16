@@ -1,0 +1,17 @@
+# Backs the IngressRoute only.
+apiVersion: v1
+kind: Service
+metadata:
+  name: unifi-mcp
+  namespace: unifi-mcp
+  labels:
+    app: unifi-mcp
+spec:
+  type: ClusterIP
+  selector:
+    app: unifi-mcp
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      protocol: TCP

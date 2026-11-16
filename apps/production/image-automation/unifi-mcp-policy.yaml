@@ -1,0 +1,57 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: unifi-mcp
+  namespace: flux-system
+spec:
+  image: ghcr.io/sirkirby/unifi-network-mcp
+  interval: 1h
+  # Public GHCR image, scanned anonymously. Upstream also pushes `latest`,
+  # `main`, `pr-N` and short-sha tags on every merge, so the list is large.
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: unifi-mcp
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: unifi-mcp
+  filterTags:
+    # Release tags are plain semver (0.46.0, from the network/v0.46.0 git
+    # tag). Never `latest`/`main`/sha.
+    pattern: '^(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+    extract: '$version'
+  policy:
+    semver:
+      # Patch releases only. Upstream is 0.x, where a minor can change env
+      # vars or permission defaults on a tool that can rewrite the network,
+      # so widen this range by hand after reading the changelog.
+      range: ">=0.46.0 <0.47.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: unifi-mcp
+  namespace: flux-system
+spec:
+  interval: 1h
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump unifi-mcp to {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans the app dir for the `# {"$imagepolicy": "flux-system:unifi-mcp"}` marker.
+    path: ./apps/production/unifi-mcp
+    strategy: Setters

@@ -1,0 +1,21 @@
+# LAN/VPN only, same pattern as stuff.nerdsbythehour.com (openbao). No
+# Cloudflare Tunnel hostname. No Authentik forward-auth: MCP clients send a
+# bearer token, and a forward-auth redirect would break them.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: unifi-mcp
+  namespace: unifi-mcp
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`unifi-mcp.nerdsbythehour.com`)
+      kind: Rule
+      middlewares:
+        - name: lan-only
+      services:
+        - name: unifi-mcp
+          port: 3000
+  tls:
+    secretName: unifi-mcp-tls
