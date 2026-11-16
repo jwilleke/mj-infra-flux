@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# rancher/system-upgrade-controller, vendored unmodified from the v0.21.1
+# release assets (crd.yaml, system-upgrade-controller.yaml). Bump by
+# replacing both files from a newer release. Namespace system-upgrade comes
+# from the upstream manifest. (deby#69)
+resources:
+  - crd.yaml
+  - system-upgrade-controller.yaml
+  - k3s-server-plan.yaml
+
+labels:
+  - pairs:
+      app.jimwilleke.com/name: system-upgrade
+    includeSelectors: false

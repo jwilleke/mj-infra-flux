@@ -1,0 +1,39 @@
+# k3s patch upgrades for deby (deby#69).
+#
+# - Patch-only: follows the v1.36 channel (latest v1.36.x). A minor upgrade
+#   (v1.37) is a manual edit of `channel` after reading the k3s release notes
+#   and API removals (see deby docs/planning/k3s-upgrade-1.33-to-1.36.md).
+# - Gated: does nothing until the node is labelled. Opt in for one run with
+#     kubectl label node deby k3s-upgrade=enabled
+#   and remove the label afterwards (kubectl label node deby k3s-upgrade-)
+#   to go back to fully manual.
+# - Window: Jobs are only created 22:30-23:59 ET (deby's slot in the
+#   17:30-01:30 maintenance window). Upgrading k3s restarts it; containers keep
+#   running under containerd, but the API is briefly unavailable.
+# - Single node: cordon only, no drain (draining the only node would evict
+#   everything with nowhere to go).
+apiVersion: upgrade.cattle.io/v1
+kind: Plan
+metadata:
+  name: k3s-server
+  namespace: system-upgrade
+spec:
+  concurrency: 1
+  cordon: true
+  channel: https://update.k3s.io/v1-release/channels/v1.36
+  nodeSelector:
+    matchExpressions:
+      - key: node-role.kubernetes.io/control-plane
+        operator: In
+        values: ["true"]
+      - key: k3s-upgrade
+        operator: In
+        values: ["enabled"]
+  serviceAccountName: system-upgrade
+  window:
+    days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+    startTime: "22:30"
+    endTime: "23:59"
+    timeZone: America/New_York
+  upgrade:
+    image: rancher/k3s-upgrade
