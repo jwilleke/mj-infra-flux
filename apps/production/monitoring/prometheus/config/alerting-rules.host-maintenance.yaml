@@ -1,0 +1,253 @@
+# Host maintenance alerts: pending updates, reboots, SMART, ZFS capacity and
+# certificate expiry (jwilleke/deby#69).
+#
+# deby series come from the in-cluster node-exporter DaemonSet, which reads the
+# host textfile dir /var/lib/node_exporter/textfile. The producers
+# (host-updates-textfile.sh, smart-textfile.sh) are in jwilleke/deby
+# (docs/custom-services/host-maintenance.md). Until they are installed those
+# deby rules simply have no data; the *MetricsStale rules only fire once a
+# producer has written at least once and then stops.
+#
+# deby's node-exporter is scraped twice (kubernetes-pods and
+# kubernetes-service-endpoints jobs); every deby selector pins
+# job="kubernetes-service-endpoints" so each alert fires once.
+#
+# clara already has ClaraDown / ClaraRebootRequired / ClaraUpdatesPending in
+# alerting-rules.clara.yaml; its NVMe metrics (nvme_*) are covered below.
+#
+# Not covered here (no metric source; see PR description): deby host-down
+# (Prometheus runs on deby, so it cannot see deby go down), ZFS scrub age,
+# SMART on deby /dev/sda (no data through its SAT bridge), clara backups.
+groups:
+  - name: deby_host_maintenance
+    interval: 1m
+    rules:
+      # A kernel/libc update is installed and waiting for a reboot. Reboots are
+      # manual during the unattended-upgrades quiet trial: do it in the
+      # 17:30-01:30 ET window (deby slot ~22:30).
+      - alert: DebyRebootRequired
+        expr: max(node_reboot_required{job="kubernetes-service-endpoints",service="node-exporter"}) == 1
+        for: 24h
+        labels:
+          severity: warning
+          host: deby
+          source: node-exporter
+        annotations:
+          summary: "deby needs a reboot to finish applying updates"
+          description: |
+            /var/run/reboot-required has existed on deby for over 24h.
+            Reboot in the maintenance window (17:30-01:30 ET, deby ~22:30).
+            Check: ssh deby 'cat /var/run/reboot-required.pkgs'
+
+      # Debian / Debian-Security / bookworm-updates packages pending for days:
+      # unattended-upgrades is failing or not installed. Third-party origins
+      # (Docker CE, PGDG, google-cloud-cli) are excluded on purpose: they are
+      # never applied unattended and are reported in the morning briefing.
+      - alert: DebyDebianUpdatesPending
+        expr: sum(apt_upgrades_pending{job="kubernetes-service-endpoints",service="node-exporter",origin=~"Debian.*"}) > 0
+        for: 3d
+        labels:
+          severity: warning
+          host: deby
+          source: node-exporter
+        annotations:
+          summary: "deby has {{ $value }} Debian upgrade(s) pending for 3+ days"
+          description: |
+            unattended-upgrades should apply Debian security and stable updates nightly at 22:30 ET.
+            Check: ssh deby 'apt list --upgradable; sudo tail -50 /var/log/unattended-upgrades/unattended-upgrades.log'
+
+      - alert: DebyAptListsStale
+        expr: time() - max(apt_package_cache_timestamp_seconds{job="kubernetes-service-endpoints",service="node-exporter"}) > 3 * 86400
+        for: 1h
+        labels:
+          severity: warning
+          host: deby
+          source: node-exporter
+        annotations:
+          summary: "deby apt package lists are {{ $value | humanizeDuration }} old"
+          description: |
+            apt-daily.timer (22:00 ET) has not refreshed the package lists for 3+ days,
+            so pending security updates are invisible.
+            Check: ssh deby 'systemctl status apt-daily.timer apt-daily.service; journalctl -u apt-daily.service -e'
+
+      - alert: DebyUpdatesMetricsStale
+        expr: time() - max(deby_updates_textfile_timestamp_seconds{job="kubernetes-service-endpoints"}) > 3600
+        for: 15m
+        labels:
+          severity: warning
+          host: deby
+          source: node-exporter
+        annotations:
+          summary: "deby-updates.prom textfile metrics are stale"
+          description: |
+            host-updates-textfile.timer (every 15 min) stopped writing, so
+            DebyRebootRequired / DebyDebianUpdatesPending / cert-expiry alerts are blind.
+            Check: ssh deby 'systemctl status host-updates-textfile.timer host-updates-textfile.service'
+
+      - alert: DebySmartMetricsStale
+        expr: time() - max(deby_smart_textfile_timestamp_seconds{job="kubernetes-service-endpoints"}) > 3 * 3600
+        for: 15m
+        labels:
+          severity: warning
+          host: deby
+          source: node-exporter
+        annotations:
+          summary: "deby-smart.prom textfile metrics are stale"
+          description: |
+            smart-textfile.timer (hourly) stopped writing, so SMART alerts for deby are blind.
+            Check: ssh deby 'systemctl status smart-textfile.timer smart-textfile.service'
+
+      # k3s rotates its own certs on restart when within 90 days of expiry, but
+      # copies such as ~/.kube/config do not follow. On 2026-11-16 jim's
+      # kubeconfig client cert expired with no warning.
+      - alert: K3sCertificateExpiringSoon
+        expr: (min by (cert) (deby_cert_expiry_timestamp_seconds{job="kubernetes-service-endpoints"}) - time()) < 30 * 86400
+        for: 1h
+        labels:
+          severity: warning
+          host: deby
+          source: node-exporter
+        annotations:
+          summary: "deby certificate {{ $labels.cert }} expires in {{ $value | humanizeDuration }}"
+          description: |
+            k3s-* certs: restart k3s in the maintenance window so it renews them
+            (sudo systemctl restart k3s), then recopy kubeconfigs.
+            kubeconfig-<user>: back up ~/.kube/config and copy in a fresh
+            /etc/rancher/k3s/k3s.yaml (mode 600).
+
+  - name: smart_disks
+    interval: 5m
+    rules:
+      - alert: SmartDeviceUnhealthy
+        expr: max by (instance, device, model) (smart_device_healthy) == 0
+        for: 5m
+        labels:
+          severity: critical
+          source: node-exporter
+        annotations:
+          summary: "SMART health FAILED on {{ $labels.device }} ({{ $labels.model }})"
+          description: |
+            The drive's SMART overall-health self-assessment is FAILED. Replace it.
+            Check: sudo smartctl -a {{ $labels.device }}
+
+      - alert: SmartSectorProblems
+        expr: max by (instance, device, model, name) (smart_ata_attribute_raw{id=~"5|197|198"}) > 0
+        for: 1h
+        labels:
+          severity: warning
+          source: node-exporter
+        annotations:
+          summary: "{{ $labels.device }} ({{ $labels.model }}): {{ $labels.name }} = {{ $value }}"
+          description: |
+            Reallocated, pending or offline-uncorrectable sectors are non-zero; the
+            drive is starting to fail. Watch for growth and check the ZFS pool on it.
+            Check: sudo smartctl -a {{ $labels.device }}; zpool status -v
+
+      - alert: DiskTemperatureHigh
+        expr: max by (instance, device, model) (smart_device_temperature_celsius) > 55
+        for: 30m
+        labels:
+          severity: warning
+          source: node-exporter
+        annotations:
+          summary: "{{ $labels.device }} ({{ $labels.model }}) is at {{ $value }}°C"
+          description: Drive above 55°C for 30 minutes. Check airflow around the host.
+
+      # deby: smart_nvme_* (smart-textfile.sh). clara: nvme_* (nvme_metrics.py).
+      - alert: NvmeCriticalWarning
+        expr: |
+          (
+            max by (instance, device) (smart_nvme_critical_warning)
+            or max by (instance, device) (nvme_critical_warning)
+          ) > 0
+        for: 5m
+        labels:
+          severity: critical
+          source: node-exporter
+        annotations:
+          summary: "NVMe {{ $labels.device }} on {{ $labels.instance }} reports a critical warning ({{ $value }})"
+          description: |
+            Bitfield: 1 spare low, 2 temperature, 4 reliability degraded, 8 read-only, 16 backup power.
+            Check: sudo smartctl -a /dev/$(basename {{ $labels.device }})
+
+      - alert: NvmeWearHigh
+        expr: |
+          max by (instance, device) (smart_nvme_percentage_used) > 80
+          or max by (instance, device) (nvme_percentage_used_ratio) * 100 > 80
+        for: 1h
+        labels:
+          severity: warning
+          source: node-exporter
+        annotations:
+          summary: "NVMe {{ $labels.device }} on {{ $labels.instance }} has used {{ $value }}% of its rated endurance"
+          description: Plan a replacement.
+
+      - alert: NvmeMediaErrors
+        expr: |
+          max by (instance, device) (increase(smart_nvme_media_errors_total[1d])) > 0
+          or max by (instance, device) (increase(nvme_media_errors_total[1d])) > 0
+        for: 5m
+        labels:
+          severity: warning
+          source: node-exporter
+        annotations:
+          summary: "NVMe {{ $labels.device }} on {{ $labels.instance }} logged media errors in the last day"
+          description: "Check: sudo smartctl -a /dev/$(basename {{ $labels.device }})"
+
+  - name: zfs_capacity
+    interval: 5m
+    rules:
+      # Health is ZfsPoolUnhealthy (alerting-rules.storage-backup.yaml); this
+      # adds capacity, from the same zfs-health-watch.sh textfile.
+      - alert: ZfsPoolCapacityHigh
+        expr: max by (pool) (deby_zfs_pool_capacity_pct) > 80
+        for: 1h
+        labels:
+          severity: warning
+          host: deby
+        annotations:
+          summary: "ZFS pool {{ $labels.pool }} is {{ $value }}% full"
+          description: |
+            ZFS performance degrades above ~80% and snapshots need headroom.
+            Check: zpool list; zfs list -t snapshot -o name,used -s used | tail
+
+      - alert: ZfsPoolCapacityCritical
+        expr: max by (pool) (deby_zfs_pool_capacity_pct) > 90
+        for: 15m
+        labels:
+          severity: critical
+          host: deby
+        annotations:
+          summary: "ZFS pool {{ $labels.pool }} is {{ $value }}% full"
+          description: |
+            Backups into this pool will start failing. Prune old snapshots or dailies.
+            Check: zpool list; zfs list -t snapshot -o name,used -s used | tail
+
+  - name: certificates
+    interval: 5m
+    rules:
+      # cert-manager's own view of every Certificate, including ones the
+      # blackbox probes (SSLCertExpiringSoon) never hit: internal-only hosts,
+      # host-certs synced to Cockpit, the unifi-mcp cert, ...
+      - alert: CertManagerCertificateExpiringSoon
+        expr: (max by (namespace, name) (certmanager_certificate_expiration_timestamp_seconds) - time()) < 14 * 86400
+        for: 1h
+        labels:
+          severity: warning
+          source: cert-manager
+        annotations:
+          summary: "Certificate {{ $labels.namespace }}/{{ $labels.name }} expires in {{ $value | humanizeDuration }}"
+          description: |
+            cert-manager normally renews 30 days before expiry, so renewal is failing.
+            Check: kubectl -n {{ $labels.namespace }} describe certificate {{ $labels.name }}; kubectl -n cert-manager logs deploy/cert-manager --tail=100
+
+      - alert: CertManagerCertificateNotReady
+        expr: max by (namespace, name) (certmanager_certificate_ready_status{condition="False"}) == 1
+        for: 1h
+        labels:
+          severity: warning
+          source: cert-manager
+        annotations:
+          summary: "Certificate {{ $labels.namespace }}/{{ $labels.name }} is not Ready"
+          description: |
+            Check: kubectl -n {{ $labels.namespace }} describe certificate {{ $labels.name }}
