@@ -17,7 +17,8 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.29.3-alpine@sha256:b3c656d55d7ad751196f21b7fd2e8d4da9cb430e32f646adcf92441b72f82b14  # pinned to the digest running 2026-10-14 (#234); upgrade deliberately
+        # pinned to the digest running 2026-10-14 (#234); now bumped patch-only by Flux image automation (deby#69)
+        image: nginx:1.29.3-alpine@sha256:b3c656d55d7ad751196f21b7fd2e8d4da9cb430e32f646adcf92441b72f82b14 # {"$imagepolicy": "flux-system:shared-resources-nginx"}
         ports:
         - containerPort: 80
           name: http

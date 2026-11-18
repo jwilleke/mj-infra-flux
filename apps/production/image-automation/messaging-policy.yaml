@@ -1,0 +1,53 @@
+# Mosquitto (deby#69, follows up mj-infra-flux#234). Patch-only within 2.0.x.
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: mosquitto
+  namespace: flux-system
+spec:
+  # Exactly as written in the manifest, so the setter rewrites only tag@digest.
+  image: eclipse-mosquitto
+  interval: 6h
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: mosquitto
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: mosquitto
+  digestReflectionPolicy: IfNotPresent
+  filterTags:
+    pattern: '^(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+    extract: '$version'
+  policy:
+    semver:
+      range: ">=2.0.22 <2.1.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: messaging
+  namespace: flux-system
+spec:
+  interval: 6h
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump messaging images {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans the dir for `# {"$imagepolicy": "flux-system:<name>"}` markers.
+    path: ./apps/production/messaging
+    strategy: Setters

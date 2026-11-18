@@ -17,4 +17,11 @@ resources:
   # public after the fluxcdbot PAT decommission (2026-05-15); the
   # ImageRepository now scans anonymously, no pull secret.
   - unifi-mcp-policy.yaml  # GHCR sirkirby/unifi-network-mcp; patch-only within 0.46.x (0.x minors can change permission defaults)
+  # deby#69: fill image-automation gaps, patch-only, tag@digest (follows up mj-infra-flux#234)
+  - monitoring-policy.yaml  # prometheus, alertmanager, blackbox, node-exporter, loki, grafana, otel-collector
+  - teslamate-policy.yaml
+  - messaging-policy.yaml  # mosquitto
+  - guest-services-policy.yaml  # whoami
+  - shared-resources-policy.yaml  # nginx
+  - relay-ha-policy.yaml  # nginx-unprivileged; was floating 1.29-alpine
   - flux-system-git-auth.sops.yaml

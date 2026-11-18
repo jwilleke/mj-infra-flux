@@ -1,0 +1,54 @@
+# nginx static file server (deby#69, follows up mj-infra-flux#234).
+# Patch-only within 1.29.x, alpine variant.
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: shared-resources-nginx
+  namespace: flux-system
+spec:
+  # Exactly as written in the manifest, so the setter rewrites only tag@digest.
+  image: nginx
+  interval: 6h
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: shared-resources-nginx
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: shared-resources-nginx
+  digestReflectionPolicy: IfNotPresent
+  filterTags:
+    pattern: '^(?P<version>[0-9]+\.[0-9]+\.[0-9]+)-alpine$'
+    extract: '$version'
+  policy:
+    semver:
+      range: ">=1.29.3 <1.30.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: shared-resources
+  namespace: flux-system
+spec:
+  interval: 6h
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        chore(image-automation): bump shared-resources images {{range .Changed.Changes}}{{.NewValue}} {{end}}
+    push:
+      branch: master
+  update:
+    # Scans the dir for `# {"$imagepolicy": "flux-system:<name>"}` markers.
+    path: ./apps/production/shared-resources
+    strategy: Setters
