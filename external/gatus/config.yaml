@@ -1,0 +1,185 @@
+# Gatus config for the off-site public watcher on jims-test-instance.
+# This path is not Flux-reconciled. Install and updates are manual; see README.md.
+#
+# Alerts go by email from Gatus itself (Resend SMTP). They do not go through
+# Alertmanager or Prometheus. The SMTP password comes from the environment,
+# not from this file.
+
+metrics: false
+
+web:
+  address: "127.0.0.1"
+  port: 8080
+
+storage:
+  type: sqlite
+  path: /var/lib/gatus/data.db
+
+ui:
+  title: "nerdsbythehour public watcher"
+  header: "nerdsbythehour public watcher"
+  dashboard-heading: "Public sites"
+  dashboard-subheading: "Off-site checks from jims-test-instance. Internal services are watched from inside the LAN."
+
+alerting:
+  email:
+    from: "alerts@nerdsbythehour.com"
+    username: "resend"
+    password: "${GATUS_SMTP_PASSWORD}"
+    host: "smtp.resend.com"
+    port: 465
+    to: "mjsservers@willeke.com"
+    default-alert:
+      enabled: true
+      failure-threshold: 3
+      success-threshold: 2
+      send-on-resolved: true
+
+endpoints:
+  - name: nerdsbythehour-apex
+    group: public
+    url: "https://nerdsbythehour.com/"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - '[BODY] == pat(*Landing Page*)'
+      - "[CERTIFICATE_EXPIRATION] > 336h"
+    alerts:
+      - type: email
+
+  - name: www
+    group: public
+    url: "https://www.nerdsbythehour.com/"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 336h"
+    alerts:
+      - type: email
+
+  - name: cdn
+    group: public
+    url: "https://cdn.nerdsbythehour.com/"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 336h"
+    alerts:
+      - type: email
+
+  - name: owntracks
+    group: public
+    url: "https://owntracks.nerdsbythehour.com/"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 401"
+      - "[CERTIFICATE_EXPIRATION] > 336h"
+    alerts:
+      - type: email
+
+  # Dawarich sends unauthenticated browsers to /users/sign_in.
+  - name: maps
+    group: public
+    url: "https://maps.nerdsbythehour.com/"
+    interval: 60s
+    client:
+      ignore-redirect: true
+    conditions:
+      - "[STATUS] == 302"
+      - "[CERTIFICATE_EXPIRATION] > 336h"
+    alerts:
+      - type: email
+
+  - name: relay
+    group: public
+    url: "https://relay.nerdsbythehour.com/"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 336h"
+    alerts:
+      - type: email
+
+  # /healthz returns 200 "ok" from the public internet. The Flux comment says
+  # this liveness path is "kept off the public route", but the Cloudflare
+  # tunnel sends the whole hostname to the service, so /healthz is reachable.
+  # The service's intended public path is the Tesla Fleet key at
+  # /.well-known/appspecific/com.tesla.3p.public-key.pem (200). Root is 404
+  # by design.
+  - name: relay-ha
+    group: public
+    url: "https://relay-ha.nerdsbythehour.com/healthz"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - '[BODY] == pat(*ok*)'
+      - "[CERTIFICATE_EXPIRATION] > 336h"
+    alerts:
+      - type: email
+
+  - name: ngdpbase-demo
+    group: public
+    url: "https://ngdpbase-demo.nerdsbythehour.com/"
+    interval: 60s
+    client:
+      ignore-redirect: true
+    conditions:
+      - "[STATUS] == 302"
+      - "[CERTIFICATE_EXPIRATION] > 336h"
+    alerts:
+      - type: email
+
+  - name: geohazardwatch
+    group: public
+    url: "https://geohazardwatch.com/"
+    interval: 60s
+    client:
+      ignore-redirect: true
+    conditions:
+      - "[STATUS] == 302"
+      - "[CERTIFICATE_EXPIRATION] > 336h"
+    alerts:
+      - type: email
+
+  - name: demo-yourphr
+    group: public
+    url: "https://demo.yourphr.org/"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 336h"
+    alerts:
+      - type: email
+
+  - name: demo-relay
+    group: public
+    url: "https://demo-relay.yourphr.org/"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 336h"
+    alerts:
+      - type: email
+
+  # Leak canaries. These names are LAN/VPN-only (split-horizon DNS, not on
+  # the Cloudflare tunnel allowlist). From the public internet they currently
+  # do not resolve. A successful public connection is a failure and alerts.
+  - name: auth-not-public
+    group: canaries
+    url: "https://auth.nerdsbythehour.com/"
+    interval: 60s
+    conditions:
+      - "[CONNECTED] == false"
+    alerts:
+      - type: email
+        description: "auth.nerdsbythehour.com became reachable from the public internet"
+
+  - name: stuff-not-public
+    group: canaries
+    url: "https://stuff.nerdsbythehour.com/"
+    interval: 60s
+    conditions:
+      - "[CONNECTED] == false"
+    alerts:
+      - type: email
+        description: "stuff.nerdsbythehour.com became reachable from the public internet"
