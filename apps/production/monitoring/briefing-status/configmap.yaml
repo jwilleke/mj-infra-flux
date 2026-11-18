@@ -1,0 +1,13 @@
+# Output ConfigMap. Flux creates it once and then leaves it alone
+# (ssa: IfNotPresent), so the CronJob's daily patch is never reverted.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: briefing-status
+  annotations:
+    kustomize.toolkit.fluxcd.io/ssa: IfNotPresent
+data:
+  status.md: |
+    # Infra status
+
+    - Not generated yet: the briefing-status CronJob runs daily at 04:45 ET.
