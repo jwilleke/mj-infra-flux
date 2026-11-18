@@ -18,7 +18,7 @@ spec:
       containers:
       - name: nginx
         # pinned to the digest running 2026-10-14 (#234); now bumped patch-only by Flux image automation (deby#69)
-        image: nginx:1.29.3-alpine@sha256:b3c656d55d7ad751196f21b7fd2e8d4da9cb430e32f646adcf92441b72f82b14 # {"$imagepolicy": "flux-system:shared-resources-nginx"}
+        image: nginx:1.29.8-alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de # {"$imagepolicy": "flux-system:shared-resources-nginx"}
         ports:
         - containerPort: 80
           name: http
@@ -42,7 +42,7 @@ spec:
             memory: "128Mi"
             cpu: "200m"
         securityContext:
-          runAsUser: 101  # nginx user
+          runAsUser: 101 # nginx user
           runAsGroup: 101
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
