@@ -17,7 +17,7 @@ spec:
       containers:
       - name: mosquitto
         # pinned to the digest running 2026-10-14 (#234); now bumped patch-only by Flux image automation (deby#69)
-        image: eclipse-mosquitto:2.0.22@sha256:077fe4ff4c49df1e860c98335c77dda08360629e0e2a718147027e4db3eace9d # {"$imagepolicy": "flux-system:mosquitto"}
+        image: eclipse-mosquitto:2.0.23@sha256:6a332cc7a8dbe011cbc076180cbb76b37c6f0f55809682ea08e7980ef0112ad9 # {"$imagepolicy": "flux-system:mosquitto"}
         ports:
         - containerPort: 1883
           name: mqtt
