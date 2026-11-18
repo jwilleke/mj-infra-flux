@@ -12,32 +12,27 @@ spec:
     # Explicit null: server-side apply otherwise keeps the live default
     # rollingUpdate block, which is invalid with Recreate.
     rollingUpdate: null
-
   selector:
     matchLabels:
       app: alertmanager
-
   template:
     metadata:
       labels:
         app: alertmanager
-
     spec:
       securityContext:
-        fsGroup: 65534  # image runs as nobody; make the data volume writable
+        fsGroup: 65534 # image runs as nobody; make the data volume writable
       containers:
         - name: alertmanager
           # image tags at https://quay.io/repository/prometheus/alertmanager
-          image: quay.io/prometheus/alertmanager:v0.34.1@sha256:e9733bafb1bdef9b00e25a21f8f99dc26a22224bf16641ad754d1649f4c3357a # {"$imagepolicy": "flux-system:alertmanager"}
+          image: quay.io/prometheus/alertmanager:v0.34.2@sha256:39d8bb3966c694a124428a3a88fbcffd40bd069129ecd47c059f8a3f17c55f3b # {"$imagepolicy": "flux-system:alertmanager"}
           args:
             - "--config.file=/config/alertmanager.yaml"
             - "--web.external-url=https://grafana.nerdsbythehour.com/alerting/list"
             - "--storage.path=/alertmanager"
-
           ports:
             - name: api
               containerPort: 9093
-
           resources:
             limits:
               cpu: "1.0"
@@ -45,17 +40,13 @@ spec:
             requests:
               cpu: "250m"
               memory: "250Mi"
-
           volumeMounts:
             - name: alertmanager-config-volume
               mountPath: /config
-
             - name: alertmanager-secrets
               mountPath: /config/secrets
-
             - name: alertmanager-data
               mountPath: /alertmanager
-
       volumes:
         # populated by configMapGenerator in kustomization.yaml
         - name: alertmanager-config-volume

@@ -6,25 +6,21 @@ metadata:
     app: prometheus
 spec:
   serviceName: prometheus
-
   replicas: 1
-
   selector:
     matchLabels:
       app: prometheus
-
   template:
     metadata:
       labels:
         app: prometheus
-
     spec:
       serviceAccountName: prometheus
       containers:
         - name: prometheus
           # image tags at https://hub.docker.com/r/prom/prometheus/tags
           # TODO: upgrade to v3: https://prometheus.io/docs/prometheus/3.0/migration/ (looks safe)
-          image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e # {"$imagepolicy": "flux-system:prometheus"}
+          image: prom/prometheus:v3.15.1@sha256:fa3302279710be2f21a8301ec17a8b4f2301fd829bd113839b3b6b02b6f191a2 # {"$imagepolicy": "flux-system:prometheus"}
           args:
             # storage config: https://prometheus.io/docs/prometheus/latest/storage/
             - "--storage.tsdb.retention.time=15d" # reduced from 30d to minimize WAL accumulation and faster recovery
@@ -34,11 +30,9 @@ spec:
             # Authentication handled by Authentik ForwardAuth at ingress level
             # enables `curl -X POST https://prometheus.jimwilleke.com/-/reload` to reload configs per https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
             - "--web.enable-lifecycle"
-
           ports:
             - name: web-ui
               containerPort: 9090
-
           startupProbe:
             httpGet:
               path: /-/healthy
@@ -46,7 +40,6 @@ spec:
             failureThreshold: 30
             periodSeconds: 10
             timeoutSeconds: 5
-
           resources:
             requests:
               cpu: "1"
@@ -54,55 +47,45 @@ spec:
             limits:
               cpu: "2" # increased from 1.0 for better compaction performance
               memory: "8Gi" # increased from 4Gi to handle larger datasets
-
           lifecycle:
             preStop:
               exec:
                 command: ["/bin/sh", "-c", "sleep 15"]
-
           volumeMounts:
             - name: prometheus-config-volume
               mountPath: /etc/prometheus
-
             - name: prometheus-storage-volume
               mountPath: /prometheus
-
             # NetAlertX Bearer token (deby#27) — out-of-band secret
             # Cannot mount inside /etc/prometheus (ConfigMap mountpoint).
             - name: netalertx-token-volume
               mountPath: /etc/prometheus-secrets/netalertx-token
               subPath: token
               readOnly: true
-
             # Home Assistant long-lived access token (mjs-ha#72) — out-of-band
             # secret, same pattern as NetAlertX above.
             - name: homeassistant-token-volume
               mountPath: /etc/prometheus-secrets/homeassistant-token
               subPath: token
               readOnly: true
-
       securityContext:
         # this user is on the node's os as the file system owner
         # https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
         runAsUser: 4030
         runAsGroup: 4030
         fsGroup: 4030
-
       volumes:
         # populated by configMapGenerator in kustomization.yaml
         - name: prometheus-config-volume
           configMap:
             defaultMode: 420
             name: prometheus-config
-
         - name: netalertx-token-volume
           secret:
             secretName: netalertx-api-token
-
         - name: homeassistant-token-volume
           secret:
             secretName: homeassistant-api-token
-
   volumeClaimTemplates:
     - metadata:
         name: prometheus-storage-volume
@@ -112,4 +95,4 @@ spec:
         storageClassName: local-path
         resources:
           requests:
-            storage: 60Gi  # slightly larger than retention size for headroom
+            storage: 60Gi # slightly larger than retention size for headroom

@@ -7,13 +7,11 @@ metadata:
   name: grafana
 spec:
   serviceName: grafana
-
   replicas: 1
   selector:
     matchLabels:
       app: grafana
-  
-  template:  
+  template:
     metadata:
       labels:
         app: grafana
@@ -21,18 +19,15 @@ spec:
         # the prometheus config is configured to look for this
         prometheus.io/scrape: 'true'
         prometheus.io/port: '3000'
-    
-    spec:    
+    spec:
       containers:
         - name: grafana
           # for latest tag: https://hub.docker.com/r/grafana/grafana/tags
-          image: grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f # {"$imagepolicy": "flux-system:grafana"}
-          
+          image: grafana/grafana:13.2.6@sha256:b21409d7951ddcfd63a4b49083e4ef2cc35bc1437d071813bf82bfb238b00bca # {"$imagepolicy": "flux-system:grafana"}
           ports:
             - containerPort: 3000
               name: http-grafana
               protocol: TCP
-
           # authentik OIDC SSO (APP-NATIVE-OIDC tier — see thishost docs/access/access-standards.md).
           # Grafana local login is intentionally left enabled as break-glass.
           env:
@@ -70,7 +65,6 @@ spec:
               value: "contains(groups[*], 'authentik Admins') && 'Admin' || contains(groups[*], 'admin-21-fairway') && 'Admin' || 'Viewer'"
             - name: GF_AUTH_GENERIC_OAUTH_ALLOW_ASSIGN_GRAFANA_ADMIN
               value: "true"
-
             # State-history backend: Loki intent (mj-infra-flux#90)
             # NOTE: alertingApiServer=true (Grafana 11 default) forces annotation backend
             # regardless of GF_UNIFIED_ALERTING_STATE_HISTORY_BACKEND. Per-key feature toggle
@@ -84,7 +78,6 @@ spec:
               value: "http://loki.monitoring.svc.cluster.local:3100"
             - name: GF_UNIFIED_ALERTING_STATE_HISTORY_LOKI_REMOTE_READ_URL
               value: "http://loki.monitoring.svc.cluster.local:3100"
-
           readinessProbe:
             failureThreshold: 3
             httpGet:
@@ -103,7 +96,6 @@ spec:
             tcpSocket:
               port: 3000
             timeoutSeconds: 1
-          
           resources:
             requests:
               cpu: 250m
@@ -111,7 +103,6 @@ spec:
             limits:
               cpu: "1.0"
               memory: "2Gi"
-          
           volumeMounts:
             # https://grafana.com/docs/grafana/latest/setup-grafana/configure-docker/#default-paths
             - mountPath: /var/lib/grafana
@@ -125,14 +116,12 @@ spec:
             # Mount dashboard JSON files
             - mountPath: /var/lib/grafana/dashboards
               name: grafana-dashboards
-      
       securityContext:
         # this user is on the node's os as the file system owner
         # https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
-        runAsUser:  4020
+        runAsUser: 4020
         runAsGroup: 4020
-        fsGroup:    4020
-
+        fsGroup: 4020
       # more general configuration for grafana in an ini file as described at https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/
       volumes:
         - name: grafana-pv

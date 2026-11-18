@@ -6,16 +6,13 @@ metadata:
     app: blackbox-exporter
 spec:
   replicas: 1
-  
   selector:
     matchLabels:
       app: blackbox-exporter
-
   template:
     metadata:
       labels:
         app: blackbox-exporter
-
     spec:
       # Use local DNS for external domain resolution
       dnsPolicy: "None"
@@ -25,32 +22,28 @@ spec:
         searches:
           - nerdsbythehour.com
       containers:
-      - name: blackbox-exporter
-        # image tags at https://quay.io/repository/prometheus/blackbox-exporter
-        image: quay.io/prometheus/blackbox-exporter:v0.29.0@sha256:9613f2884689b6fad9f1939f6a3b0388c93a022cfaededb19545b329b5c83dea # {"$imagepolicy": "flux-system:blackbox-exporter"}
-        args:
-        - '--config.file=/config/blackbox-config.yaml'
-        
-        ports:
-        - name: for-prometheus
-          containerPort: 9115
-
-        resources:
-          limits:
-            cpu: "1.0"
-            memory: "1Gi"
-          requests:
-            cpu: "250m"
-            memory: "250Mi"
-      
-        volumeMounts:
-        # per https://github.com/prometheus/blackbox-exporter?tab=readme-ov-file#using-the-docker-image
-        - name: blackbox-exporter-config-volume
-          mountPath: /config
-        
+        - name: blackbox-exporter
+          # image tags at https://quay.io/repository/prometheus/blackbox-exporter
+          image: quay.io/prometheus/blackbox-exporter:v0.29.1@sha256:ea1c7aa3ef3f307cd03e85f34abb604478ccb90b567fc690da0cd9776da76b13 # {"$imagepolicy": "flux-system:blackbox-exporter"}
+          args:
+            - '--config.file=/config/blackbox-config.yaml'
+          ports:
+            - name: for-prometheus
+              containerPort: 9115
+          resources:
+            limits:
+              cpu: "1.0"
+              memory: "1Gi"
+            requests:
+              cpu: "250m"
+              memory: "250Mi"
+          volumeMounts:
+            # per https://github.com/prometheus/blackbox-exporter?tab=readme-ov-file#using-the-docker-image
+            - name: blackbox-exporter-config-volume
+              mountPath: /config
       volumes:
-      # populated by configMapGenerator in kustomization.yaml
-      - name: blackbox-exporter-config-volume
-        configMap:
+        # populated by configMapGenerator in kustomization.yaml
+        - name: blackbox-exporter-config-volume
+          configMap:
             defaultMode: 420
             name: blackbox-exporter-config
