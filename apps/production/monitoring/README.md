@@ -415,10 +415,49 @@ Configure notification routing in:
 
 __Current configuration:__
 
-- __Receiver__: Telegram (chat_id: 510755639)
+- __Receiver__: email to `mjsservers@willeke.com` through Resend SMTP (`smtp.resend.com:587`, password file `/config/secrets/resend_api_key` from the `alertmanager-secrets` ExternalSecret)
 - __Group wait__: 30s
 - __Group interval__: 5m
 - __Repeat interval__: 4h
+- __Weekly maintenance window__: `severity="warning"` notifications are muted Sat 22:00 to Sun 02:00 America/New_York (see below)
+
+### Maintenance window
+
+One weekly window for all planned updates and reboots: __Saturday 22:00 to Sunday 02:00 America/New_York__. The device schedule (UniFi, Home Assistant, deby, clara, the GCP watcher) lives in [jwilleke/deby `docs/maintenance/maintenance-window.md`](https://github.com/jwilleke/deby/blob/master/docs/maintenance/maintenance-window.md); epic [deby#69](https://github.com/jwilleke/deby/issues/69).
+
+__What the config does__ (`prometheus-alertmanager/config/alertmanager.yaml`):
+
+- `time_intervals: weekly-maintenance-window` is two ranges, Sat 22:00-24:00 and Sun 00:00-02:00, both with `location: America/New_York`, so DST is handled by Alertmanager.
+- A child route matching `severity="warning"` carries `mute_time_intervals: [weekly-maintenance-window]`. During the window those alerts still fire and are visible in the Alertmanager UI and Grafana, but no email goes out. A warning still firing when the window closes is emailed at the next group interval after 02:00, so a real problem is not lost.
+- `critical` and `info` alerts are not muted. Loki ruler alerts (`loki/rules/rules.yaml`) go through this same Alertmanager, so the mute covers them too. Grafana has no Grafana-managed alert rules (checked 2026-11-18), so no Grafana mute timing is needed.
+
+__Planned reboots that would trip a critical alert__ (`ServiceDown` 2m, `PostgreSQLDown` 2m, `ClaraDown` 5m, `HomeAssistantScrapeDown` 10m, `UDMProWANDown` 2m, `HostLogsAbsent` 5m): add a scoped silence before the step and expire it after the post-checks. Alertmanager runs with a `/alerting/list` route prefix, so pass it in the URL:
+
+```bash
+# on deby
+AM='kubectl --kubeconfig /home/jim/.kube/config -n monitoring exec deploy/alertmanager -- amtool --alertmanager.url=http://localhost:9093/alerting/list'
+
+# example: clara reboot, silence everything about clara for 45 minutes
+$AM silence add 'alertname=~"Clara.*|Node.*"' 'instance=~"clara.*"' --duration=45m --author=jim --comment='clara patch reboot (deby#69)'
+# or by alert name only
+$AM silence add alertname=ClaraDown --duration=45m --author=jim --comment='clara patch reboot (deby#69)'
+
+$AM silence query            # list active silences and their IDs
+$AM silence expire <ID>      # end it as soon as the post-checks pass
+```
+
+Silences are stored on the `alertmanager-data` PVC, so they survive an Alertmanager restart. A deby reboot takes Alertmanager itself down, so nothing is sent while deby is down; `for:` timers restart when Prometheus and Loki come back.
+
+__Check the config before merging a change:__
+
+```bash
+# on deby, from a checkout of this repo (the running pod has amtool v0.34.1)
+kubectl --kubeconfig /home/jim/.kube/config -n monitoring exec -i deploy/alertmanager -- \
+  amtool check-config /dev/stdin < apps/production/monitoring/prometheus-alertmanager/config/alertmanager.yaml
+kubectl --kubeconfig /home/jim/.kube/config -n monitoring exec -i deploy/alertmanager -- \
+  sh -c 'cat > /tmp/am.yaml && amtool config routes test --config.file=/tmp/am.yaml --verify.receivers=on_call_operator_default severity=warning alertname=Test; rm -f /tmp/am.yaml' \
+  < apps/production/monitoring/prometheus-alertmanager/config/alertmanager.yaml
+```
 
 __Supported receivers:__
 
@@ -426,7 +465,7 @@ __Supported receivers:__
 - Slack webhooks
 - PagerDuty
 - Webhook (generic)
-- Telegram (currently configured)
+- Telegram
 
 ## Monitoring Best Practices
 

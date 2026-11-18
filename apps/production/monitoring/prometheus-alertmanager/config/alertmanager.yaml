@@ -35,6 +35,22 @@ route:
   repeat_interval: 4h
 
   routes:
+    # Weekly maintenance window (deby#69; schedule in jwilleke/deby
+    # docs/maintenance/maintenance-window.md; silences runbook in
+    # apps/production/monitoring/README.md#maintenance-window):
+    # severity=warning notifications are held from Sat 22:00 to Sun 02:00
+    # America/New_York. Alerts still fire and show in Grafana and the
+    # Alertmanager UI; a warning that is still firing when the window closes
+    # is notified at the next group_interval after 02:00. critical and info
+    # alerts do not match this route and keep notifying through the root
+    # route. For a planned reboot that would trip a critical alert, add a
+    # scoped silence first (see the README section).
+    - matchers:
+        - severity="warning"
+      receiver: "on_call_operator_default"
+      mute_time_intervals:
+        - weekly-maintenance-window
+
     # severity=info: Don't send the follow-up resolved notification.
     #- match:
     #    severity: info
@@ -44,6 +60,26 @@ route:
     # all other alerts get sent notifications for the initial firing _and_ resolved notifications.
 
     #match: We want this to match all alerts (severity=info is first though so it will stop)
+
+# Sat 22:00 -> Sun 02:00 America/New_York (deby#69). The window crosses
+# midnight, so it is two ranges (end_time "24:00" is allowed). location makes
+# DST automatic: the window stays at local 22:00-02:00 in both EST and EDT.
+# On the November fall-back night 01:00-02:00 happens twice, so the window is
+# one hour longer; on the March spring-forward night local 02:00 does not
+# exist, so the window ends at 03:00 EDT, which is the same instant.
+time_intervals:
+  - name: weekly-maintenance-window
+    time_intervals:
+      - weekdays: ["saturday"]
+        times:
+          - start_time: "22:00"
+            end_time: "24:00"
+        location: "America/New_York"
+      - weekdays: ["sunday"]
+        times:
+          - start_time: "00:00"
+            end_time: "02:00"
+        location: "America/New_York"
 
 inhibit_rules:
   # Inhibit rules mute a new alert (target) that matches an existing alert (source).
