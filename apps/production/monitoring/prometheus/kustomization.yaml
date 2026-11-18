@@ -55,6 +55,8 @@ configMapGenerator:
       # OpenBao /v1/sys/metrics + sealed / scrape-down alerts (mj-infra-flux#257)
       - config/scrape-configs.openbao.yaml
       - config/alerting-rules.openbao.yaml
+      # Host maintenance: reboot/apt pending, SMART, ZFS capacity, cert expiry (deby#69)
+      - config/alerting-rules.host-maintenance.yaml
       # coinpoet and tayle configs removed
 
 labels:
