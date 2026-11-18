@@ -45,6 +45,7 @@ resources:
   - ./host-certs       # LE certs for host services (deby Cockpit :9091), synced by systemd timer on host
   - ./esphome-builder  # ESPHome Device Builder on deby, hostNetwork (6052 dashboard+MCP, 6055 HA remote-build); replicas 0 until cutover (mj-infra-flux#280)
   - ./unifi-mcp        # UniFi Network MCP server (sirkirby/unifi-mcp); LAN/VPN-only, bearer token, read-only policy gates
+  - ./system-upgrade   # rancher/system-upgrade-controller; k3s patch Plan gated by node label k3s-upgrade=enabled (deby#69)
 
   # OpenBao, External Secrets Operator, and the ClusterSecretStore are
   # not listed here. They have their own Flux Kustomizations
