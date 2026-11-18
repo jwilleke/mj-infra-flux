@@ -5,7 +5,7 @@ metadata:
 spec:
   replicas: 1
   strategy:
-    type: Recreate     # RWO local-path PVC; single-attach, no rolling — only one pod can hold the chunks dir
+    type: Recreate # RWO local-path PVC; single-attach, no rolling — only one pod can hold the chunks dir
   selector:
     matchLabels:
       app.jimwilleke.com/name: loki
@@ -20,7 +20,7 @@ spec:
         fsGroup: 10001
       containers:
         - name: loki
-          image: grafana/loki:3.7.8@sha256:1107dd5274e0ada47e42472b7a7e71f3b2a2fe878878108f3e2f9e51528f0193 # {"$imagepolicy": "flux-system:loki"}
+          image: grafana/loki:3.7.10@sha256:b43c257ccfc925d4a50b8717cac61a3b51df8c48d01847936057e5c4075a24a7 # {"$imagepolicy": "flux-system:loki"}
           args:
             - "-config.file=/etc/loki/loki.yaml"
           ports:
