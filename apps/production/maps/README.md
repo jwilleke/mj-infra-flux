@@ -108,7 +108,7 @@ points to keep the database small.
 | Item | Value |
 | --- | --- |
 | URL | <https://maps.nerdsbythehour.com> |
-| Reach | Public through Cloudflare (public DNS resolves to Cloudflare, checked 2026-11-23), and LAN |
+| Reach | Public through the Cloudflare Tunnel (`tunnel-infra-flux`) → Traefik, and LAN. Public DNS resolves to Cloudflare (checked 2026-11-23) |
 | Sign-in | Dawarich's own login (no Authentik in front) |
 
 ### Where it runs / where data lives
