@@ -10,7 +10,7 @@ A daily 04:45 ET CronJob that writes a five-line infra status for News-Guy's ~05
 4. __Package updates pending__ per host, Debian origins vs third-party (`apt_upgrades_pending`).
 5. __Image / firmware updates__: Docker images Diun saw updated in the last 7 days and fwupd devices with firmware available (deby textfile metrics).
 
-deby's apt, reboot, Diun and fwupd lines read `no data` until the host producers in jwilleke/deby (`docs/custom-services/host-maintenance.md`) are installed.
+deby's apt, reboot, Diun and fwupd lines read `no data` until the host producers in [jwilleke/homelab `hosts/deby/docs/custom-services/host-maintenance.md`](https://github.com/jwilleke/homelab/blob/master/hosts/deby/docs/custom-services/host-maintenance.md) are installed.
 
 ## Where it goes
 
