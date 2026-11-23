@@ -423,7 +423,7 @@ __Current configuration:__
 
 ### Maintenance window
 
-One weekly window for all planned updates and reboots: __Saturday 22:00 to Sunday 02:00 America/New_York__. The device schedule (UniFi, Home Assistant, deby, clara, the GCP watcher) lives in [jwilleke/deby `docs/maintenance/maintenance-window.md`](https://github.com/jwilleke/deby/blob/master/docs/maintenance/maintenance-window.md); epic [deby#69](https://github.com/jwilleke/deby/issues/69).
+One weekly window for all planned updates and reboots: __Saturday 22:00 to Sunday 02:00 America/New_York__. The device schedule (UniFi, Home Assistant, deby, clara, the GCP watcher) lives in [jwilleke/homelab `docs/maintenance/maintenance-window.md`](https://github.com/jwilleke/homelab/blob/master/docs/maintenance/maintenance-window.md); epic [deby#69](https://github.com/jwilleke/deby/issues/69).
 
 __What the config does__ (`prometheus-alertmanager/config/alertmanager.yaml`):
 

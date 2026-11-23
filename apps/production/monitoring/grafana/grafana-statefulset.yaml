@@ -28,7 +28,7 @@ spec:
             - containerPort: 3000
               name: http-grafana
               protocol: TCP
-          # authentik OIDC SSO (APP-NATIVE-OIDC tier — see thishost docs/access/access-standards.md).
+          # authentik OIDC SSO (APP-NATIVE-OIDC tier — see homelab hosts/deby/docs/access/access-standards.md).
           # Grafana local login is intentionally left enabled as break-glass.
           env:
             - name: TESLAMATE_DB_PASSWORD

@@ -28,11 +28,14 @@ start the cluster.
 `/mnt/local-k3s-data`. That copy can be torn. Restore from a snapshot file,
 not from the live directory.
 
-The unseal key is not under `/mnt/local-k3s-data`. The host script
-`/usr/local/bin/nas-backup-rsync.sh` excludes `/data/systems/deby/openbao/`
-so the key is not copied onto deby's backup pool. The same exclude still
-needs to land in the `jwilleke/deby` copy of that script. This repo does
-not contain that script.
+The unseal key is not under `/mnt/local-k3s-data`. __But it is copied onto
+deby:__ `/usr/local/bin/nas-backup-rsync.sh` pulls the whole `jims` module,
+and it has __no__ `/data/systems/deby/openbao/` exclude. On 2026-11-23
+`/nas-backup/tank_nas-to-deby/jims/data/systems/deby/openbao/` on deby held
+`unseal.key`, `recovery.key` and `snapshots/`. The script source is
+[`hosts/deby/bin/nas-backup-rsync.sh`](https://github.com/jwilleke/homelab/blob/master/hosts/deby/bin/nas-backup-rsync.sh)
+in `jwilleke/homelab`. The exclude (and removing the copied keys) is a
+host change that has not been made.
 
 ## Dependencies
 
@@ -428,6 +431,6 @@ ls -t /mnt/tank/jims/data/systems/deby/openbao/snapshots | head -3
 
 ### Known gaps
 
-- `nas-backup-rsync.sh` on deby excludes the openbao folder so the unseal key is not copied onto deby's own backup disk. The `jwilleke/deby` repo does not contain that script at all, so the exclude is not in git.
+- `nas-backup-rsync.sh` on deby does __not__ exclude the openbao folder, so the unseal and recovery keys are copied onto deby's own `nas-backup` pool (checked 2026-11-23). The script is in `jwilleke/homelab` at `hosts/deby/bin/nas-backup-rsync.sh`; add the exclude there and reinstall.
 - Some Secrets are still made by hand and are not in OpenBao: `monitoring/netalertx-api-token`, `monitoring/homeassistant-api-token`, `ngdpbase-demo/ngdpbase-demo-secrets`, `ngdpbase-demo/ngdpbase-demo-resend`. A rebuild loses them.
 - If the NAS is down when OpenBao starts, it stays sealed and every ExternalSecret stops refreshing.

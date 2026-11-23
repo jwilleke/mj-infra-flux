@@ -35,7 +35,7 @@ spec:
           - --no-collector.ipvs
           # Loki-independent host metrics (mj-infra-flux#74): the deby host
           # writes ZFS pool health + backup-deby freshness .prom files here
-          # via a systemd timer (jwilleke/deby). NOTE: the inert
+          # via a systemd timer (jwilleke/homelab). NOTE: the inert
           # --no-collector.systemd patch in kustomization.yaml does not reach
           # the live DaemonSet, so this arg belongs here, not in that patch.
           - --collector.textfile.directory=/host/textfile

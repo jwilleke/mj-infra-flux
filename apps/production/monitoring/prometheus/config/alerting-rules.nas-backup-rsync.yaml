@@ -9,7 +9,7 @@ groups:
       # curl silently failed (expired token, network blip, GitHub API
       # hiccup), a real failure produced no signal anywhere. These rules fire
       # off a node-exporter textfile metric written by the job itself
-      # (jwilleke/deby: bin/nas-backup-rsync.sh ->
+      # (jwilleke/homelab: hosts/deby/bin/nas-backup-rsync.sh ->
       # /var/lib/node_exporter/textfile/nas-backup-rsync.prom), independent
       # of the GitHub API call succeeding.
       #
@@ -39,7 +39,7 @@ groups:
             ago (threshold ~1d). Check on the host:
               journalctl -u nas-backup-rsync.service -e
               tail -50 /var/log/nas-backup-rsync.log
-              gh issue list -R jwilleke/deby --search "nas-backup-rsync"
+              gh issue list -R jwilleke/homelab --search "nas-backup-rsync"
 
       # Escalate to critical once more than 2 nightly runs in a row have
       # failed or not happened at all — the same 2-day staleness threshold
@@ -59,4 +59,4 @@ groups:
             ago (threshold 2d, more than 2 missed/failed nightly runs). Check on the host:
               systemctl status nas-backup-rsync.service nas-backup-rsync.timer
               journalctl -u nas-backup-rsync.service -e
-              gh issue list -R jwilleke/deby --search "nas-backup-rsync"
+              gh issue list -R jwilleke/homelab --search "nas-backup-rsync"

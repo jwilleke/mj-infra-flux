@@ -2,7 +2,7 @@
 
 Traefik + Authentik front-end for __NetAlertX__, which runs as a Docker container on the __deby host__ (`192.168.68.71:20211`, `network_mode: host`) — not in the cluster. Mirrors the `home-assistant-proxy` / `prometheus` external-service + forward-auth pattern.
 
-- __Host runbook for the NetAlertX app itself:__ `~/thishost/docs/dockers/netalertx.md` (deby#22).
+- __Host runbook for the NetAlertX app itself:__ [homelab `hosts/deby/docs/dockers/netalertx.md`](https://github.com/jwilleke/homelab/blob/master/hosts/deby/docs/dockers/netalertx.md) (deby#22).
 - __This ingress work:__ deby#24.
 - __Access:__ internal-only. `netalertx.nerdsbythehour.com` → `192.168.68.71` (private). No UDM port-forward, so it is reachable only from the LAN / VPN — unlike `ha.nerdsbythehour.com`, which is intentionally inside __and__ outside.
 

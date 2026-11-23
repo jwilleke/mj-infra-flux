@@ -35,7 +35,7 @@ route:
   repeat_interval: 4h
 
   routes:
-    # Weekly maintenance window (deby#69; schedule in jwilleke/deby
+    # Weekly maintenance window (deby#69; schedule in jwilleke/homelab
     # docs/maintenance/maintenance-window.md; silences runbook in
     # apps/production/monitoring/README.md#maintenance-window):
     # severity=warning notifications are held from Sat 22:00 to Sun 02:00

@@ -242,7 +242,7 @@ groups:
       # stay connected 24/7; ANY disconnect is interesting, not just
       # the >1d connected case caught by UDMProLongRunningClientOffline.
       # Matches the operator's camera inventory (see
-      # thishost/docs/network-monitoring.md) by alias: known UniFi
+      # homelab docs/network-monitoring.md) by alias: known UniFi
       # camera names + the "Temp-G[3-5]-N" pattern + GRM-EAST/WEST +
       # any alias starting with "Cam " or model-numbered "G[3-5] ".
       # Add to the alternation as new cameras are adopted. Fires

@@ -2,7 +2,7 @@
 # :20211), NOT in the cluster. This selector-less Service + manual Endpoints
 # lets Traefik route to it like any in-cluster backend. deby's LAN IP is
 # 192.168.68.71 (the same IP the Traefik LB advertises), reachable from the
-# cluster. See ~/thishost/docs/dockers/netalertx.md and deby#22 / deby#24.
+# cluster. See jwilleke/homelab hosts/deby/docs/dockers/netalertx.md and deby#22 / deby#24.
 apiVersion: v1
 kind: Service
 metadata:

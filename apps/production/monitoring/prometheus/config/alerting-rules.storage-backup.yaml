@@ -6,7 +6,7 @@ groups:
       # mj-infra-flux#74 — Loki-INDEPENDENT storage/backup alerting.
       #
       # These fire off node-exporter textfile metrics written by the deby
-      # host (jwilleke/deby: node-exporter-textfile.{service,timer} ->
+      # host (jwilleke/homelab hosts/deby: node-exporter-textfile.{service,timer} ->
       # /var/lib/node_exporter/textfile/deby-storage.prom). node-exporter
       # is healthy and independent of Loki/NFS, so this path stays up when
       # the Loki ruler is down (the 2026-05-06 incident). The Loki

@@ -3,7 +3,7 @@
 #
 # deby series come from the in-cluster node-exporter DaemonSet, which reads the
 # host textfile dir /var/lib/node_exporter/textfile. The producers
-# (host-updates-textfile.sh, smart-textfile.sh) are in jwilleke/deby
+# (host-updates-textfile.sh, smart-textfile.sh) are in jwilleke/homelab (hosts/deby/bin/)
 # (docs/custom-services/host-maintenance.md). Until they are installed those
 # deby rules simply have no data; the *MetricsStale rules only fire once a
 # producer has written at least once and then stops.

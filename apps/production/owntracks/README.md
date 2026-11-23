@@ -73,7 +73,7 @@ These steps live outside this repo and have to be done manually:
 
 ## Topic isolation
 
-The shared broker has no ACLs; topic separation is by convention. The recorder publishes only under `owntracks/`. See `~/thishost/docs/mqtt.md` for the full tenant table.
+The shared broker has no ACLs; topic separation is by convention. The recorder publishes only under `owntracks/`. See the [messaging README](../messaging/README.md) for the full tenant table.
 
 ## Operating
 
