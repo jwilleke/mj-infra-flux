@@ -90,6 +90,7 @@ Public hostnames found in the app READMEs and blackbox targets:
 | `relay-ha.nerdsbythehour.com` | `relay-ha` |
 | `ngdpbase-demo.nerdsbythehour.com` | `ngdpbase-demo` |
 | `owntracks.nerdsbythehour.com` | Traefik → `owntracks` (basic auth) |
+| `maps.nerdsbythehour.com` | Traefik → `maps-app` (Dawarich login) |
 
 ### Where it runs / where data lives
 
