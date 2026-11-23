@@ -69,3 +69,62 @@ curl https://relay.nerdsbythehour.com/healthz   # 200 OK
 
 For the distributed product, a brand-consistent `relay.yourphr.org` on a managed runtime
 (Fly.io / Cloud Run) is reserved — trivial to move since the relay is stateless.
+
+## Operator notes: yourphr-relay — operator reference
+
+*Moved from homelab `docs/apps/yourphr-relay.md` (last changed 2026-08-17) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+The YourPHR SMART on FHIR OAuth store-and-poll relay. A small, stateless public bouncer for the SMART authorization `code` — part of the SMART provider sync epic (yourphr#50).
+
+__Deployed as:__ mj-infra-flux#104 + mj-infra-flux#105
+__Image:__ `ghcr.io/jwilleke/yourphr-relay:main`
+__Manifests:__ [`mj-infra-flux/apps/production/yourphr-relay/`](./)
+
+### What it does
+
+A provider redirects the user's browser to `https://relay.nerdsbythehour.com/callback?code=&state=`; the relay stores `{state → code}` in memory with a ~60s TTL. The LAN-side YourPHR instance polls `/pending?state=` (gated by the `X-Yourphr-Token` shared secret) to retrieve the code and completes the token exchange itself.
+
+__The relay never sees access/refresh tokens__ and holds no provider app registration (per-user / BYO `client_id`).
+
+### Access
+
+| | |
+|---|---|
+| URL | <https://relay.nerdsbythehour.com> |
+| Auth | None on `/callback` (public, must be reachable by provider redirect); `/pending` protected by `X-Yourphr-Token` shared secret |
+| Exposure | Cloudflare Tunnel (not Traefik — `/callback` must be public and unauthenticated) |
+
+### Architecture
+
+```
+Internet → Cloudflare Edge (TLS) → Tunnel → cloudflared
+                                              ↓
+                              yourphr-relay.yourphr.svc.cluster.local:8080
+                                              ↓
+                                      yourphr-relay pod
+```
+
+- __Namespace:__ `yourphr` (shared with the main app)
+- __Port:__ 8080 (plain HTTP in-cluster; Cloudflare terminates TLS at edge)
+- __No Ingress, no cert-manager__ — Cloudflare Tunnel handles TLS and DNS
+- __Secret:__ `yourphr-relay` Secret in `yourphr` namespace — contains `YOURPHR_RELAY_SECRET` (SOPS-encrypted in git)
+
+### Secret management
+
+The shared secret (`YOURPHR_RELAY_SECRET`) gates `/pending`. It is encrypted at rest in `apps/production/yourphr-relay/relay-secret.sops.yaml` (SOPS + age, same recipient as all other repo secrets). Flux decrypts it inside the cluster; the plaintext never touches git.
+
+The same value must be configured on the YourPHR app side (yourphr#51) so the app can authenticate to `/pending`.
+
+### Cloudflare Tunnel
+
+The relay hostname is dashboard-managed (not in git). In Cloudflare Zero Trust → the existing tunnel → Public Hostnames:
+
+- __Subdomain:__ `relay` · __Domain:__ `nerdsbythehour.com` · __Type:__ `HTTP` · __URL:__ `yourphr-relay.yourphr.svc.cluster.local:8080`
+
+### Health
+
+```bash
+curl https://relay.nerdsbythehour.com/healthz   # 200 OK
+kubectl -n yourphr get pods -l app=yourphr-relay
+kubectl -n yourphr logs deploy/yourphr-relay
+```

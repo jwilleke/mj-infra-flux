@@ -187,3 +187,74 @@ When upgrading PostgreSQL major versions:
 3. Test thoroughly before production cutover
 
 Current version: PostgreSQL 17
+
+## Operations summary
+
+*Moved from homelab `network/apps/database-postgresql.md` (last changed 2026-11-16) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+### What it is and does
+
+One PostgreSQL 17 server in the cluster that other apps can share. Today only
+TeslaMate uses it (database `teslamate`). Authentik and Maps run their own
+separate Postgres servers.
+
+### Access
+
+| Item | Value |
+| --- | --- |
+| In cluster | `postgresql.database.svc:5432` |
+| From outside | Not exposed |
+| Sign-in | Postgres user `postgres` (password in Secret below), app user `teslamate` |
+
+### Where it runs / where data lives
+
+| Item | Value |
+| --- | --- |
+| Host | deby, namespace `database`, StatefulSet `postgresql` (image postgres 17.7) |
+| Data | hostPath PV `postgresql-pv` → `/mnt/local-k3s-data/postgresql` (50Gi) |
+| Backup | Nightly `pg_dumpall` → `/deby-backup/host/daily/<date>/dumps/k3s-postgres-all.sql.gz`. The raw data folder is excluded from the file backup on purpose. |
+
+### Secrets
+
+| Secret | Where |
+| --- | --- |
+| `postgres` password | OpenBao `apps/database/postgresql` → Secret `database/postgresql-secret`, key `postgres-password` |
+| `teslamate` user password | OpenBao `apps/teslamate/teslamate`, property `database-password` |
+
+### Dependencies
+
+- OpenBao and External Secrets
+- Used by: [TeslaMate](../teslamate/README.md), Grafana TeslaMate dashboards ([monitoring](../monitoring/README.md))
+
+### Recovery
+
+(a) Pod broken:
+
+```bash
+kubectl -n database get pods
+kubectl -n database logs postgresql-0 --tail=100
+kubectl -n database delete pod postgresql-0       # StatefulSet recreates it
+```
+
+(b) Data lost:
+
+```bash
+zcat /deby-backup/host/daily/latest/dumps/k3s-postgres-all.sql.gz | \
+  kubectl -n database exec -i postgresql-0 -- psql -U postgres -d postgres
+kubectl -n teslamate rollout restart deploy/teslamate
+```
+
+(c) deby rebuilt: recreate `/mnt/local-k3s-data/postgresql` (empty), let Flux
+start the pod, then restore the dump as in (b).
+
+### Health checks
+
+```bash
+kubectl -n database exec postgresql-0 -- pg_isready -U postgres
+kubectl -n database exec postgresql-0 -- psql -U postgres -c '\l'
+```
+
+### Known gaps
+
+- Single instance, no replication. The nightly dump is the only restore point (up to 24 hours of TeslaMate data can be lost).
+- The README in `apps/production/database` still shows `sudo kubectl` and Docker migration steps from before the move to k3s.

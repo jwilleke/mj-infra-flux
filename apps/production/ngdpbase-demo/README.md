@@ -119,3 +119,60 @@ curl -o /dev/null -w "%{http_code}\n" https://ngdpbase-demo.nerdsbythehour.com/r
 ```
 
 Then, in a browser with a real mailbox: request a link for an address with no account, confirm it arrives, click it, confirm you can edit but not delete.
+
+## Operations summary
+
+*Moved from homelab `network/apps/ngdpbase-demo.md` (last changed 2026-11-16) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+### What it is and does
+
+A public, throwaway copy of ngdpbase so people can try the project without
+installing it. It can be wiped at any time.
+
+### Access
+
+| Item | Value |
+| --- | --- |
+| URL | <https://ngdpbase-demo.nerdsbythehour.com> (public, Cloudflare Tunnel; no Traefik Ingress) |
+| Sign-in | ngdpbase login; sign-up is off; admin password from the Secret below |
+
+### Where it runs / where data lives
+
+deby, namespace `ngdpbase-demo`, ngdpbase 5.42.0 (image-automated). Data on
+hostPath `/mnt/local-k3s-data/ngdpbase-demo` (2Gi). Treated as disposable.
+
+### Secrets
+
+| Secret | Where |
+| --- | --- |
+| Session secret, admin password | Secret `ngdpbase-demo/ngdpbase-demo-secrets`, keys `session-secret`, `admin-password` (made by hand) |
+| Resend mail | Secret `ngdpbase-demo/ngdpbase-demo-resend`, keys `api-key`, `from` (made by hand) |
+
+### Dependencies
+
+[cloudflared](../cloudflared/README.md), Resend.
+
+### Recovery
+
+(a) Pod broken:
+
+```bash
+kubectl -n ngdpbase-demo rollout restart deploy/ngdpbase-demo
+```
+
+(b) Data lost: start empty. The admin account is recreated from the Secret.
+
+(c) deby rebuilt: recreate both Secrets by hand first (the pod will not start
+without them; steps in `apps/production/ngdpbase-demo/README.md`), then
+`flux reconcile kustomization apps --with-source`.
+
+### Health checks
+
+```bash
+curl -o /dev/null -w "%{http_code}\n" https://ngdpbase-demo.nerdsbythehour.com/   # 200
+```
+
+### Known gaps
+
+- Its two Secrets are not in git or OpenBao.
+- Saving on `/admin/configuration` fails by design (read-only config mount).

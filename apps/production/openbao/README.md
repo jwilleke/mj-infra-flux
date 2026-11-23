@@ -343,3 +343,87 @@ default (`disable_unauthed_generate_root_endpoints = true` on the listener),
 so `bao operator generate-root` with only the recovery key returns 403. To use
 the recovery key: temporarily set that listener option to `false` in
 `helmrelease.yaml`, reconcile, generate the root token, then revert.
+
+## Operations summary
+
+*Moved from homelab `network/apps/openbao-external-secrets.md` (last changed 2026-11-23) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+The full story of the SOPS age key and OpenBao (unseal, recovery, snapshots)
+is in [docs/secrets.md](https://github.com/jwilleke/homelab/blob/master/docs/secrets.md). This page
+is the short app card for the two Flux apps, so it matches the other pages.
+
+### What it is and does
+
+OpenBao is the password vault for apps on deby. External Secrets Operator reads
+values from OpenBao and writes them into ordinary Kubernetes Secrets, so app
+folders in git only hold an `ExternalSecret` that names a path. Together they
+replace most SOPS files.
+
+### Access
+
+| Item | Value |
+| --- | --- |
+| OpenBao URL | <https://stuff.nerdsbythehour.com> (LAN and VPN only; Traefik `ipAllowList` for `192.168.68.0/24` and `192.168.11.0/24`; no tunnel, no public DNS) |
+| Sign-in | Authentik OIDC for people; Kubernetes auth for External Secrets (role `external-secrets`) and the snapshot job (role `raft-snapshot`) |
+| External Secrets | No UI; `kubectl get externalsecret -A` |
+
+### Where it runs / where data lives
+
+| Item | Value |
+| --- | --- |
+| OpenBao | deby, namespace `openbao`, HelmRelease `openbao` (chart 0.30.6, OpenBao 2.7.2), Flux Kustomization `openbao` |
+| Raft data | hostPath `/mnt/local-k3s-data/openbao` |
+| Audit log | hostPath `/mnt/local-k3s-data/openbao-audit` |
+| Unseal key file | NAS `/mnt/tank/jims/data/systems/deby/openbao/unseal.key` (mounted read-only) |
+| Snapshots | CronJob `openbao-snapshot`, daily 02:30 ET → `/mnt/tank/jims/data/systems/deby/openbao/snapshots`, newest 14 kept |
+| External Secrets | namespace `external-secrets`, HelmRelease 2.14.0; ClusterSecretStore `openbao` (Host: `openbao.openbao.svc`, Port: `8200`, HTTP, KV v2), Flux Kustomizations `external-secrets` and `openbao-secret-store` |
+
+### Secrets
+
+Names only. Every app page lists its own OpenBao paths (all under `apps/<app>/...`).
+Unseal and recovery keys: see [docs/secrets.md](https://github.com/jwilleke/homelab/blob/master/docs/secrets.md).
+
+### Dependencies
+
+- NAS (Tank) mounted at `/mnt/tank/jims` when the pod starts (unseal key)
+- Authentik for human login
+- Used by: cert-manager, cloudflared, database, demo-yourphr, geohazardwatch, maps, monitoring, owntracks, teslamate, yourphr
+
+### Recovery
+
+(a) Pod broken:
+
+```bash
+kubectl -n openbao get pods
+kubectl -n openbao exec openbao-0 -- bao status        # Sealed should be false
+flux reconcile helmrelease openbao -n openbao
+kubectl -n external-secrets rollout restart deploy
+kubectl get clustersecretstore openbao
+```
+
+(b) Data lost: restore the newest Raft snapshot. Steps are in
+[docs/secrets.md](https://github.com/jwilleke/homelab/blob/master/docs/secrets.md) (Recovery). Do not
+restore from the live raft folder copy in deby-backup; it can be torn.
+
+(c) deby rebuilt: the NAS mount must be back first, then Flux brings up
+`openbao`, then `openbao-secret-store`. Force a resync after:
+
+```bash
+flux reconcile kustomization openbao --with-source
+flux reconcile kustomization openbao-secret-store
+kubectl get externalsecret -A | grep -v SecretSynced
+```
+
+### Health checks
+
+```bash
+curl -sI https://stuff.nerdsbythehour.com/ | head -2     # 307 to /ui/
+kubectl get externalsecret -A | grep -v SecretSynced     # should list only the header
+ls -t /mnt/tank/jims/data/systems/deby/openbao/snapshots | head -3
+```
+
+### Known gaps
+
+- `nas-backup-rsync.sh` on deby excludes the openbao folder so the unseal key is not copied onto deby's own backup disk. The `jwilleke/deby` repo does not contain that script at all, so the exclude is not in git.
+- Some Secrets are still made by hand and are not in OpenBao: `monitoring/netalertx-api-token`, `monitoring/homeassistant-api-token`, `ngdpbase-demo/ngdpbase-demo-secrets`, `ngdpbase-demo/ngdpbase-demo-resend`. A rebuild loses them.
+- If the NAS is down when OpenBao starts, it stays sealed and every ExternalSecret stops refreshing.

@@ -123,3 +123,139 @@ You're running Authentik __2025.10.1__. The UI and options may differ from older
 - Look for "Proxy" or "Forward auth" when creating providers
 - Some versions have "Forward auth (single application)" vs "Forward auth (domain level)"
 - Use "Forward auth (single application)" if available
+
+## Operations summary
+
+*Moved from homelab `network/apps/authentik.md` (last changed 2026-11-23) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+Authentik is the login server for the home network. Most `*.nerdsbythehour.com`
+apps send you to it before they let you in.
+
+### What it is and does
+
+Authentik checks who you are (password plus passkey) and then lets you into
+other apps. It does this two ways: as a Traefik forward-auth gate in front of
+apps that have no login of their own (TeslaMate, Prometheus, NetAlertX, the
+Traefik dashboard, YourPHR, jimsmcp), and as an OpenID Connect provider for apps
+that can use it directly (Grafana, Home Assistant, OpenBao). Its user library
+at `/if/user/#/library` is the "members" page for the site.
+
+### Access
+
+| Item | Value |
+| --- | --- |
+| URL | <https://auth.nerdsbythehour.com> |
+| Reach | LAN only (DNS points at deby, `192.168.68.71`; no tunnel route) |
+| Sign-in | Authentik user and password, passkey (blueprint `authentik-blueprint-passkeys`) |
+| Shortcut | <https://nerdsbythehour.com/members> redirects to the user library |
+
+### Where it runs / where data lives
+
+| Item | Value |
+| --- | --- |
+| Host | deby, k3s namespace `authentik` |
+| Deploy | Flux HelmRelease `authentik` (chart 2026.8.3), repo path `apps/production/authentik` |
+| Database | Bundled PostgreSQL 17 StatefulSet `authentik-postgresql`, PVC `data-authentik-postgresql-0` (local-path 8Gi, under `/var/lib/rancher/k3s/storage/`) |
+| Cache | Redis, PVC `redis-data-authentik-redis-master-0` (local-path 2Gi) |
+| Backup | Nightly `pg_dumpall` by `backup-deby.sh` to `/deby-backup/host/daily/<date>/dumps/authentik-postgres-all.sql.gz` (21:01 ET) |
+
+The forward-auth Middleware `authentik-forwardauth` is copied into the
+`authentik`, `monitoring`, `netalertx-proxy`, `teslamate`, `kube-system` and
+`yourphr` namespaces.
+
+### Secrets
+
+| Secret | Where |
+| --- | --- |
+| Authentik secret key, Postgres password | SOPS file `apps/production/authentik/authentik-secrets.sops.yaml` → Secret `authentik/authentik-secrets`, keys `secret_key`, `postgresql_password` |
+| SOPS key that decrypts it | See [docs/secrets.md](https://github.com/jwilleke/homelab/blob/master/docs/secrets.md) |
+| OIDC client secrets for Grafana / HA | Stored in Authentik itself; copies in OpenBao `apps/monitoring/grafana-oauth` and HA `/config/secrets.yaml` |
+
+### Dependencies
+
+- Traefik and cert-manager (TLS for `auth.nerdsbythehour.com`)
+- SOPS age key in `flux-system/sops-age` (Authentik is deliberately not on OpenBao, so it can come up first)
+- Everything behind forward-auth or OIDC depends on Authentik
+
+### Recovery
+
+Run on deby: `ssh deby`, then `export KUBECONFIG=$HOME/.kube/config`.
+
+(a) Pod broken:
+
+```bash
+kubectl -n authentik get pods
+kubectl -n authentik logs deploy/authentik-server --tail=100
+flux reconcile helmrelease authentik -n authentik
+kubectl -n authentik rollout restart deploy/authentik-server deploy/authentik-worker
+```
+
+(b) Data lost (database gone or corrupt):
+
+```bash
+B=/deby-backup/host/daily/latest/dumps
+zcat $B/authentik-postgres-all.sql.gz | \
+  kubectl -n authentik exec -i authentik-postgresql-0 -- \
+  sh -c 'PGPASSWORD=$(cat /opt/bitnami/postgresql/secrets/password) psql -U authentik -d postgres'
+kubectl -n authentik rollout restart deploy/authentik-server deploy/authentik-worker
+```
+
+(c) deby rebuilt: follow [docs/restores/deby-backup.md](https://github.com/jwilleke/homelab/blob/master/docs/restores/deby-backup.md). Put
+the age key back as `flux-system/sops-age` before `flux bootstrap`, let Flux
+create the release, then restore the dump as in (b).
+
+### Health checks
+
+```bash
+curl -sI https://auth.nerdsbythehour.com/ | head -3     # 302 to /flows/-/default/authentication/
+kubectl -n authentik get helmrelease,pods
+```
+
+### Known gaps
+
+- If Authentik is down you cannot sign in to any forward-auth app. There is no break-glass path documented here. Unknown — to fill in.
+- The Postgres PVC is excluded from the file backup on purpose; only the logical dump protects it.
+- Which users, groups and applications exist lives only in the database, not in git (apart from the passkeys blueprint).
+
+## For users: SSO — auth.nerdsbythehour.com
+
+*Moved from homelab `docs/services-provided/authentik.md` (last changed 2026-08-17) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+Authentik is the single sign-on (SSO) portal for all protected services. Log in here once and all Authentik-protected services share your session.
+
+### How to reach it
+
+__URL:__ <https://auth.nerdsbythehour.com>
+
+LAN only. Public DNS (checked 2026-11-23 with `dig @1.1.1.1`) points this name at deby, `192.168.68.71`, so it is not reachable from the internet. (The older homelab page said it was public via Cloudflare.)
+
+### Authentication
+
+| What | Detail |
+|---|---|
+| Admin account | `akadmin` (set password on first login at `/if/flow/initial-setup/`) |
+| User library | <https://auth.nerdsbythehour.com/if/user/#/library> — lists every app you have access to |
+| Admin portal | <https://auth.nerdsbythehour.com/if/admin/> — create providers, apps, users, outposts |
+
+### Protected services
+
+The following services require an Authentik session before you can reach them:
+
+- Home Assistant (`ha.nerdsbythehour.com`)
+- Grafana (`grafana.nerdsbythehour.com`)
+- TeslaMate (`teslamate.nerdsbythehour.com`)
+- JimsWiki (`nerdsbythehour.com/jimswiki`)
+- NetAlertX (`netalertx.nerdsbythehour.com`)
+- MCP Server (`jimsmcp.nerdsbythehour.com`)
+
+### Unprotected (public) services
+
+- `nerdsbythehour.com` / `deby.nerdsbythehour.com` (landing + whoami)
+- `nerdsbythehour.com/speed` (speed test)
+- `geohazardwatch.com`
+- `owntracks.nerdsbythehour.com` (uses its own HTTP Basic Auth, not Authentik)
+- `prometheus.nerdsbythehour.com` is LAN-only and, as of 2026-11-23, behind Authentik forward-auth (`monitoring-authentik-forwardauth` on its Ingress), so it belongs in the protected list above
+
+### Operator reference
+
+[`mj-infra-flux/apps/production/authentik/README.md`](README.md)

@@ -62,3 +62,113 @@ flux -n flux-system get image repository geohazardwatch-ngdpbase
 flux -n flux-system get image policy geohazardwatch-ngdpbase
 flux -n flux-system get image update geohazardwatch-ngdpbase
 ```
+
+## Operations summary
+
+*Moved from homelab `network/apps/geohazardwatch.md` (last changed 2026-11-16) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+### What it is and does
+
+GeoHazardWatch is a public website built on ngdpbase (Jim's wiki/page engine).
+It publishes geohazard pages at `geohazardwatch.com`. Content is added through
+the ngdpbase ingest API.
+
+### Access
+
+| Item | Value |
+| --- | --- |
+| Public | <https://geohazardwatch.com> (Cloudflare Tunnel, bypasses Traefik) |
+| LAN | <https://geohazardwatch.nerdsbythehour.com> (Traefik) |
+| Sign-in | Public read. ngdpbase's own login for editing; ingest uses client credentials |
+
+### Where it runs / where data lives
+
+| Item | Value |
+| --- | --- |
+| Host | deby, namespace `geohazardwatch`, Deployment `geohazardwatch` (ngdpbase 5.42.0, image-automated), `hostNetwork`, port 3000 |
+| Main data | NAS hostPath `/mnt/tank/jims/data/systems/geohazardwatch` |
+| Fast data | hostPath `/mnt/local-k3s-data/geohazardwatch` |
+| Backup | NAS copy pulled nightly to `/nas-backup/tank_nas-to-deby/jims/` (20:00); fast folder in the deby-backup rsync (21:01) |
+
+### Secrets
+
+| Secret | Where |
+| --- | --- |
+| Ingest client | OpenBao `apps/geohazardwatch/ngdpbase-ingest-creds` → Secret `ngdpbase-ingest-creds`, keys `client-id`, `client-secret` |
+| Session secret | Secret `geohazardwatch-secrets`, key `session-secret` (optional; does not exist today) |
+
+### Dependencies
+
+- Tank NAS mounted at `/mnt/tank/jims`
+- [cloudflared](../cloudflared/README.md) route for `geohazardwatch.com`
+- Traefik for the LAN host
+
+### Recovery
+
+(a) Pod broken:
+
+```bash
+kubectl -n geohazardwatch get pods
+kubectl -n geohazardwatch logs deploy/geohazardwatch --tail=100
+kubectl -n geohazardwatch rollout restart deploy/geohazardwatch
+```
+
+(b) Data lost: copy back from the NAS mirror or deby-backup, then restart.
+
+```bash
+rsync -a /nas-backup/tank_nas-to-deby/jims/data/systems/geohazardwatch/ /mnt/tank/jims/data/systems/geohazardwatch/
+rsync -a /deby-backup/host/daily/latest/rootfs/mnt/local-k3s-data/geohazardwatch/ /mnt/local-k3s-data/geohazardwatch/
+kubectl -n geohazardwatch rollout restart deploy/geohazardwatch
+```
+
+(c) deby rebuilt: the fast folder must exist (`type: Directory`, the pod will
+not start without it). Restore `/mnt/local-k3s-data`, mount the NAS, then
+`flux reconcile kustomization apps --with-source`.
+
+### Health checks
+
+```bash
+curl -o /dev/null -w "%{http_code}\n" https://geohazardwatch.com/
+curl -o /dev/null -w "%{http_code}\n" https://geohazardwatch.nerdsbythehour.com/
+```
+
+### Known gaps
+
+- `certificate.yaml` in the app folder is not listed in its kustomization.
+- No `geohazardwatch-secrets` Secret exists, so the session secret is whatever the app picks by default. Unknown — to fill in whether that is intended.
+- `hostNetwork` means port 3000 on deby itself is used by this pod.
+- The `nas-backup` mirror has no version history (deletes sync over).
+
+## For users: GeoHazardWatch — geohazardwatch.com
+
+*Moved from homelab `docs/services-provided/geohazardwatch.md` (last changed 2026-08-17) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+Public geological hazard tracker showing real-time volcano activity, earthquake data, and USGS HANS alerts worldwide.
+
+### How to reach it
+
+| From | URL | Auth |
+|---|---|---|
+| Anywhere (internet) | <https://geohazardwatch.com> | None — public |
+| LAN / internal | <https://geohazardwatch.nerdsbythehour.com> | None — public |
+
+### What it provides
+
+- __Volcano activity__ — data from the Global Volcanism Program (GVP)
+- __Earthquakes__ — USGS earthquake feed, updated continuously
+- __USGS HANS alerts__ — Hazard Notification System feed
+- __Wiki pages__ — supporting articles and background content
+
+Data is refreshed nightly via an automated import job. The underlying wiki engine is `ngdpbase` with the `ve-geology` addon.
+
+### Data freshness
+
+The nightly import job runs at 08:00 UTC. To force an immediate refresh (operator):
+
+```bash
+kubectl -n geohazardwatch create job --from=cronjob/geohazardwatch-data-refresh manual-refresh-$(date +%s)
+```
+
+### Operator reference
+
+[`mj-infra-flux/apps/production/geohazardwatch/README.md`](README.md)
