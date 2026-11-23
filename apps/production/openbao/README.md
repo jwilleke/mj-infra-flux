@@ -137,7 +137,11 @@ base64 /mnt/tank/jims/data/systems/deby/openbao/unseal.key
 
 ### 2. LastPass secure note
 
-Create a secure note named `deby OpenBao break-glass`. Put in it:
+As of 2026-11-23 the recovery key lives on the NAS at
+`/mnt/tank/jims/data/systems/deby/openbao/recovery.key` (written at the
+2026-11-01 re-init). The LastPass note holds the recovery key from before that
+re-init, which no longer works. If you re-init again, refresh the note. Create
+a secure note named `deby OpenBao break-glass`. Put in it:
 
 - key id `deby-2026-11`
 - the base64 line from the command above (the unseal key, not a password)
@@ -204,7 +208,7 @@ max 4 hours. Store the ids with the agent, not in git.
 OIDC down, or Authentik down, and you still need an admin token:
 
 1. The store must already be unsealed. A restart unseals from the NAS key file. The recovery key does not unseal.
-2. Read the recovery key from the LastPass note.
+2. Read the recovery key from the NAS: `/mnt/tank/jims/data/systems/deby/openbao/recovery.key` (the LastPass copy predates the 2026-11-01 re-init and does not work).
 3. `bao operator generate-root` with that recovery key.
 4. Fix OIDC. Revoke the generated root token.
 
@@ -214,7 +218,7 @@ Unseal key file lost, LastPass copy still there: decode it back to the NAS path,
 
 ### NAS key lost, LastPass copy OK
 
-Restore the file to `/mnt/tank/jims/data/systems/deby/openbao/unseal.key` (mode `0440`, group 988 as the NAS assigns; the pod reads it via supplementalGroups 988) and restart the pod. It auto-unseals. No data is lost.
+Restore the file to `/mnt/tank/jims/data/systems/deby/openbao/unseal.key` (mode `0440` intended; on 2026-11-23 the NAS showed `0660`, owner uid 977, group `unifi-drive` 988, for both `unseal.key` and `recovery.key`. Group 988 must be able to read it; the pod reads it via supplementalGroups 988) and restart the pod. It auto-unseals. No data is lost.
 
 ```bash
 umask 077
@@ -228,7 +232,7 @@ kubectl -n openbao delete pod openbao-0
 
 ### deby lost, snapshots OK
 
-Rebuild the host, mount `jims` at `/mnt/tank/jims`, and copy the newest file from `/mnt/tank/jims/data/systems/deby/openbao/snapshots` on the NAS. Flux reinstalls OpenBao. The new raft directory is empty, so init once (the script prints a new recovery key; you will throw it away), then restore the newest snapshot. The snapshot is sealed with the NAS key, so that key must be the same file. After restore, the fresh init is gone: use the original recovery key from LastPass, not the one from the throwaway init.
+Rebuild the host, mount `jims` at `/mnt/tank/jims`, and copy the newest file from `/mnt/tank/jims/data/systems/deby/openbao/snapshots` on the NAS. Flux reinstalls OpenBao. The new raft directory is empty, so init once (the script prints a new recovery key; you will throw it away), then restore the newest snapshot. The snapshot is sealed with the NAS key, so that key must be the same file. After restore, the fresh init is gone: use the original recovery key from the NAS file `recovery.key`, not the one from the throwaway init.
 
 ```bash
 SNAP=/mnt/tank/jims/data/systems/deby/openbao/snapshots/openbao-YYYYMMDDTHHMMSSZ.snap
