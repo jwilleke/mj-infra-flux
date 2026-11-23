@@ -94,3 +94,55 @@ The name is deliberately generic. If Home Assistant needs another public
 endpoint, add a `location` block to the nginx ConfigMap rather than creating a
 second tunnel route. Keep the default `return 404` — this host should expose
 only what is explicitly listed.
+
+## Operations summary
+
+*Moved from homelab `network/apps/relay-ha.md` (last changed 2026-11-16) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+### What it is and does
+
+A tiny nginx site that publishes the Tesla Fleet API public key at the
+well-known path Tesla checks. Tesla only sends car commands to an app whose key
+is reachable there. Every other path returns 404.
+
+### Access
+
+| Item | Value |
+| --- | --- |
+| URL | <https://relay-ha.nerdsbythehour.com/.well-known/appspecific/com.tesla.3p.public-key.pem> |
+| Reach | Public through Cloudflare Tunnel |
+| Sign-in | None (public key only) |
+
+### Where it runs / where data lives
+
+deby, namespace `relay-ha`, nginx 1.29, 2 replicas. The public key is in a
+ConfigMap in git. No data.
+
+### Secrets
+
+The matching private key is not in the cluster. Where it is kept is Unknown — to
+fill in (likely with the Home Assistant Tesla setup).
+
+### Dependencies
+
+[cloudflared](../cloudflared/README.md) route; Home Assistant Tesla integration.
+
+### Recovery
+
+(a) Pod broken: `kubectl -n relay-ha rollout restart deploy/relay-ha`
+
+(b) Data lost: nothing local; the key is in git.
+
+(c) deby rebuilt: Flux redeploys.
+
+### Health checks
+
+From outside the LAN:
+
+```bash
+curl -sSI https://relay-ha.nerdsbythehour.com/.well-known/appspecific/com.tesla.3p.public-key.pem
+```
+
+### Known gaps
+
+- Private key location unknown.

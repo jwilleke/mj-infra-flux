@@ -262,3 +262,101 @@ sudo kubectl rollout restart deployment/teslamate -n teslamate
 - TeslaMate GitHub: <https://github.com/teslamate-org/teslamate>
 - Documentation: <https://docs.teslamate.org/>
 - Community: <https://github.com/teslamate-org/teslamate/discussions>
+
+## Operations summary
+
+*Moved from homelab `network/apps/teslamate.md` (last changed 2026-11-16) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+### What it is and does
+
+TeslaMate logs the Tesla's drives, charging and state. It stores everything in
+the shared Postgres and publishes live values to MQTT, which Home Assistant
+uses. Dashboards are in Grafana.
+
+### Access
+
+| Item | Value |
+| --- | --- |
+| URL | <https://teslamate.nerdsbythehour.com> |
+| Dashboards | <https://grafana.nerdsbythehour.com> |
+| Reach | LAN |
+| Sign-in | Authentik forward-auth; Tesla account token stored (encrypted) in its database |
+
+### Where it runs / where data lives
+
+deby, namespace `teslamate`, TeslaMate 4.3.0. No volume of its own; all data in
+database `teslamate` on the [shared PostgreSQL](../database/README.md).
+
+### Secrets
+
+| Secret | Where |
+| --- | --- |
+| DB password, encryption key | OpenBao `apps/teslamate/teslamate` → Secret `teslamate/teslamate-secret`, keys `database-password`, `encryption-key` |
+
+The encryption key is needed to read the Tesla tokens in a restored database.
+
+### Dependencies
+
+Shared PostgreSQL, [Mosquitto](../messaging/README.md), Authentik, Grafana.
+
+### Recovery
+
+(a) Pod broken: `kubectl -n teslamate rollout restart deploy/teslamate`
+
+(b) Data lost: restore the shared Postgres dump (see
+[database-postgresql.md](../database/README.md)), then restart TeslaMate.
+
+(c) deby rebuilt: as for the shared Postgres, with OpenBao unsealed first.
+
+### Health checks
+
+```bash
+kubectl -n teslamate logs deploy/teslamate --tail=20
+mosquitto_sub -h mqtt.nerdsbythehour.com -t 'teslamate/#' -C 1 -W 30 -v
+```
+
+### Known gaps
+
+- App README still describes the old Docker setup.
+
+## For users: TeslaMate — teslamate.nerdsbythehour.com
+
+*Moved from homelab `docs/services-provided/teslamate.md` (last changed 2026-08-17) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+Self-hosted Tesla vehicle data logger. Records trips, charging sessions, battery degradation, efficiency, and position history. Grafana dashboards provide visualization.
+
+### How to reach it
+
+__URL:__ <https://teslamate.nerdsbythehour.com>
+
+LAN only. Public DNS (checked 2026-11-23 with `dig @1.1.1.1`) points this name at deby, `192.168.68.71`, so it is not reachable from the internet. (The older homelab page said it was public via Cloudflare.)
+
+### Authentication
+
+Authentik ForwardAuth — log in at `auth.nerdsbythehour.com` first, then TeslaMate is accessible without a separate password.
+
+### First-time Tesla account link
+
+1. Open <https://teslamate.nerdsbythehour.com>
+2. Sign in with your Tesla account credentials (encrypted at rest with `ENCRYPTION_KEY`).
+3. Grant access to your vehicle(s). Data logging starts automatically once the vehicle is awake.
+
+### What it records
+
+- Real-time vehicle state (location, speed, charge level, climate)
+- Trip history with efficiency and energy stats
+- Charging session duration, cost, and kWh
+- Battery degradation over time
+- Geofence events
+
+### Grafana dashboards
+
+Dashboards at <https://grafana.nerdsbythehour.com> — look for the TeslaMate dashboard group. Data source is the `teslamate` PostgreSQL database.
+
+### MQTT output
+
+TeslaMate publishes live state to the shared broker under `teslamate/#`. Home Assistant subscribes to this prefix via its TeslaMate integration.
+
+### Operator reference
+
+[`mj-infra-flux/apps/production/teslamate/README.md`](README.md)

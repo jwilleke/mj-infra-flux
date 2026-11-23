@@ -348,7 +348,7 @@ __Can regenerate:__
 
 ## References
 
-- Migration plan: `docker-migration.md`
+- Migration plan (archived): [homelab `docs/archive/docker-migration.md`](https://github.com/jwilleke/homelab/blob/master/docs/archive/docker-migration.md)
 - Deployment guidelines: `DEPLOYMENT-GUIDELINES.md`
 - Security incident: `SECURITY-INCIDENT.md`
 - Claude preferences: `.claude-code-preferences.md`

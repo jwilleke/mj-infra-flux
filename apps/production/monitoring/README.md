@@ -729,3 +729,153 @@ Neither convention covers apps that are internal-only *and* have no Kubernetes D
 - Grafana config: `apps/production/monitoring/grafana/`
 - Alertmanager config: `apps/production/monitoring/prometheus-alertmanager/`
 - Blackbox config: `apps/production/monitoring/prometheus-blackbox-exporter/`
+
+## Operations summary
+
+*Moved from homelab `network/apps/monitoring.md` (last changed 2026-11-16) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+### What it is and does
+
+The monitoring stack collects metrics and logs from deby, the cluster, Home
+Assistant, NetAlertX and other LAN hosts, shows them in Grafana dashboards, and
+emails alerts. Blackbox probes check that the public sites answer.
+
+### Access
+
+| Item | Value |
+| --- | --- |
+| Grafana | <https://grafana.nerdsbythehour.com> (Authentik OIDC, generic OAuth) |
+| Prometheus | <https://prometheus.nerdsbythehour.com> (Authentik forward-auth) |
+| Loki | NodePort `192.168.68.71:31100` (no auth) |
+| Alertmanager | In cluster only |
+| Reach | LAN only |
+
+### Where it runs / where data lives
+
+| Item | Value |
+| --- | --- |
+| Host | deby, namespace `monitoring` |
+| Prometheus | v3.15.0 StatefulSet, local-path PVC 60Gi, 15 days kept |
+| Grafana | 13.2.4 StatefulSet, hostPath `/mnt/local-k3s-data/grafana` |
+| Loki | 3.7.8, local-path PVC 20Gi, 30 days kept |
+| Alertmanager | v0.34.1, local-path PVC 1Gi, mails `mjsservers@willeke.com` via Resend |
+| Others | blackbox-exporter, otel-collector, node-exporter (DaemonSet), kube-state-metrics v2.20.0 |
+| Extra targets | Home Assistant, NetAlertX, `clara` `192.168.68.24:9100`; blackbox probes `demo.yourphr.org`, `demo-relay.yourphr.org`, `ngdpbase-demo.nerdsbythehour.com`, `geohazardwatch.com` |
+| Backup | Grafana folder in the deby-backup rsync. Prometheus/Loki PVCs sit under `/var/lib/rancher/k3s/storage` and are copied live by the rootfs rsync |
+
+### Secrets
+
+| Secret | Where |
+| --- | --- |
+| Grafana OIDC client secret | OpenBao `apps/monitoring/grafana-oauth` → Secret `grafana-oauth`, key `client-secret` |
+| Grafana read of TeslaMate DB | OpenBao `apps/teslamate/teslamate`, property `database-password` → Secret `grafana-teslamate-db` |
+| Alertmanager mail (Resend) | OpenBao `apps/monitoring/alertmanager-secrets` → Secret `alertmanager-secrets` |
+| NetAlertX API token | Secret `monitoring/netalertx-api-token`, key `token` (made by hand) |
+| Home Assistant token | Secret `monitoring/homeassistant-api-token`, key `token` (made by hand) |
+
+### Dependencies
+
+Authentik, Traefik, cert-manager, OpenBao, [shared PostgreSQL](../database/README.md)
+for TeslaMate dashboards, Resend for email.
+
+### Recovery
+
+(a) Pod broken:
+
+```bash
+kubectl -n monitoring get pods
+kubectl -n monitoring rollout restart statefulset/prometheus statefulset/grafana
+kubectl -n monitoring rollout restart deploy/loki deploy/alertmanager
+```
+
+(b) Data lost: metrics and logs are history only; they restart empty. For
+Grafana, copy back
+`/deby-backup/host/daily/latest/rootfs/mnt/local-k3s-data/grafana/` with the
+pod scaled to 0. Dashboards defined in git come back on their own.
+
+(c) deby rebuilt: restore `/mnt/local-k3s-data`, recreate the two hand-made
+token Secrets, then `flux reconcile kustomization apps --with-source`.
+
+### Health checks
+
+```bash
+kubectl -n monitoring get pods
+curl -sI https://grafana.nerdsbythehour.com/login | head -1
+kubectl -n monitoring port-forward svc/prometheus 9090 &   # then open /targets
+```
+
+### Known gaps
+
+- `netalertx-api-token` and `homeassistant-api-token` are not in git or OpenBao.
+- `grafana-ingress` has no `ingressClassName`.
+- Loki NodePort has no auth on the LAN.
+- Prometheus, Loki and Alertmanager PVCs use reclaim policy `Delete`.
+
+## For users: Grafana — grafana.nerdsbythehour.com
+
+*Moved from homelab `docs/services-provided/grafana.md` (last changed 2026-08-17) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+Dashboards for host metrics, Kubernetes cluster state, and TeslaMate vehicle analytics.
+
+### How to reach it
+
+__URL:__ <https://grafana.nerdsbythehour.com>
+
+LAN only. Public DNS (checked 2026-11-23 with `dig @1.1.1.1`) points this name at deby, `192.168.68.71`, so it is not reachable from the internet. (The older homelab page said it was public via Cloudflare.)
+
+### Authentication
+
+Login is via __Authentik OAuth2__. Click "Sign in with Authentik" on the Grafana login page. Your Authentik session carries over — no separate Grafana password needed for normal use.
+
+Admin credentials (if OAuth is unavailable): stored in the `grafana-oauth` secret; see `docs/secrets-inventory.md`.
+
+### What's available
+
+| Dashboard area | What it shows |
+|---|---|
+| Host / node | CPU, memory, disk I/O, ZFS pool health on `deby` |
+| Kubernetes | Pod count, resource usage, Flux reconciliation state |
+| TeslaMate | Trip history, charging sessions, battery degradation, range |
+| Loki logs | Ingested logs from cluster pods and host systemd units |
+
+### Data sources wired up
+
+- __Prometheus__ — `http://prometheus.monitoring.svc.cluster.local:9090`
+- __Loki__ — log aggregation from Promtail / OpenTelemetry collector
+- __PostgreSQL (TeslaMate)__ — direct read-only connection to the `teslamate` database
+
+### Operator reference
+
+[`mj-infra-flux/apps/production/monitoring/grafana/`](grafana/)
+
+## For users: Prometheus — prometheus.nerdsbythehour.com
+
+*Moved from homelab `docs/services-provided/prometheus.md` (last changed 2026-08-17) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+Time-series metrics store for host, cluster, and application monitoring. This is the data source behind Grafana.
+
+### How to reach it
+
+__URL:__ <https://prometheus.nerdsbythehour.com>
+
+__LAN-only__ — not exposed to the internet. Accessible from `192.168.68.0/24` or via VPN. The Ingress now has Authentik forward-auth (`monitoring-authentik-forwardauth`, checked 2026-11-23); Prometheus itself has no login, so do not forward its port externally.
+
+### What it scrapes
+
+- __Node exporter__ — CPU, memory, disk, network on `deby`
+- __kube-state-metrics__ — Kubernetes object state (pod health, deployment readiness)
+- __cAdvisor__ — container resource usage
+- __Blackbox exporter__ — external HTTP/TCP probes (uptime checks for public services)
+- __OpenTelemetry collector__ — OTLP metrics forwarded from applications
+
+### Alertmanager
+
+Alerts fire through __Alertmanager__ (`prometheus-alertmanager` in the `monitoring` namespace). All notifications route through Alertmanager — direct-app SMTP is interim-only. See [`mj-infra-flux#86`](https://github.com/jwilleke/mj-infra-flux/issues/86) for the target architecture.
+
+### Preferred interface
+
+Use __Grafana__ (`grafana.nerdsbythehour.com`) for day-to-day dashboards. Access the Prometheus UI directly only for ad-hoc PromQL queries or alert-rule inspection.
+
+### Operator reference
+
+[`mj-infra-flux/apps/production/monitoring/prometheus/`](prometheus/)

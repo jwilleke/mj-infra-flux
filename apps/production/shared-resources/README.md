@@ -170,3 +170,53 @@ Proxy: Enabled (orange cloud)
 ```
 
 This routes through Cloudflare → your firewall → 192.168.68.71 (deby) → Traefik → shared-resources service.
+
+## Operations summary
+
+*Moved from homelab `network/apps/shared-resources.md` (last changed 2026-11-16) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+### What it is and does
+
+An nginx site that serves static files (images, scripts and similar) from a
+folder on the NAS, so other sites can link to them.
+
+### Access
+
+| Item | Value |
+| --- | --- |
+| URL | <https://cdn.nerdsbythehour.com> |
+| Reach | LAN |
+| Sign-in | None |
+
+### Where it runs / where data lives
+
+deby, namespace `shared-resources`, Deployment `shared-resources` (nginx).
+Files on NAS hostPath `/mnt/tank/jims/data/systems/shared-resources`, mirrored
+nightly to `/nas-backup/tank_nas-to-deby/jims/`.
+
+### Secrets
+
+None.
+
+### Dependencies
+
+Tank NAS mount, Traefik, cert-manager.
+
+### Recovery
+
+(a) Pod broken: `kubectl -n shared-resources rollout restart deploy/shared-resources`
+
+(b) Data lost: copy back from
+`/nas-backup/tank_nas-to-deby/jims/data/systems/shared-resources/`.
+
+(c) deby rebuilt: mount the NAS, Flux redeploys.
+
+### Health checks
+
+```bash
+curl -o /dev/null -w "%{http_code}\n" https://cdn.nerdsbythehour.com/
+```
+
+### Known gaps
+
+- If the NAS is not mounted, nginx serves an empty folder instead of failing.

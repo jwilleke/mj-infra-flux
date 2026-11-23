@@ -126,7 +126,7 @@ kubectl apply -k apps/production/myapp/
 
 ## Migration from Docker
 
-See `docker-migration.md` for the complete migration process from Docker Compose to Kubernetes.
+See [docker-migration.md](https://github.com/jwilleke/homelab/blob/master/docs/archive/docker-migration.md) (archived in homelab) for the complete migration process from Docker Compose to Kubernetes.
 
 Key principles:
 

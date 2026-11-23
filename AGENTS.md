@@ -171,7 +171,7 @@ __Reference Documentation:__
 
 - __README.md__ - Quick start, common commands, usage
 - __SECURITY-INCIDENT.md__ - Real security incident and lessons learned
-- __docker-migration.md__ - Migration strategy from Docker to Kubernetes
+- __docker-migration.md__ - Migration strategy from Docker to Kubernetes (archived: homelab `docs/archive/docker-migration.md`)
 
 __Application READMEs:__
 
@@ -376,7 +376,7 @@ kubectl port-forward -n namespace svc/myservice 8080:80
 - __Decision:__ Migrate all Docker Compose services to k3s
 - __Status:__ Phase 3 Complete - All services migrated
 - __Rationale:__ Better orchestration, scaling, and GitOps integration
-- __Documentation:__ `docker-migration.md`
+- __Documentation:__ homelab `docs/archive/docker-migration.md`
 
 ### Kustomize Over Helm
 

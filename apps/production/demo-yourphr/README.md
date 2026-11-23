@@ -54,7 +54,7 @@ kubectl run demo-yourphr-db-reset -n demo-yourphr --rm --restart=Never --image=a
 kubectl scale deploy/demo-yourphr -n demo-yourphr --replicas=1
 ```
 
-(Same pattern as the ops `yourphr` DB-reset runbook in `docs/apps/yourphr.md` on the `thishost` workspace — just pointed at the demo's own PVC.)
+(Same pattern as the ops `yourphr` DB-reset runbook in [`apps/production/yourphr/README.md`](../yourphr/README.md) — just pointed at the demo's own PVC.)
 
 ## Status — live ✅
 
@@ -83,3 +83,79 @@ All confirmed live 2026-07-31: both pods `1/1 Running` with no errors, `demo.you
 
 - [ ] Sandbox Medicare connect flow completes end-to-end (Sources → Connect → Blue Button sandbox → authorize → data appears) — the OAuth round-trip needs a live `state`/`code` from an actual provider redirect, not reproducible via curl
 - [ ] CMS sandbox app's registered callback URL matches `https://demo-relay.yourphr.org/callback` exactly (registered in the CMS developer portal — [yourphr#433](https://github.com/jwilleke/yourphr/issues/433), operator action)
+
+## Operations summary
+
+*Moved from homelab `network/apps/demo-yourphr.md` (last changed 2026-11-16) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+### What it is and does
+
+A throwaway public copy of YourPHR, built so CMS reviewers (Blue Button 2.0)
+can try it without an Authentik account. It has its own SMART-on-FHIR OAuth
+relay. It must never hold real health data. It is separate from the family
+[YourPHR](../yourphr/README.md) install.
+
+### Access
+
+| Item | Value |
+| --- | --- |
+| App | <https://demo.yourphr.org> (public, Cloudflare Tunnel) |
+| Relay | <https://demo-relay.yourphr.org> (public, Cloudflare Tunnel) |
+| Sign-in | YourPHR's own demo login. No Authentik. |
+
+### Where it runs / where data lives
+
+| Item | Value |
+| --- | --- |
+| Host | deby, namespace `demo-yourphr` |
+| Workloads | `demo-yourphr-ts` (yourphr 3.21.0), `demo-yourphr-relay` (yourphr-relay `main-N`, image-automated) |
+| Data | SQLite on hostPath PV `demo-yourphr-ts-data-pv` → `/mnt/local-k3s-data/demo-yourphr-ts` (1Gi) |
+| Backup | Swept up by the nightly `/mnt/local-k3s-data` rsync in `backup-deby.sh` |
+
+### Secrets
+
+| Secret | Where |
+| --- | --- |
+| Relay shared secret | OpenBao `apps/demo-yourphr/demo-yourphr-relay` → Secret `demo-yourphr/demo-yourphr-relay` |
+
+### Dependencies
+
+- [cloudflared](../cloudflared/README.md) routes for both hostnames
+- OpenBao / External Secrets
+- CMS sandbox app registration with callback `https://demo-relay.yourphr.org/callback`
+
+### Recovery
+
+(a) Pod broken:
+
+```bash
+kubectl -n demo-yourphr get pods
+kubectl -n demo-yourphr rollout restart deploy/demo-yourphr-ts deploy/demo-yourphr-relay
+```
+
+(b) Data lost: it is demo data. Either copy the folder back from
+`/deby-backup/host/daily/latest/rootfs/mnt/local-k3s-data/demo-yourphr-ts/`,
+or start empty:
+
+```bash
+kubectl -n demo-yourphr scale deploy/demo-yourphr-ts --replicas=0
+# restore or empty /mnt/local-k3s-data/demo-yourphr-ts on deby
+kubectl -n demo-yourphr scale deploy/demo-yourphr-ts --replicas=1
+```
+
+(c) deby rebuilt: restore `/mnt/local-k3s-data` from deby-backup, then
+`flux reconcile kustomization apps --with-source`.
+
+### Health checks
+
+```bash
+curl -o /dev/null -w "%{http_code}\n" https://demo.yourphr.org/          # 200
+curl -o /dev/null -w "%{http_code}\n" https://demo-relay.yourphr.org/    # 200
+```
+
+Blackbox in [monitoring](../monitoring/README.md) probes both.
+
+### Known gaps
+
+- Tunnel routes exist only in the Cloudflare dashboard.
+- deby has both `/mnt/local-k3s-data/demo-yourphr` (named in the app README) and `/mnt/local-k3s-data/demo-yourphr-ts`. Which one is live should be confirmed; the other may be an old copy.

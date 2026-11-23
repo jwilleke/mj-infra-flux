@@ -67,3 +67,65 @@ When making changes to the OpenSpeedTest source or configuration:
 - Both services are linked from the landing page `/guest` route
 - All services use Traefik ingress with Let's Encrypt TLS certificates
 - Services are managed by Flux GitOps from this repository
+
+## Operations summary
+
+*Moved from homelab `network/apps/guest-services.md` (last changed 2026-11-16) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+### What it is and does
+
+Two small helper pages. OpenSpeedTest lets anyone on the LAN test their speed to
+deby. whoami echoes back request headers, which helps when checking Traefik.
+
+### Access
+
+| Item | Value |
+| --- | --- |
+| Speed test | <https://nerdsbythehour.com/speed> |
+| whoami | <https://deby.nerdsbythehour.com> |
+| Reach | LAN only (DNS points at deby) |
+| Sign-in | None |
+
+### Where it runs / where data lives
+
+deby, namespace `guest-services`. `openspeedtest:latest` is built on deby and
+imported into k3s (`imagePullPolicy: Never`). whoami is `traefik/whoami` v1.12.0.
+No data.
+
+### Secrets
+
+None.
+
+### Dependencies
+
+Traefik, cert-manager.
+
+### Recovery
+
+(a) Pod broken:
+
+```bash
+kubectl -n guest-services get pods
+kubectl -n guest-services rollout restart deploy
+```
+
+(b) Data lost: nothing to lose.
+
+(c) deby rebuilt: the openspeedtest image is not in any registry. Rebuild and
+import it before Flux can start the pod:
+
+```bash
+docker build -t openspeedtest:latest <source dir>   # source dir: Unknown — to fill in
+docker save openspeedtest:latest -o /tmp/ost.tar && sudo k3s ctr images import /tmp/ost.tar
+```
+
+### Health checks
+
+```bash
+curl -s https://deby.nerdsbythehour.com/ | head -5
+curl -o /dev/null -w "%{http_code}\n" https://nerdsbythehour.com/speed
+```
+
+### Known gaps
+
+- OpenSpeedTest image is local only; where its build files live is unknown.

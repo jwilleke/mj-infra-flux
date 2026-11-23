@@ -96,3 +96,107 @@ kubectl run -it --rm mqtt-sub --image=eclipse-mosquitto:2 --restart=Never -- \
 ## Image
 
 Tag is set by Flux image-automation (`apps/production/image-automation/owntracks-policy.yaml`) — ImagePolicy semver range `>=1.0.0 <2.0.0`. Manifest-side marker is `# {"$imagepolicy": "flux-system:owntracks-recorder"}` on the `image:` line of `recorder-deployment.yaml`; the controller scans every hour and pushes a `chore(image-automation): bump owntracks-recorder to <tag>` commit when a newer in-range tag appears. To pin manually (e.g. to roll back), remove the marker comment and set the tag by hand. OwnTracks also publishes `1.0.1-43`-style tags; those are treated as semver pre-releases and excluded automatically.
+
+## Operations summary
+
+*Moved from homelab `network/apps/owntracks.md` (last changed 2026-11-16) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+### What it is and does
+
+OwnTracks Recorder receives location updates from family phones (OwnTracks
+app, HTTP mode) and stores them. A small Lua hook republishes each location to
+MQTT, so Home Assistant can track who is home.
+
+### Access
+
+| Item | Value |
+| --- | --- |
+| URL | <https://owntracks.nerdsbythehour.com> (phones post to `/pub`) |
+| Reach | Meant to be public through Cloudflare Tunnel → Traefik, and LAN. Public DNS pointed at the LAN address on 2026-11-23; see "For users" below |
+| Sign-in | Traefik basic auth, one user per person |
+
+### Where it runs / where data lives
+
+deby, namespace `owntracks`, Deployment `owntracks-recorder` (1.0.4,
+image-automated). Store on hostPath `/mnt/local-k3s-data/owntracks/store`,
+included in the deby-backup rsync.
+
+### Secrets
+
+| Secret | Where |
+| --- | --- |
+| Basic auth users | OpenBao `apps/owntracks/owntracks-basic-auth` → Secret `owntracks/owntracks-basic-auth` |
+| Phone passwords | Password manager |
+
+### Dependencies
+
+[cloudflared](../cloudflared/README.md), Traefik, [Mosquitto](../messaging/README.md), Home Assistant bridge.
+
+### Recovery
+
+(a) Pod broken:
+
+```bash
+kubectl -n owntracks rollout restart deploy/owntracks-recorder
+```
+
+(b) Data lost: copy back
+`/deby-backup/host/daily/latest/rootfs/mnt/local-k3s-data/owntracks/store/`.
+
+(c) deby rebuilt: restore `/mnt/local-k3s-data`, Flux redeploys.
+
+### Health checks
+
+```bash
+curl -o /dev/null -w "%{http_code}\n" https://owntracks.nerdsbythehour.com/   # 401 without login
+mosquitto_sub -h mqtt.nerdsbythehour.com -t 'owntracks/#' -C 1 -W 30 -v
+```
+
+### Known gaps
+
+- Public endpoint protected only by basic auth.
+
+## For users: OwnTracks — owntracks.nerdsbythehour.com
+
+*Moved from homelab `docs/services-provided/owntracks.md` (last changed 2026-08-17) for [homelab#87](https://github.com/jwilleke/homelab/issues/87).*
+
+Phone location tracking. The OwnTracks mobile app sends location updates over HTTPS; the Recorder stores tracks and republishes them to the MQTT broker so Home Assistant can display device positions in real time.
+
+### How to reach it
+
+__URL:__ <https://owntracks.nerdsbythehour.com>
+
+Designed to be reachable from anywhere through the Cloudflare Tunnel. __Contradiction found 2026-11-23:__ public DNS (`dig @1.1.1.1`) returns `deby.nerdsbythehour.com` → `192.168.68.71` for this name, not Cloudflare, so off-LAN phones may not reach it. Check the tunnel route and the DNS record in Cloudflare.
+
+### Authentication
+
+__HTTP Basic Auth__ — username and password per device, set at app configuration time. This is Traefik-layer auth, independent of Authentik.
+
+| User | Notes |
+|---|---|
+| `jim` | Jim's devices |
+| `molly` | Molly's devices |
+
+Credentials are stored in the `owntracks-basic-auth` Secret (SOPS-encrypted in `mj-infra-flux`). Plaintext lives in the password manager.
+
+### Mobile app setup
+
+1. Install the [OwnTracks app](https://owntracks.org) (iOS or Android).
+2. Settings → Mode: __HTTP__.
+3. URL: `https://owntracks.nerdsbythehour.com/pub`
+4. Username: your username (see above). Password: from the password manager.
+5. Device ID: set a unique name per phone (e.g. `phonejsw`).
+
+### What the Recorder does
+
+- Stores incoming locations to a persistent LMDB database.
+- Republishes each HTTP-arrived location to the MQTT broker under `owntracks/<user>/<device>` via a Lua hook — this is what Home Assistant subscribes to.
+- Built-in track viewer is at `https://owntracks.nerdsbythehour.com/view/`.
+
+### MQTT topic
+
+`owntracks/#` — subscribed to by Home Assistant (`192.168.68.20`).
+
+### Operator reference
+
+[`mj-infra-flux/apps/production/owntracks/README.md`](README.md)

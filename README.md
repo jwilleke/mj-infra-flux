@@ -19,7 +19,7 @@ I stole this from [Activescott](https://github.com/activescott/home-infra-k8s-fl
 - __[CONTRIBUTING.md](CONTRIBUTING.md)__ - Contribution guidelines
 - __[SETUP.md](SETUP.md)__ - Initial setup and bootstrapping instructions
 - __[SECURITY-INCIDENT.md](SECURITY-INCIDENT.md)__ - Security lessons learned
-- __[docker-migration.md](docker-migration.md)__ - Migration strategy from Docker to Kubernetes
+- __[docker-migration.md](https://github.com/jwilleke/homelab/blob/master/docs/archive/docker-migration.md)__ - Migration strategy from Docker to Kubernetes (archived in homelab)
 
 ### Infrastructure
 

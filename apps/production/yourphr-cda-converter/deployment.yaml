@@ -29,7 +29,7 @@ spec:
           # (/proc/meminfo, not the cgroup limit) and routes.js sizes the worker pool off os.cpus().length
           # (20, this node's full core count) — both ignore the resources block below entirely, and
           # neither is configurable via env var (hardcoded, no override hook upstream). Observed at 386Mi/512Mi
-          # (~75%) at idle with zero conversion load — see thishost docs/apps/yourphr.md. Bypassing the
+          # (~75%) at idle with zero conversion load — see apps/production/yourphr/README.md. Bypassing the
           # entrypoint script's own NODE_OPTIONS calc (which would otherwise clobber ours) so the heap
           # ceiling matches this container's real memory limit instead of the host's ~64GB.
           command: ["npm", "start"]
