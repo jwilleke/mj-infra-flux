@@ -27,7 +27,7 @@ __What it needs on clara (host changes; not done):__
 - Mail: clara has no MTA. Gatus would send through `smtp.resend.com:587` itself, which needs a credential on clara. Use a __separate Resend API key__, so revoking one host's key doesn't silence the other path.
   - OpenBao (stuff): `kv/hosts/clara/gatus`, key `smtp-password` (the new Resend API key). Optional key `smtp-username` = `resend`.
   - clara has no ESO; copy the value once into `/etc/gatus/gatus.env` (root, mode 0600) and reference it as `${SMTP_PASSWORD}` in the config.
-- Where it lives: a new `gatus/` directory in the `jwilleke/clara` repo.
+- Where it lives: a new `gatus/` directory in the `jwilleke/clara` repo (now `hosts/clara/` in `jwilleke/homelab`, #85).
 
 The failure this leaves: if Resend is down, both deby's and clara's mail paths fail together. A second transport (e.g. ntfy or Pushover) would close it.
 

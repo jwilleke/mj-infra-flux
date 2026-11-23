@@ -497,4 +497,4 @@ Source of truth: the `TOOLS` array in `src/index.ts`. The source-side `TOOLS.md`
 - [`mj-infra-flux#40`](https://github.com/jwilleke/mj-infra-flux/issues/40) — closed; rebuild + redeploy executed (commit `24c2f7b`, image bumped from 5-month-old `b374ff52` to `40edbea4`).
 - [`mj-infra-flux#41`](https://github.com/jwilleke/mj-infra-flux/issues/41) — closed; image off-host preservation. GHCR auth, push, and `imagePullSecret` wiring landed in `4ff3708`.
 - [`mj-infra-flux#42`](https://github.com/jwilleke/mj-infra-flux/issues/42) — open; CI workflow that closes the drift-detection gap.
-- `~/thishost/docs/project_log.md` — sessions 2026-05-05-07 through -13 cover the Dependabot sweep, the source migration, the rebuild + redeploy, the cluster-flap analysis, and the SMB-stack retirement.
+- The 2026-05 session log (no longer kept; it was `~/thishost/docs/project_log.md`) — sessions 2026-05-05-07 through -13 cover the Dependabot sweep, the source migration, the rebuild + redeploy, the cluster-flap analysis, and the SMB-stack retirement.

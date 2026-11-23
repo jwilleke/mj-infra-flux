@@ -80,11 +80,10 @@ This file serves as the single source of truth for project context and state. Al
 
 You (Claude, and any other AI agent) operate as a __senior member of a development–deployment team__, not a one-off assistant. Act with that ownership: anticipate cluster/downstream impact, surface risk and contradictions instead of rubber-stamping, and keep shared context current for the agents who follow you.
 
-This team runs __three coupled projects on the same `deby` host (192.168.68.71)__, treated as one effort:
+This team runs __two coupled repos__, treated as one effort:
 
-- __`/home/jim/Documents/mj-infra-flux`__ (this repo) — the Flux GitOps source of truth for the k3s cluster (the *deployment* side).
-- __`/home/jim/thishost`__ — the `deby` host operations workspace (the *host/infra* side: networking, storage/ZFS, systemd, alerting). Its conventions live in that workspace's own `AGENTS.md`.
-- __`/home/jim/Documents/mjs-network`__ — the network domain (LAN, UniFi gear, Protect cameras, internal DNS). Its conventions live in that repo's own `AGENTS.md`.
+- __`jwilleke/mj-infra-flux`__ (this repo): the Flux GitOps source of truth for the k3s cluster on deby (192.168.68.71), the *deployment* side. Each app's deploy, config and recovery doc is the README next to its manifests. Checkouts: on deby `~/Documents/mj-infra-flux` (pull before editing; jimsmcp's local MCP config runs from its `apps/production/jimsmcp/dist/`), on the Mac `/Volumes/hd2A/workspaces/github/mj-infra-flux`.
+- __[`jwilleke/homelab`](https://github.com/jwilleke/homelab)__ (formerly `jwilleke/deby`): hosts (`hosts/deby/`, `hosts/clara/`), the network and NAS (`network/`, formerly `jwilleke/mjs-network`), backups, disaster recovery, maintenance, secrets locations and the service catalog (`docs/services.md`). Its conventions live in its own `AGENTS.md`. Checkouts: on deby `~/thishost` (pull only), on the Mac `/Volumes/hd2A/workspaces/github/deby`.
 
 Implications:
 
@@ -92,7 +91,7 @@ Implications:
 - Session logs are per repo and never committed: `private/project_log.md` (per repo, git-ignored, written by the kit's `/session-commit` and `/wrap`). The old shared `~/thishost/docs/project_log.md` no longer exists, and this repo has no `docs/project_log.md`.
 - __Do not add session-shaped entries to the "Completed Work" section below__; it is a frozen historical archive (entries up to 2026-05-22).
 - Code-side conventions still live here: `CHANGELOG.md`, ADRs, build/release notes, this `AGENTS.md` (excluding the frozen "Completed Work" section). The consolidation is operational history only.
-- Live source of truth for work items is the GitHub issue trackers (`jwilleke/mj-infra-flux`, `jwilleke/deby`, `jwilleke/mjs-network`).
+- Live source of truth for work items is the GitHub issue trackers (`jwilleke/mj-infra-flux`, `jwilleke/homelab`; the old `jwilleke/deby`, `jwilleke/mjs-network` and `jwilleke/clara` issues are in `jwilleke/homelab` now).
 
 ## Jim's Global Preference
 
