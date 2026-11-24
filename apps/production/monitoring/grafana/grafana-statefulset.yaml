@@ -23,7 +23,7 @@ spec:
       containers:
         - name: grafana
           # for latest tag: https://hub.docker.com/r/grafana/grafana/tags
-          image: grafana/grafana:13.2.6@sha256:b21409d7951ddcfd63a4b49083e4ef2cc35bc1437d071813bf82bfb238b00bca # {"$imagepolicy": "flux-system:grafana"}
+          image: grafana/grafana:13.2.7@sha256:9fd7619deb8923fc422f2183c3f82fc8dc2f668fd2b54b087336f597cfd92b0d # {"$imagepolicy": "flux-system:grafana"}
           ports:
             - containerPort: 3000
               name: http-grafana
