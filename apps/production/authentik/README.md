@@ -154,7 +154,7 @@ at `/if/user/#/library` is the "members" page for the site.
 | Item | Value |
 | --- | --- |
 | Host | deby, k3s namespace `authentik` |
-| Deploy | Flux HelmRelease `authentik` (chart 2026.8.3), repo path `apps/production/authentik` |
+| Deploy | Flux HelmRelease `authentik` (chart 2026.8.7), repo path `apps/production/authentik` |
 | Database | Bundled PostgreSQL 17 StatefulSet `authentik-postgresql`, PVC `data-authentik-postgresql-0` (local-path 8Gi, under `/var/lib/rancher/k3s/storage/`) |
 | Cache | Redis, PVC `redis-data-authentik-redis-master-0` (local-path 2Gi) |
 | Backup | Nightly `pg_dumpall` by `backup-deby.sh` to `/deby-backup/host/daily/<date>/dumps/authentik-postgres-all.sql.gz` (21:01 ET) |
