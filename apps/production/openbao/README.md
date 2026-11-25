@@ -43,7 +43,7 @@ host change that has not been made.
 - Traefik 3.7 with `externalTrafficPolicy: Local`
 - The NAS export already mounted on deby at `/mnt/tank/jims`
 - Authentik at `https://auth.nerdsbythehour.com` for human login, after init
-- External Secrets Operator (chart 2.14.0), installed beside this app
+- External Secrets Operator (chart 2.15.0), installed beside this app
 
 Flux order. `apps` depends on none of these:
 
@@ -383,7 +383,7 @@ replace most SOPS files.
 | Audit log | hostPath `/mnt/local-k3s-data/openbao-audit` |
 | Unseal key file | NAS `/mnt/tank/jims/data/systems/deby/openbao/unseal.key` (mounted read-only) |
 | Snapshots | CronJob `openbao-snapshot`, daily 02:30 ET → `/mnt/tank/jims/data/systems/deby/openbao/snapshots`, newest 14 kept |
-| External Secrets | namespace `external-secrets`, HelmRelease 2.14.0; ClusterSecretStore `openbao` (Host: `openbao.openbao.svc`, Port: `8200`, HTTP, KV v2), Flux Kustomizations `external-secrets` and `openbao-secret-store` |
+| External Secrets | namespace `external-secrets`, HelmRelease 2.15.0; ClusterSecretStore `openbao` (Host: `openbao.openbao.svc`, Port: `8200`, HTTP, KV v2), Flux Kustomizations `external-secrets` and `openbao-secret-store` |
 
 ### Secrets
 
