@@ -63,6 +63,16 @@ systemctl enable --now gatus
 Do not open a firewall or UFW port, and do not run this in Docker. The e2-micro
 has 1 GB of RAM and no Docker runtime.
 
+## Maintenance window
+
+`config.yaml` mutes all Gatus emails Saturday 22:00 to Sunday 02:00
+America/New_York (`maintenance.start: "22:00"`, `duration: 4h`,
+`every: [Saturday]`, `timezone: America/New_York`). That matches the
+Alertmanager window in [jwilleke/homelab `docs/maintenance/maintenance-window.md`](https://github.com/jwilleke/homelab/blob/master/docs/maintenance/maintenance-window.md).
+Because this directory is not Flux-reconciled, copy the updated
+`config.yaml` to `/etc/gatus/config.yaml` on the VM and run
+`sudo systemctl restart gatus` for the mute to take effect.
+
 ## Update
 
 Repeat the build (or image extract) for the new tag, verify the tag commit or

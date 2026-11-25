@@ -419,7 +419,7 @@ __Current configuration:__
 - __Group wait__: 30s
 - __Group interval__: 5m
 - __Repeat interval__: 4h
-- __Weekly maintenance window__: `severity="warning"` notifications are muted Sat 22:00 to Sun 02:00 America/New_York (see below)
+- __Weekly maintenance window__: planned-update noise (including some criticals) and remaining `severity="warning"` notifications are muted Sat 22:00 to Sun 02:00 America/New_York (see below). Backups, disk/pool health, IDS spikes, and a few other always-on alerts are never muted.
 
 ### Maintenance window
 
@@ -428,10 +428,15 @@ One weekly window for all planned updates and reboots: __Saturday 22:00 to Sunda
 __What the config does__ (`prometheus-alertmanager/config/alertmanager.yaml`):
 
 - `time_intervals: weekly-maintenance-window` is two ranges, Sat 22:00-24:00 and Sun 00:00-02:00, both with `location: America/New_York`, so DST is handled by Alertmanager.
-- A child route matching `severity="warning"` carries `mute_time_intervals: [weekly-maintenance-window]`. During the window those alerts still fire and are visible in the Alertmanager UI and Grafana, but no email goes out. A warning still firing when the window closes is emailed at the next group interval after 02:00, so a real problem is not lost.
-- `critical` and `info` alerts are not muted. Loki ruler alerts (`loki/rules/rules.yaml`) go through this same Alertmanager, so the mute covers them too. Grafana has no Grafana-managed alert rules (checked 2026-11-18), so no Grafana mute timing is needed.
+- Three child routes, first match wins:
+  - Never muted, even during the window: `BackupDebyFailed`, `BackupDebyStale`, `NasBackupRsyncStale`, `NasBackupRsyncMissedOrFailed`, `NodeDiskSpaceCritical`, `NodeDiskSpaceLow`, `ZfsPoolCapacityCritical`, `ZfsPoolCapacityHigh`, `ZfsPoolDegraded`, `ZfsPoolUnhealthy`, `SmartDeviceUnhealthy`, `NvmeCriticalWarning`, `NvmeMediaErrors`, `NvmeWearHigh`, `DiskTemperatureHigh`, `SmartSectorProblems`, `OpenBaoSealed`, `AlertmanagerNotificationDeliveryFailing`, `UDMProThreatRateSpike`, `SSLCertExpiryCritical`, `TankNonRoutineEvent`, `ProtectNonRoutineEvent`.
+  - Muted during the window, any severity (planned reboot/update noise): `UDMProWANDown`, `ServiceDown`, `HomeAssistantScrapeDown`, `HomeAssistantAlarmPanelUnavailable`, `HomeAssistantNotificationDeliveryFailing`, `HostLogsAbsent`, `NodeNotReady`, `PostgreSQLDown`, `PodCrashLoopBackOff`, `DeploymentNoReplicas`, `StatefulSetNoReplicas`, `ClaraDown`, `OpenBaoScrapeDown`, `NetAlertXScrapeDown`.
+  - Remaining `severity="warning"` alerts are muted during the window (the original [mj-infra-flux#294](https://github.com/jwilleke/mj-infra-flux/pull/294) mute).
+- During the window those muted alerts still fire and are visible in the Alertmanager UI and Grafana, but no email goes out. An alert still firing when the window closes is emailed at the next group interval after 02:00, so a problem that lasts past the window is not lost.
+- Loki ruler alerts (`loki/rules/rules.yaml`) go through this same Alertmanager, so the mute covers them too. Grafana has no Grafana-managed alert rules (checked 2026-11-18), so no Grafana mute timing is needed.
+- Gatus on the GCP VM emails on its own, not through Alertmanager. `external/gatus/config.yaml` has a matching `maintenance` block (Saturday 22:00, duration 4h, `America/New_York`). That file is not Flux-reconciled; copy it to the VM for the mute to take effect.
 
-__Planned reboots that would trip a critical alert__ (`ServiceDown` 2m, `PostgreSQLDown` 2m, `ClaraDown` 5m, `HomeAssistantScrapeDown` 10m, `UDMProWANDown` 2m, `HostLogsAbsent` 5m): add a scoped silence before the step and expire it after the post-checks. Alertmanager runs with a `/alerting/list` route prefix, so pass it in the URL:
+__Ad-hoc "quiet for xx minutes"__ still uses a scoped silence (for work outside this window, or a shorter/longer mute than Saturday night). Alertmanager runs with a `/alerting/list` route prefix, so pass it in the URL:
 
 ```bash
 # on deby
