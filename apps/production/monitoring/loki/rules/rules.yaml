@@ -164,22 +164,25 @@ groups:
               {source="udmpro"} |= "UNIFIcategory=Critical"
             in Grafana → Explore → Loki for the full event payload.
 
-      # IDS/IPS rate spike. Baseline: ~50 Security events/day = ~0.3
-      # per 10m. Threshold > 5 in 10m catches port-scan bursts,
-      # botnet probing, or coordinated attack patterns without
-      # firing on routine background scanning.
+      # IDS/IPS rate spike. Counts only UNIFIpolicyType=IDS/IPS
+      # events. Firewall-policy blocks (for example iot-gw-block-all
+      # mDNS from myiot) are excluded on purpose: they are expected
+      # isolation drops, not threats. IDS/IPS volume is ~2/day.
+      # Threshold > 5 in 10m catches a real burst without firing on
+      # that baseline.
       - alert: UDMProThreatRateSpike
-        expr: 'sum(count_over_time({source="udmpro"} |= "UNIFIcategory=Security "[10m])) > 5'
+        expr: 'sum(count_over_time({source="udmpro"} |= "UNIFIcategory=Security " |= "UNIFIpolicyType=IDS/IPS "[10m])) > 5'
         for: 5m
         labels:
           severity: warning
         annotations:
           summary: "UDM Pro IDS/IPS detection rate elevated (>5 in 10m)"
           description: |
-            More than 5 Security-category CEF events in 10 minutes,
-            well above the ~0.3/10m baseline. Likely a port scan
-            burst or sustained attack pattern. Inspect:
-              {source="udmpro"} |= "UNIFIcategory=Security" |~ "msg="
+            More than 5 IDS/IPS Security events in 10 minutes,
+            well above the ~2/day baseline. Likely a port scan
+            burst or sustained attack pattern. Firewall blocks
+            such as iot-gw-block-all are not counted. Inspect:
+              {source="udmpro"} |= "UNIFIcategory=Security" |= "UNIFIpolicyType=IDS/IPS" |~ "msg="
 
       # Managed UniFi infrastructure went offline. Covers switches
       # and APs (and UDM Pro itself, though typically that breaks
