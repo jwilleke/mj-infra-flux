@@ -21,6 +21,13 @@
 # applied. Do not delete that Job: Flux would recreate it and it would run
 # again (harmless outside the window; unwelcome inside it). If the Job spec
 # must change, rename the Job (for example -v2) so Kubernetes accepts it.
+#
+# The container image must include /bin/sh. rancher/kubectl:v1.30.3 does
+# not (it is distroless), which is why the original bootstrap Job and the
+# first guard run failed on 2026-11-25. alpine/kubectl:1.36.4 is Alpine
+# based, so it has a shell, and 1.36 matches the cluster (k3s v1.36.5+k3s1).
+# The bootstrap Job is named -v2 so Flux can create a new Job instead of
+# trying to mutate the failed one.
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -138,7 +145,7 @@ data:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: image-automation-window-bootstrap
+  name: image-automation-window-bootstrap-v2
   namespace: flux-system
   labels:
     app.kubernetes.io/name: image-automation-window
@@ -163,7 +170,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: apply
-          image: rancher/kubectl:v1.30.3
+          image: alpine/kubectl:1.36.4
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "/scripts/apply.sh", "suspend"]
           volumeMounts:
@@ -223,7 +230,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: apply
-              image: rancher/kubectl:v1.30.3
+              image: alpine/kubectl:1.36.4
               imagePullPolicy: IfNotPresent
               command: ["/bin/sh", "/scripts/apply.sh", "unsuspend"]
               volumeMounts:
@@ -283,7 +290,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: apply
-              image: rancher/kubectl:v1.30.3
+              image: alpine/kubectl:1.36.4
               imagePullPolicy: IfNotPresent
               command: ["/bin/sh", "/scripts/apply.sh", "suspend"]
               volumeMounts:
@@ -344,7 +351,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: apply
-              image: rancher/kubectl:v1.30.3
+              image: alpine/kubectl:1.36.4
               imagePullPolicy: IfNotPresent
               command: ["/bin/sh", "/scripts/apply.sh", "guard"]
               volumeMounts:
