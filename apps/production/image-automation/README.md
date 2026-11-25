@@ -4,7 +4,7 @@ ImageRepository, ImagePolicy, and ImageUpdateAutomation objects live here, all i
 
 `image-automation-window.yaml` is the gate (homelab#118):
 
-- A bootstrap Job suspends every ImageUpdateAutomation as soon as Flux applies this directory.
+- A bootstrap Job (`image-automation-window-bootstrap-v2`) suspends every ImageUpdateAutomation as soon as Flux applies this directory. The Job image is `alpine/kubectl:1.36.4` because it includes `/bin/sh`. The earlier `rancher/kubectl:v1.30.3` image does not, and the first bootstrap Job failed for that reason on 2026-11-25.
 - CronJobs unsuspend at Saturday 22:00 and suspend at Sunday 02:00 (`timeZone: America/New_York`).
 - A guard CronJob every 30 minutes re-applies that desired state, so a missed Sunday job cannot leave automations pushing all week.
 
