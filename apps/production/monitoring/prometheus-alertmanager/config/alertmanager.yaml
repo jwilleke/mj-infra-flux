@@ -38,13 +38,30 @@ route:
     # Weekly maintenance window (deby#69; schedule in jwilleke/homelab
     # docs/maintenance/maintenance-window.md; silences runbook in
     # apps/production/monitoring/README.md#maintenance-window):
-    # severity=warning notifications are held from Sat 22:00 to Sun 02:00
-    # America/New_York. Alerts still fire and show in Grafana and the
-    # Alertmanager UI; a warning that is still firing when the window closes
-    # is notified at the next group_interval after 02:00. critical and info
-    # alerts do not match this route and keep notifying through the root
-    # route. For a planned reboot that would trip a critical alert, add a
-    # scoped silence first (see the README section).
+    # Sat 22:00 to Sun 02:00 America/New_York. Alerts still fire and show
+    # in Grafana and the Alertmanager UI; anything still firing when the
+    # window closes is emailed at the next group_interval after 02:00.
+    # First matching route wins.
+    #
+    # Never muted, even during the window: backups, disk/pool/SMART
+    # capacity or health, a sealed OpenBao, Alertmanager itself failing
+    # to send, real IDS spikes, and the Protect/Tank tripwires (those
+    # are currently the only alerts for NVR/NAS storage faults).
+    - matchers:
+        - alertname=~"AlertmanagerNotificationDeliveryFailing|BackupDebyFailed|BackupDebyStale|DiskTemperatureHigh|NasBackupRsyncMissedOrFailed|NasBackupRsyncStale|NodeDiskSpaceCritical|NodeDiskSpaceLow|NvmeCriticalWarning|NvmeMediaErrors|NvmeWearHigh|OpenBaoSealed|ProtectNonRoutineEvent|SSLCertExpiryCritical|SmartDeviceUnhealthy|SmartSectorProblems|TankNonRoutineEvent|UDMProThreatRateSpike|ZfsPoolCapacityCritical|ZfsPoolCapacityHigh|ZfsPoolDegraded|ZfsPoolUnhealthy"
+      receiver: "on_call_operator_default"
+
+    # Planned-reboot and planned-update noise of any severity: UniFi
+    # WAN/DNS/HTTP probes, HA going down or failing to notify during a
+    # restart, deby/k3s/clara node reboot fallout. Scoped silences
+    # remain useful outside this window (see the README).
+    - matchers:
+        - alertname=~"ClaraDown|DeploymentNoReplicas|HomeAssistantAlarmPanelUnavailable|HomeAssistantNotificationDeliveryFailing|HomeAssistantScrapeDown|HostLogsAbsent|NetAlertXScrapeDown|NodeNotReady|OpenBaoScrapeDown|PodCrashLoopBackOff|PostgreSQLDown|ServiceDown|StatefulSetNoReplicas|UDMProWANDown"
+      receiver: "on_call_operator_default"
+      mute_time_intervals:
+        - weekly-maintenance-window
+
+    # Remaining severity=warning notifications (the original #294 mute).
     - matchers:
         - severity="warning"
       receiver: "on_call_operator_default"

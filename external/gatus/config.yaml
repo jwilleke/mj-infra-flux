@@ -15,6 +15,19 @@ storage:
   type: sqlite
   path: /var/lib/gatus/data.db
 
+# Weekly maintenance window, same as Alertmanager: Saturday 22:00 to
+# Sunday 02:00 America/New_York. Gatus emails from this VM, not through
+# Alertmanager, so it needs its own mute. This is global (all endpoints,
+# including the canaries). A public leak during the window would also be
+# delayed until 02:00. This file is not Flux-reconciled; copy it to
+# /etc/gatus/config.yaml on jims-test-instance and restart Gatus.
+maintenance:
+  start: "22:00"
+  duration: 4h
+  timezone: "America/New_York"
+  every:
+    - Saturday
+
 ui:
   title: "nerdsbythehour public watcher"
   header: "nerdsbythehour public watcher"
