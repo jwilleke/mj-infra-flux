@@ -32,7 +32,9 @@ spec:
       # deployment follows this policy again — the Go releases 1.0.0-2.10.3 are still tagged on that
       # repository, and a range admitting them means one re-published old tag could roll the live
       # instance back onto a stack that cannot read its database.
-      range: '>=3.0.0'
+      # Cap at 4.0.0 so a major release cannot roll out on its own during
+      # the Saturday window. Raise the ceiling in Git after Jim approves 4.x.
+      range: '>=3.0.0 <4.0.0'
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageUpdateAutomation

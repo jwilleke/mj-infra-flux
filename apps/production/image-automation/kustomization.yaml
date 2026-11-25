@@ -25,3 +25,5 @@ resources:
   - shared-resources-policy.yaml  # nginx
   - relay-ha-policy.yaml  # nginx-unprivileged; was floating 1.29-alpine
   - flux-system-git-auth.sops.yaml
+  # Saturday 22:00–Sunday 02:00 ET window for ImageUpdateAutomations (homelab#118)
+  - image-automation-window.yaml

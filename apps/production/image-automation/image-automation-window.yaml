@@ -1,0 +1,370 @@
+# Confine ImageUpdateAutomation git pushes to the weekly maintenance window
+# (Saturday 22:00 to Sunday 02:00, America/New_York). Part of homelab#118 / #69.
+#
+# Why spec.suspend is omitted from the ImageUpdateAutomation manifests:
+# Flux's kustomize-controller only manages fields that are in the applied YAML.
+# If spec.suspend is declared in Git, the next reconcile force-takes the field
+# and overwrites a live kubectl/flux patch (see Flux docs, "Suspending and
+# resuming", and the note that a declared false value prevents hot-patching).
+# These jobs patch spec.suspend in-cluster with field-manager
+# image-automation-window. Because Git does not assert the field, the patch
+# sticks. ImagePolicies and ImageRepositories keep scanning; only the
+# automations that commit to master are gated.
+#
+# Desired state (suspend vs unsuspend) is stored as an annotation on
+# image-automation-window-state, which is also not declared in this file's
+# data so Flux will not revert it. A guard CronJob reapplies that state every
+# 30 minutes, so a missed Sunday 02:00 job cannot leave automations pushing
+# all week, and a newly added automation is suspended on the next guard run.
+#
+# The bootstrap Job suspends every automation as soon as this file is first
+# applied. Do not delete that Job: Flux would recreate it and it would run
+# again (harmless outside the window; unwelcome inside it). If the Job spec
+# must change, rename the Job (for example -v2) so Kubernetes accepts it.
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: image-automation-window
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: image-automation-window
+    app.kubernetes.io/part-of: maintenance-window
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: image-automation-window
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: image-automation-window
+    app.kubernetes.io/part-of: maintenance-window
+rules:
+  - apiGroups: ["image.toolkit.fluxcd.io"]
+    resources: ["imageupdateautomations"]
+    verbs: ["get", "list", "patch"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["image-automation-window-state"]
+    verbs: ["get", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: image-automation-window
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: image-automation-window
+    app.kubernetes.io/part-of: maintenance-window
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: image-automation-window
+subjects:
+  - kind: ServiceAccount
+    name: image-automation-window
+    namespace: flux-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: image-automation-window-script
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: image-automation-window
+    app.kubernetes.io/part-of: maintenance-window
+data:
+  apply.sh: |
+    #!/bin/sh
+    set -eu
+    NS=flux-system
+    CM=image-automation-window-state
+    ANN=maintenance.nerdsbythehour.com/desired
+    ACTION=${1:-}
+
+    case "$ACTION" in
+      suspend)
+        VALUE=true
+        DESIRED=suspend
+        ;;
+      unsuspend)
+        VALUE=false
+        DESIRED=unsuspend
+        ;;
+      guard)
+        DESIRED=$(kubectl get configmap "$CM" -n "$NS" -o go-template='{{index .metadata.annotations "maintenance.nerdsbythehour.com/desired"}}{{"\n"}}' 2>/dev/null || true)
+        if [ "$DESIRED" = "unsuspend" ]; then
+          VALUE=false
+        else
+          DESIRED=suspend
+          VALUE=true
+        fi
+        ;;
+      *)
+        echo "usage: $0 suspend|unsuspend|guard" >&2
+        exit 2
+        ;;
+    esac
+
+    echo "action=$ACTION desired=$DESIRED suspend=$VALUE"
+
+    if [ "$ACTION" = "suspend" ] || [ "$ACTION" = "unsuspend" ]; then
+      kubectl annotate configmap "$CM" -n "$NS" --overwrite --field-manager=image-automation-window "${ANN}=${DESIRED}"
+    fi
+
+    count=0
+    for res in $(kubectl get imageupdateautomation -n "$NS" -o name); do
+      kubectl patch "$res" -n "$NS" --type merge --field-manager=image-automation-window -p "{\"spec\":{\"suspend\":${VALUE}}}"
+      count=$((count + 1))
+    done
+    echo "patched ${count} ImageUpdateAutomations to suspend=${VALUE}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: image-automation-window-state
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: image-automation-window
+    app.kubernetes.io/part-of: maintenance-window
+  annotations:
+    # Live desired state is written by the window jobs as
+    # maintenance.nerdsbythehour.com/desired=suspend|unsuspend.
+    # That annotation is intentionally omitted here so Flux does not revert it.
+    maintenance.nerdsbythehour.com/managed-by: image-automation-window
+data:
+  readme: "Desired suspend state lives in the maintenance.nerdsbythehour.com/desired annotation, set by the window jobs, not in this data."
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: image-automation-window-bootstrap
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: image-automation-window
+    app.kubernetes.io/part-of: maintenance-window
+    app.kubernetes.io/component: bootstrap
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: image-automation-window
+        app.kubernetes.io/component: bootstrap
+    spec:
+      serviceAccountName: image-automation-window
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: apply
+          image: rancher/kubectl:v1.30.3
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "/scripts/apply.sh", "suspend"]
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 64Mi
+      volumes:
+        - name: scripts
+          configMap:
+            name: image-automation-window-script
+            defaultMode: 0555
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: image-automation-unsuspend
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: image-automation-window
+    app.kubernetes.io/part-of: maintenance-window
+spec:
+  # Saturday 22:00 America/New_York — window opens
+  schedule: "0 22 * * 6"
+  timeZone: America/New_York
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: image-automation-window
+            app.kubernetes.io/component: unsuspend
+        spec:
+          serviceAccountName: image-automation-window
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            fsGroup: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: apply
+              image: rancher/kubectl:v1.30.3
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/sh", "/scripts/apply.sh", "unsuspend"]
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 200m
+                  memory: 64Mi
+          volumes:
+            - name: scripts
+              configMap:
+                name: image-automation-window-script
+                defaultMode: 0555
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: image-automation-suspend
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: image-automation-window
+    app.kubernetes.io/part-of: maintenance-window
+spec:
+  # Sunday 02:00 America/New_York — window closes
+  schedule: "0 2 * * 0"
+  timeZone: America/New_York
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: image-automation-window
+            app.kubernetes.io/component: suspend
+        spec:
+          serviceAccountName: image-automation-window
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            fsGroup: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: apply
+              image: rancher/kubectl:v1.30.3
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/sh", "/scripts/apply.sh", "suspend"]
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 200m
+                  memory: 64Mi
+          volumes:
+            - name: scripts
+              configMap:
+                name: image-automation-window-script
+                defaultMode: 0555
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: image-automation-window-guard
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: image-automation-window
+    app.kubernetes.io/part-of: maintenance-window
+spec:
+  # Re-assert the last desired state every 30 minutes (heals a missed
+  # edge job and suspends automations added mid-week).
+  schedule: "0,30 * * * *"
+  timeZone: America/New_York
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: image-automation-window
+            app.kubernetes.io/component: guard
+        spec:
+          serviceAccountName: image-automation-window
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            fsGroup: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: apply
+              image: rancher/kubectl:v1.30.3
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/sh", "/scripts/apply.sh", "guard"]
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 200m
+                  memory: 64Mi
+          volumes:
+            - name: scripts
+              configMap:
+                name: image-automation-window-script
+                defaultMode: 0555
