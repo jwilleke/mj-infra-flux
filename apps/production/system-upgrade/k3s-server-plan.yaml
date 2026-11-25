@@ -7,9 +7,10 @@
 #     kubectl label node deby k3s-upgrade=enabled
 #   and remove the label afterwards (kubectl label node deby k3s-upgrade-)
 #   to go back to fully manual.
-# - Window: Jobs are only created 22:30-23:59 ET (deby's slot in the
-#   17:30-01:30 maintenance window). Upgrading k3s restarts it; containers keep
-#   running under containerd, but the API is briefly unavailable.
+# - Window: Jobs are only created Sunday 00:15-01:00 ET, after deby's
+#   unattended-upgrades slot (00:00) and inside the Saturday 22:00 to Sunday
+#   02:00 America/New_York maintenance window. Upgrading k3s restarts it;
+#   containers keep running under containerd, but the API is briefly unavailable.
 # - Single node: cordon only, no drain (draining the only node would evict
 #   everything with nowhere to go).
 apiVersion: upgrade.cattle.io/v1
@@ -31,9 +32,9 @@ spec:
         values: ["enabled"]
   serviceAccountName: system-upgrade
   window:
-    days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
-    startTime: "22:30"
-    endTime: "23:59"
+    days: ["sun"]
+    startTime: "00:15"
+    endTime: "01:00"
     timeZone: America/New_York
   upgrade:
     image: rancher/k3s-upgrade
