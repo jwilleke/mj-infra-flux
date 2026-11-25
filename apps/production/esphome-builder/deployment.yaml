@@ -31,7 +31,7 @@ spec:
         kubernetes.io/hostname: deby
       containers:
         - name: esphome-builder
-          image: ghcr.io/esphome/esphome:2026.11.0 # {"$imagepolicy": "flux-system:esphome-builder"}
+          image: ghcr.io/esphome/esphome:2026.11.1 # {"$imagepolicy": "flux-system:esphome-builder"}
           imagePullPolicy: IfNotPresent
           # No --remote-build-only: that mode serves no HTTP dashboard (and so no
           # MCP). In dashboard mode the remote-build receiver still binds 6055
