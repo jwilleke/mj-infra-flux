@@ -11,7 +11,7 @@ start the cluster.
 
 - __URL__: `https://stuff.nerdsbythehour.com` (LAN and VPN only)
 - __Namespace__: `openbao`
-- __Chart__: official `openbao` chart `0.30.6`, app image `quay.io/openbao/openbao:2.7.2`
+- __Chart__: official `openbao` chart `0.30.8`, app image `quay.io/openbao/openbao:2.7.3`
 - __In-cluster API__ (ESO): `http://openbao.openbao.svc.cluster.local:8200`
 - __Run as__: uid/gid 3003
 
@@ -72,7 +72,7 @@ Rules `OpenBaoSealed` and `OpenBaoScrapeDown` live in
 
 ## Seal
 
-OpenBao 2.7.2 unseals from a key file with the built-in __static__ seal
+OpenBao 2.7.3 unseals from a key file with the built-in __static__ seal
 (`seal "static"`, `current_key = "file:///..."`). No plugin. Shamir would
 wait for an operator. Transit, PKCS#11, and cloud KMS need a second trust
 service this homelab does not have. `env://` would put the key in the
@@ -378,7 +378,7 @@ replace most SOPS files.
 
 | Item | Value |
 | --- | --- |
-| OpenBao | deby, namespace `openbao`, HelmRelease `openbao` (chart 0.30.6, OpenBao 2.7.2), Flux Kustomization `openbao` |
+| OpenBao | deby, namespace `openbao`, HelmRelease `openbao` (chart 0.30.8, OpenBao 2.7.3), Flux Kustomization `openbao` |
 | Raft data | hostPath `/mnt/local-k3s-data/openbao` |
 | Audit log | hostPath `/mnt/local-k3s-data/openbao-audit` |
 | Unseal key file | NAS `/mnt/tank/jims/data/systems/deby/openbao/unseal.key` (mounted read-only) |

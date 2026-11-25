@@ -1,4 +1,4 @@
-# Official chart 0.30.6 (app v2.7.2).
+# Official chart 0.30.8 (app v2.7.3).
 #
 # Chart "standalone" mode stores on pebbledb, which has no raft snapshot.
 # One raft node is server.ha.raft with replicas: 1. That is the single
@@ -19,7 +19,7 @@ spec:
   chart:
     spec:
       chart: openbao
-      version: "0.30.6"
+      version: "0.30.8"
       sourceRef:
         kind: HelmRepository
         name: openbao
@@ -40,7 +40,7 @@ spec:
       enabled: false
     server:
       image:
-        tag: "2.7.2"
+        tag: "2.7.3"
       uid: 3003
       gid: 3003
       statefulSet:
