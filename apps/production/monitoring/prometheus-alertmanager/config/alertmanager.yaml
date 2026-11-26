@@ -61,6 +61,26 @@ route:
       mute_time_intervals:
         - weekly-maintenance-window
 
+    # Deferred to the maintenance window: things the window itself takes
+    # care of (pending reboot, pending apt upgrades, a k3s cert the window's
+    # k3s restart renews). Rules mark them with the label
+    # maintenance="deferred" (alerting-rules.clara.yaml,
+    # alerting-rules.host-maintenance.yaml). You get ONE email when one
+    # starts, with "scheduled for Sat window" in the subject, then a
+    # resolved email when the window fixes it. No 4-hourly repeats.
+    # repeat_interval 7d needs --data.retention above 7d, or Alertmanager
+    # forgets it already sent and repeats at retention (default 120h); the
+    # Deployment sets 192h. If the window did not fix it, Prometheus raises
+    # DeferredAlertStillActiveAfterWindow (alerting-rules.maintenance-window.yaml),
+    # which goes through the normal warning route below and repeats every 4h.
+    - matchers:
+        - maintenance="deferred"
+      receiver: "on_call_operator_default"
+      group_by: ["alertname", "host"]
+      repeat_interval: 7d
+      mute_time_intervals:
+        - weekly-maintenance-window
+
     # Remaining severity=warning notifications (the original #294 mute).
     - matchers:
         - severity="warning"
@@ -115,4 +135,6 @@ receivers:
       - to: 'mjsservers@willeke.com'
         send_resolved: true
         headers:
-          Subject: '{{ if eq .Status "firing" }}🔥{{ else }}✅{{ end }} [{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+          # Deferred alerts say so in the subject; the window follow-up
+          # alert names the alert it is about.
+          Subject: '{{ if eq .Status "firing" }}🔥{{ else }}✅{{ end }} [{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}{{ if .CommonLabels.deferred_alert }}: {{ .CommonLabels.deferred_alert }}{{ end }}{{ if and (eq .Status "firing") (eq .CommonLabels.maintenance "deferred") }} (scheduled for Sat 22:00 ET maintenance window){{ end }}'

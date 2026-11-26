@@ -1,0 +1,50 @@
+# Weekly maintenance window follow-up (jwilleke/homelab
+# docs/maintenance/maintenance-window.md): Sat 22:00 to Sun 02:00 ET.
+#
+# Some alerts are things the window takes care of: a pending reboot, pending
+# apt upgrades, a k3s cert that the window's k3s restart renews. Those rules
+# carry the label maintenance: deferred. Alertmanager emails them once and
+# does not repeat (prometheus-alertmanager/config/alertmanager.yaml), so they
+# don't email every 4 hours all week.
+#
+# This rule is the safety net: if a deferred alert was already active before
+# the window and is still active after it, the window did not fix it, and you
+# get a normal alert that repeats every 4 hours like any other warning.
+#
+# How the time math works. PromQL only knows UTC, and the Unix epoch
+# (1970-01-01 00:00 UTC) was a Thursday. 284400 s = 3 days 7 hours, so
+# (time() - 284400) % 604800 is the number of seconds since the last
+# Sunday 07:00 UTC, which is Sunday 02:00 EST, when the window closes.
+# In summer (EDT) the window closes at 06:00 UTC, so this is one hour late,
+# which only adds slack.
+#
+#   last_window_end = time() - ((time() - 284400) % 604800)
+#
+# ALERTS_FOR_STATE is a series Prometheus keeps for every pending or firing
+# alert; its value is the time the alert became active. An alert counts as
+# "should have been fixed" if it became active at least 2 hours before the
+# window closed (before about Sun 00:00 ET, when the apt runs start). for: 1h
+# gives the reboots and post-checks time, so this fires about Sun 03:00 ET
+# (04:00 in summer) at the earliest.
+groups:
+  - name: maintenance_window
+    interval: 5m
+    rules:
+      - alert: DeferredAlertStillActiveAfterWindow
+        expr: |
+          label_replace(
+            ALERTS_FOR_STATE{maintenance="deferred"}
+              < (time() - ((time() - 284400) % 604800) - 7200),
+            "deferred_alert", "$1", "alertname", "(.*)"
+          )
+        for: 1h
+        labels:
+          severity: warning
+          maintenance: overdue
+        annotations:
+          summary: "{{ $labels.deferred_alert }}{{ with $labels.host }} on {{ . }}{{ end }} is still active after the maintenance window"
+          description: |
+            {{ $labels.deferred_alert }} was waiting for the weekly maintenance window
+            (Sat 22:00 to Sun 02:00 ET) and has been active since {{ $value | humanizeTimestamp }} (UTC).
+            The window ran but did not fix it, so it now needs a look.
+            See the original alert's description for the check commands.
