@@ -15,6 +15,11 @@
 # clara already has ClaraDown / ClaraRebootRequired / ClaraUpdatesPending in
 # alerting-rules.clara.yaml; its NVMe metrics (nvme_*) are covered below.
 #
+# Rules labelled maintenance: deferred are things the weekly maintenance
+# window (Sat 22:00 to Sun 02:00 ET) takes care of. Alertmanager emails them
+# once; alerting-rules.maintenance-window.yaml emails again if the window did
+# not fix them.
+#
 # Not covered here (no metric source; see PR description): deby host-down
 # (Prometheus runs on deby, so it cannot see deby go down), ZFS scrub age,
 # SMART on deby /dev/sda (no data through its SAT bridge), clara backups.
@@ -23,8 +28,9 @@ groups:
     interval: 1m
     rules:
       # A kernel/libc update is installed and waiting for a reboot. Reboots are
-      # manual during the unattended-upgrades quiet trial: do it in the
-      # 17:30-01:30 ET window (deby slot ~22:30).
+      # manual during the unattended-upgrades quiet trial: the operator reboots
+      # in the weekly window, about Sun 00:30 ET (jwilleke/homelab
+      # docs/maintenance/maintenance-window.md).
       - alert: DebyRebootRequired
         expr: max(node_reboot_required{job="kubernetes-service-endpoints",service="node-exporter"}) == 1
         for: 24h
@@ -32,17 +38,23 @@ groups:
           severity: warning
           host: deby
           source: node-exporter
+          maintenance: deferred
         annotations:
           summary: "deby needs a reboot to finish applying updates"
           description: |
             /var/run/reboot-required has existed on deby for over 24h.
-            Reboot in the maintenance window (17:30-01:30 ET, deby ~22:30).
+            Reboot in the maintenance window, about Sun 00:30 ET, after unattended-upgrades finishes.
             Check: ssh deby 'cat /var/run/reboot-required.pkgs'
+          maintenance_window: "Scheduled for the weekly maintenance window, Sat 22:00 to Sun 02:00 ET. You get one email now and a resolved email when the window fixes it. If it is still active after the window, DeferredAlertStillActiveAfterWindow emails you."
+          # Rough countdown in UTC math (about 1h off in summer time).
+          next_window: '{{ with query "604800 - ((time() - 270000) % 604800)" }}Next window starts in about {{ . | first | value | humanizeDuration }}.{{ end }}'
 
       # Debian / Debian-Security / bookworm-updates packages pending for days:
       # unattended-upgrades is failing or not installed. Third-party origins
       # (Docker CE, PGDG, google-cloud-cli) are excluded on purpose: they are
       # never applied unattended and are reported in the morning briefing.
+      # With the homelab#119 drop-in, unattended-upgrades runs Sunday 00:00 ET
+      # only, so upgrades pending midweek wait for the window.
       - alert: DebyDebianUpdatesPending
         expr: sum(apt_upgrades_pending{job="kubernetes-service-endpoints",service="node-exporter",origin=~"Debian.*"}) > 0
         for: 3d
@@ -50,11 +62,15 @@ groups:
           severity: warning
           host: deby
           source: node-exporter
+          maintenance: deferred
         annotations:
           summary: "deby has {{ $value }} Debian upgrade(s) pending for 3+ days"
           description: |
-            unattended-upgrades should apply Debian security and stable updates nightly at 22:30 ET.
+            unattended-upgrades applies Debian security and stable updates Sunday 00:00 ET, in the maintenance window.
             Check: ssh deby 'apt list --upgradable; sudo tail -50 /var/log/unattended-upgrades/unattended-upgrades.log'
+          maintenance_window: "Scheduled for the weekly maintenance window, Sat 22:00 to Sun 02:00 ET. You get one email now and a resolved email when the window fixes it. If it is still active after the window, DeferredAlertStillActiveAfterWindow emails you."
+          # Rough countdown in UTC math (about 1h off in summer time).
+          next_window: '{{ with query "604800 - ((time() - 270000) % 604800)" }}Next window starts in about {{ . | first | value | humanizeDuration }}.{{ end }}'
 
       - alert: DebyAptListsStale
         expr: time() - max(apt_package_cache_timestamp_seconds{job="kubernetes-service-endpoints",service="node-exporter"}) > 3 * 86400
@@ -107,7 +123,11 @@ groups:
           severity: warning
           host: deby
           source: node-exporter
+          maintenance: deferred
         annotations:
+          maintenance_window: "Scheduled for the weekly maintenance window, Sat 22:00 to Sun 02:00 ET. You get one email now and a resolved email when the window fixes it. If it is still active after the window, DeferredAlertStillActiveAfterWindow emails you."
+          # Rough countdown in UTC math (about 1h off in summer time).
+          next_window: '{{ with query "604800 - ((time() - 270000) % 604800)" }}Next window starts in about {{ . | first | value | humanizeDuration }}.{{ end }}'
           summary: "deby certificate {{ $labels.cert }} expires in {{ $value | humanizeDuration }}"
           description: |
             k3s-* certs: restart k3s in the maintenance window so it renews them

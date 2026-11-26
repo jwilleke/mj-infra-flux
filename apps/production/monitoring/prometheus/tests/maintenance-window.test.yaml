@@ -1,0 +1,94 @@
+# promtool unit test for alerting-rules.maintenance-window.yaml. Not deployed.
+# Run: promtool test rules apps/production/monitoring/prometheus/tests/maintenance-window.test.yaml
+# (no local promtool? see apps/production/monitoring/README.md, Maintenance window)
+rule_files:
+  - ../config/alerting-rules.maintenance-window.yaml
+evaluation_interval: 5m
+tests:
+  # t=0 is Thu 1970-01-01 00:00 UTC. The first week is skipped because PromQL
+  # % of a negative number is negative, which never happens at real times.
+  # Window closes Sun 07:00 UTC: week 2 at 247h, week 3 at 415h.
+  - interval: 5m
+    input_series:
+      # active since week-2 Thursday 00:00 UTC (604800): the week-2 window should fix it
+      - series: 'ALERTS_FOR_STATE{alertname="ClaraRebootRequired",host="clara",maintenance="deferred",severity="warning"}'
+        values: '604800+0x5200'
+      # active since week-2 Sun 06:00 UTC (885600), 1h before that window closed: too late for it
+      - series: 'ALERTS_FOR_STATE{alertname="DebyRebootRequired",host="deby",maintenance="deferred",severity="warning"}'
+        values: '885600+0x5200'
+      # not deferred: ignored
+      - series: 'ALERTS_FOR_STATE{alertname="NewDeviceDetected",severity="warning"}'
+        values: '0+0x5200'
+    alert_rule_test:
+      # before the week-2 window closes
+      - eval_time: 246h
+        alertname: DeferredAlertStillActiveAfterWindow
+        exp_alerts: []
+      # window closed 30 min ago: pending (for: 1h), no alert yet
+      - eval_time: 247h30m
+        alertname: DeferredAlertStillActiveAfterWindow
+        exp_alerts: []
+      # 1h5m after the window: clara fires, deby does not (it started inside the window)
+      - eval_time: 248h5m
+        alertname: DeferredAlertStillActiveAfterWindow
+        exp_alerts:
+          - exp_labels:
+              alertname: DeferredAlertStillActiveAfterWindow
+              deferred_alert: ClaraRebootRequired
+              host: clara
+              severity: warning
+              maintenance: overdue
+            exp_annotations:
+              summary: "ClaraRebootRequired on clara is still active after the maintenance window"
+              description: |
+                ClaraRebootRequired was waiting for the weekly maintenance window
+                (Sat 22:00 to Sun 02:00 ET) and has been active since 1970-01-08 00:00:00 +0000 UTC (UTC).
+                The window ran but did not fix it, so it now needs a look.
+                See the original alert's description for the check commands.
+      # midweek: clara keeps firing until fixed
+      - eval_time: 400h
+        alertname: DeferredAlertStillActiveAfterWindow
+        exp_alerts:
+          - exp_labels:
+              alertname: DeferredAlertStillActiveAfterWindow
+              deferred_alert: ClaraRebootRequired
+              host: clara
+              severity: warning
+              maintenance: overdue
+            exp_annotations:
+              summary: "ClaraRebootRequired on clara is still active after the maintenance window"
+              description: |
+                ClaraRebootRequired was waiting for the weekly maintenance window
+                (Sat 22:00 to Sun 02:00 ET) and has been active since 1970-01-08 00:00:00 +0000 UTC (UTC).
+                The window ran but did not fix it, so it now needs a look.
+                See the original alert's description for the check commands.
+      # after the week-3 window: both
+      - eval_time: 416h5m
+        alertname: DeferredAlertStillActiveAfterWindow
+        exp_alerts:
+          - exp_labels:
+              alertname: DeferredAlertStillActiveAfterWindow
+              deferred_alert: ClaraRebootRequired
+              host: clara
+              severity: warning
+              maintenance: overdue
+            exp_annotations:
+              summary: "ClaraRebootRequired on clara is still active after the maintenance window"
+              description: |
+                ClaraRebootRequired was waiting for the weekly maintenance window
+                (Sat 22:00 to Sun 02:00 ET) and has been active since 1970-01-08 00:00:00 +0000 UTC (UTC).
+                The window ran but did not fix it, so it now needs a look.
+                See the original alert's description for the check commands.
+          - exp_labels:
+              alertname: DeferredAlertStillActiveAfterWindow
+              deferred_alert: DebyRebootRequired
+              host: deby
+              severity: warning
+              maintenance: overdue
+            exp_annotations:
+              summary: "DebyRebootRequired on deby is still active after the maintenance window"
+              description: |
+                DebyRebootRequired was waiting for the weekly maintenance window
+                (Sat 22:00 to Sun 02:00 ET) and has been active since 1970-01-11 06:00:00 +0000 UTC (UTC).
+                The window ran but did not fix it, so it now needs a look.
+                See the original alert's description for the check commands.

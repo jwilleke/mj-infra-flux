@@ -30,6 +30,9 @@ spec:
             - "--config.file=/config/alertmanager.yaml"
             - "--web.external-url=https://grafana.nerdsbythehour.com/alerting/list"
             - "--storage.path=/alertmanager"
+            # Keep the notification log for 8 days so the 7d repeat_interval on
+            # maintenance="deferred" alerts holds (default retention is 120h).
+            - "--data.retention=192h"
           ports:
             - name: api
               containerPort: 9093

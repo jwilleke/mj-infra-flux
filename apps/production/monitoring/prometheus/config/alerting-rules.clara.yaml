@@ -21,7 +21,9 @@ groups:
             Check: ping 192.168.68.24; ssh clara@192.168.68.24 'systemctl status prometheus-node-exporter'
 
       # A kernel/libc update was installed by unattended-upgrades and is waiting
-      # for a reboot. Reboots are manual on clara by design.
+      # for a reboot. clara's reboot-if-required.timer reboots it Sunday 01:20 ET
+      # inside the maintenance window (jwilleke/homelab#120), so this is
+      # maintenance: deferred (one email, see alerting-rules.maintenance-window.yaml).
       - alert: ClaraRebootRequired
         expr: node_reboot_required{job="clara-node"} == 1
         for: 24h
@@ -29,15 +31,23 @@ groups:
           severity: warning
           host: clara
           source: node-exporter
+          maintenance: deferred
         annotations:
           summary: "clara needs a reboot to finish applying updates"
           description: |
             /var/run/reboot-required has existed on clara for over 24h.
-            Schedule a reboot with the operator (no remote console).
-            Check: ssh clara@192.168.68.24 'cat /var/run/reboot-required.pkgs'
+            reboot-if-required.timer reboots clara Sunday 01:20 ET, in the maintenance window.
+            Nothing to do unless it is still active after the window (no remote console).
+            Check: ssh clara@192.168.68.24 'cat /var/run/reboot-required.pkgs; systemctl list-timers reboot-if-required.timer'
+          maintenance_window: "Scheduled for the weekly maintenance window, Sat 22:00 to Sun 02:00 ET. You get one email now and a resolved email when the window fixes it. If it is still active after the window, DeferredAlertStillActiveAfterWindow emails you."
+          # Rough countdown in UTC math (about 1h off in summer time).
+          next_window: '{{ with query "604800 - ((time() - 270000) % 604800)" }}Next window starts in about {{ . | first | value | humanizeDuration }}.{{ end }}'
 
-      # Upgrades are pending for days: unattended-upgrades is failing or the
-      # pending packages are outside its allowed origins.
+      # Upgrades are pending for days. unattended-upgrades now runs once a week,
+      # Sunday 01:00 ET (jwilleke/homelab#119), so pending upgrades midweek are
+      # expected and wait for the window: maintenance: deferred. If they are
+      # still pending after the window, unattended-upgrades failed or the
+      # packages are outside its allowed origins.
       - alert: ClaraUpdatesPending
         expr: sum(apt_upgrades_pending{job="clara-node"}) > 0
         for: 3d
@@ -45,8 +55,12 @@ groups:
           severity: warning
           host: clara
           source: node-exporter
+          maintenance: deferred
         annotations:
           summary: "clara has {{ $value }} APT upgrade(s) pending for 3+ days"
           description: |
-            unattended-upgrades should apply security and stable updates daily.
+            unattended-upgrades applies security and stable updates Sunday 01:00 ET, in the maintenance window.
             Check: ssh clara@192.168.68.24 'apt list --upgradable; sudo tail -50 /var/log/unattended-upgrades/unattended-upgrades.log'
+          maintenance_window: "Scheduled for the weekly maintenance window, Sat 22:00 to Sun 02:00 ET. You get one email now and a resolved email when the window fixes it. If it is still active after the window, DeferredAlertStillActiveAfterWindow emails you."
+          # Rough countdown in UTC math (about 1h off in summer time).
+          next_window: '{{ with query "604800 - ((time() - 270000) % 604800)" }}Next window starts in about {{ . | first | value | humanizeDuration }}.{{ end }}'

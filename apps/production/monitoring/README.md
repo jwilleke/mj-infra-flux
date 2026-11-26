@@ -428,11 +428,16 @@ One weekly window for all planned updates and reboots: __Saturday 22:00 to Sunda
 __What the config does__ (`prometheus-alertmanager/config/alertmanager.yaml`):
 
 - `time_intervals: weekly-maintenance-window` is two ranges, Sat 22:00-24:00 and Sun 00:00-02:00, both with `location: America/New_York`, so DST is handled by Alertmanager.
-- Three child routes, first match wins:
+- Four child routes, first match wins (the fourth, deferred alerts, is described below):
   - Never muted, even during the window: `BackupDebyFailed`, `BackupDebyStale`, `NasBackupRsyncStale`, `NasBackupRsyncMissedOrFailed`, `NodeDiskSpaceCritical`, `NodeDiskSpaceLow`, `ZfsPoolCapacityCritical`, `ZfsPoolCapacityHigh`, `ZfsPoolDegraded`, `ZfsPoolUnhealthy`, `SmartDeviceUnhealthy`, `NvmeCriticalWarning`, `NvmeMediaErrors`, `NvmeWearHigh`, `DiskTemperatureHigh`, `SmartSectorProblems`, `OpenBaoSealed`, `AlertmanagerNotificationDeliveryFailing`, `UDMProThreatRateSpike`, `SSLCertExpiryCritical`, `TankNonRoutineEvent`, `ProtectNonRoutineEvent`.
   - Muted during the window, any severity (planned reboot/update noise): `UDMProWANDown`, `ServiceDown`, `HomeAssistantScrapeDown`, `HomeAssistantAlarmPanelUnavailable`, `HomeAssistantNotificationDeliveryFailing`, `HostLogsAbsent`, `NodeNotReady`, `PostgreSQLDown`, `PodCrashLoopBackOff`, `DeploymentNoReplicas`, `StatefulSetNoReplicas`, `ClaraDown`, `OpenBaoScrapeDown`, `NetAlertXScrapeDown`.
   - Remaining `severity="warning"` alerts are muted during the window (the original [mj-infra-flux#294](https://github.com/jwilleke/mj-infra-flux/pull/294) mute).
 - During the window those muted alerts still fire and are visible in the Alertmanager UI and Grafana, but no email goes out. An alert still firing when the window closes is emailed at the next group interval after 02:00, so a problem that lasts past the window is not lost.
+- __Deferred to the window__ (route `maintenance="deferred"`, placed before the warning route): alerts for things the window itself takes care of. They email __once__ when they start, with "(scheduled for Sat 22:00 ET maintenance window)" in the subject, and then a resolved email when the window fixes them. They do not repeat every 4 hours. Each one has a `maintenance_window` annotation saying so and a rough `next_window` countdown.
+  - Labelled `maintenance: deferred`: `ClaraRebootRequired` (clara's `reboot-if-required.timer` reboots it Sun 01:20 ET), `ClaraUpdatesPending` (clara's apt runs Sun 01:00 ET), `DebyRebootRequired` (manual reboot in the window, about Sun 00:30 ET), `DebyDebianUpdatesPending` (deby's apt runs Sun 00:00 ET once the homelab#119 drop-ins are installed), `K3sCertificateExpiringSoon` (the window's k3s restart renews k3s certs).
+  - The route uses `repeat_interval: 7d`. Alertmanager forgets what it sent after `--data.retention` (default 120h) and would then repeat early, so the Deployment sets `--data.retention=192h`.
+  - __Safety net:__ `DeferredAlertStillActiveAfterWindow` (`prometheus/config/alerting-rules.maintenance-window.yaml`) fires when a deferred alert was already active before the window and is still active about an hour after it closes (about Sun 03:00 ET, 04:00 in summer). Its subject names the alert, for example `[FIRING] DeferredAlertStillActiveAfterWindow: ClaraRebootRequired`. It is an ordinary warning, so it repeats every 4 hours until fixed. Unit test: `prometheus/tests/maintenance-window.test.yaml`.
+  - To defer another alert, add `maintenance: deferred` to its rule labels. Only do that for something a scheduled job in the window will fix on its own or that is on the window checklist.
 - Loki ruler alerts (`loki/rules/rules.yaml`) go through this same Alertmanager, so the mute covers them too. Grafana has no Grafana-managed alert rules (checked 2026-11-18), so no Grafana mute timing is needed.
 - Gatus on the GCP VM emails on its own, not through Alertmanager. `external/gatus/config.yaml` has a matching `maintenance` block (Saturday 22:00, duration 4h, `America/New_York`). That file is not Flux-reconciled; copy it to the VM for the mute to take effect.
 
@@ -456,12 +461,17 @@ Silences are stored on the `alertmanager-data` PVC, so they survive an Alertmana
 __Check the config before merging a change:__
 
 ```bash
-# on deby, from a checkout of this repo (the running pod has amtool v0.34.1)
+# on deby, from a checkout of this repo (the running pod has amtool v0.34.2)
 kubectl --kubeconfig /home/jim/.kube/config -n monitoring exec -i deploy/alertmanager -- \
   amtool check-config /dev/stdin < apps/production/monitoring/prometheus-alertmanager/config/alertmanager.yaml
 kubectl --kubeconfig /home/jim/.kube/config -n monitoring exec -i deploy/alertmanager -- \
   sh -c 'cat > /tmp/am.yaml && amtool config routes test --config.file=/tmp/am.yaml --verify.receivers=on_call_operator_default severity=warning alertname=Test; rm -f /tmp/am.yaml' \
   < apps/production/monitoring/prometheus-alertmanager/config/alertmanager.yaml
+
+# rule syntax and the maintenance-window unit test, using promtool in the Prometheus pod
+tar cf - -C apps/production/monitoring/prometheus config/alerting-rules.maintenance-window.yaml tests/maintenance-window.test.yaml | \
+  kubectl --kubeconfig /home/jim/.kube/config -n monitoring exec -i prometheus-0 -c prometheus -- \
+  sh -c 'mkdir -p /tmp/pt && cd /tmp/pt && tar xf - && promtool test rules tests/maintenance-window.test.yaml; cd / && rm -rf /tmp/pt'
 ```
 
 __Supported receivers:__

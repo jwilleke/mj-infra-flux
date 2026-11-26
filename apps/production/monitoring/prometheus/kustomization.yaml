@@ -57,6 +57,8 @@ configMapGenerator:
       - config/alerting-rules.openbao.yaml
       # Host maintenance: reboot/apt pending, SMART, ZFS capacity, cert expiry (deby#69)
       - config/alerting-rules.host-maintenance.yaml
+      # Deferred-to-window alerts that the window did not fix (homelab#69)
+      - config/alerting-rules.maintenance-window.yaml
       # coinpoet and tayle configs removed
 
 labels:
