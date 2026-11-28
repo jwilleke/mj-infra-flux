@@ -102,12 +102,14 @@ Bootstrap policies, written by that script, not by a manifest:
 | Snapshot CronJob | Kubernetes auth, role `raft-snapshot` | read `sys/storage/raft/snapshot` |
 | One agent | AppRole, token TTL 1h | read one logical path |
 
-The ESO policy is broad on purpose until the first migration. No
-`ExternalSecret` exists yet. When one is added, narrow the role to that
-app and set `deletionPolicy: Retain` on the ExternalSecret. Copying a
-value into OpenBao is not rotation. Do not put the Flux bootstrap token
-in OpenBao. Do not rotate TeslaMate's `encryption-key` as part of a copy:
-existing Tesla data would become unreadable.
+The ESO policy is still broad: it can read `kv/data/apps/*` and
+`kv/data/ngdpbase/*`. Cluster ExternalSecrets (cert-manager, cloudflared,
+database, demo-yourphr, esphome-builder, geohazardwatch, maps, monitoring,
+owntracks, teslamate, unifi-mcp, yourphr) sync from `kv/apps/<app>/*`.
+Keep `deletionPolicy: Retain` on those objects. Copying a value into
+OpenBao is not rotation. Do not put the Flux bootstrap token in OpenBao.
+Do not rotate TeslaMate's `encryption-key` as part of a copy: existing
+Tesla data would become unreadable.
 
 ## One-time init on deby
 
@@ -292,8 +294,10 @@ sweeps.
 
 ## Turn OpenBao off
 
-Apps do not read OpenBao. No ExternalSecret is installed. SOPS still
-feeds startup secrets. To stop the store:
+Apps do not talk to OpenBao directly. They keep the last Kubernetes Secret
+that External Secrets Operator synced. SOPS still feeds startup secrets
+(Authentik, the age key). Suspending OpenBao (or ESO) stops those
+refreshes; it does not immediately break running apps.
 
 ```bash
 flux suspend kustomization openbao
@@ -394,7 +398,7 @@ Unseal and recovery keys: see [docs/secrets.md](https://github.com/jwilleke/home
 
 - NAS (Tank) mounted at `/mnt/tank/jims` when the pod starts (unseal key)
 - Authentik for human login
-- Used by: cert-manager, cloudflared, database, demo-yourphr, geohazardwatch, maps, monitoring, owntracks, teslamate, yourphr
+- Used by: cert-manager, cloudflared, database, demo-yourphr, esphome-builder, geohazardwatch, maps, monitoring, owntracks, teslamate, unifi-mcp, yourphr
 
 ### Recovery
 
@@ -431,6 +435,13 @@ ls -t /mnt/tank/jims/data/systems/deby/openbao/snapshots | head -3
 
 ### Known gaps
 
-- `nas-backup-rsync.sh` on deby does __not__ exclude the openbao folder, so the unseal and recovery keys are copied onto deby's own `nas-backup` pool (checked 2026-11-23). The script is in `jwilleke/homelab` at `hosts/deby/bin/nas-backup-rsync.sh`; add the exclude there and reinstall.
+- The repo copy of `jwilleke/homelab` `hosts/deby/bin/nas-backup-rsync.sh`
+  excludes `/data/systems/deby/openbao/`. The live host script lost that
+  exclude on the 2026-11-23 reinstall, so the unseal key, recovery key and
+  raft snapshots were copied onto deby's `nas-backup` pool at
+  `/nas-backup/tank_nas-to-deby/jims/data/systems/deby/openbao/` (still
+  present 2026-11-28). After that homelab change is installed, delete the
+  leaked folder by hand (`rsync --delete` will not). The ZFS snapshot
+  `nas-backup@pre-patch-20261116` also contains it.
 - Some Secrets are still made by hand and are not in OpenBao: `monitoring/netalertx-api-token`, `monitoring/homeassistant-api-token`, `ngdpbase-demo/ngdpbase-demo-secrets`, `ngdpbase-demo/ngdpbase-demo-resend`. A rebuild loses them.
 - If the NAS is down when OpenBao starts, it stays sealed and every ExternalSecret stops refreshing.
