@@ -1,192 +1,54 @@
-# jimsmcp Tool Reference
+# jimsmcp tool reference
 
-Complete reference for all 14 tools provided by jimsmcp.
+All 15 tools from the `TOOLS` array in `src/index.ts`. Authentik write calls are implemented in `src/authentik.ts`.
 
-## Kubernetes Tools
+Tools marked __changes things__ update the cluster or Authentik. Delete and retire are __irreversible__ when they succeed. A 404 on delete or retire is treated as already gone and is a no-op.
 
-### k8s_get_pods
+In Claude Code, tool names are prefixed with `mcp__jimsmcp__` (for example `mcp__jimsmcp__flux_get_status`).
 
-Get pods in a namespace or across all namespaces.
+There are no `k8s_get_*` tools here any more. Use the official Kubernetes MCP server for pods, logs, deployments, services and ingresses.
 
-__Parameters:__
-
-- `namespace` (optional): Namespace to query
-- `labelSelector` (optional): Label selector (e.g., 'app=grafana')
-
-__Examples:__
-
-```json
-// All pods in monitoring namespace
-{"namespace": "monitoring"}
-
-// Pods with specific label
-{"labelSelector": "app=grafana"}
-
-// All pods in cluster
-{}
-```
-
-__Returns:__
-
-```json
-[
-  {
-    "name": "grafana-5d7f8c9b6d-abc123",
-    "namespace": "monitoring",
-    "status": "Running",
-    "ready": "True",
-    "restarts": 0,
-    "age": "2024-11-18T12:00:00Z"
-  }
-]
-```
-
----
-
-### k8s_get_pod_logs
-
-Get logs from a specific pod.
-
-__Parameters:__
-
-- `namespace` (required): Namespace of the pod
-- `podName` (required): Name of the pod
-- `container` (optional): Container name
-- `tailLines` (optional): Number of lines to tail (default: 100)
-
-__Example:__
-
-```json
-{
-  "namespace": "monitoring",
-  "podName": "grafana-5d7f8c9b6d-abc123",
-  "tailLines": 50
-}
-```
-
----
-
-### k8s_get_deployments
-
-Get deployments in a namespace or across all namespaces.
-
-__Parameters:__
-
-- `namespace` (optional): Namespace to query
-
-__Returns:__
-
-```json
-[
-  {
-    "name": "grafana",
-    "namespace": "monitoring",
-    "replicas": 1,
-    "ready": 1,
-    "upToDate": 1,
-    "available": 1
-  }
-]
-```
-
----
-
-### k8s_get_services
-
-Get services in a namespace or across all namespaces.
-
-__Parameters:__
-
-- `namespace` (optional): Namespace to query
-
-__Returns:__
-
-```json
-[
-  {
-    "name": "grafana-service",
-    "namespace": "monitoring",
-    "type": "ClusterIP",
-    "clusterIP": "10.43.123.45",
-    "ports": [
-      {
-        "name": "web-ui",
-        "port": 3000,
-        "targetPort": 3000
-      }
-    ]
-  }
-]
-```
-
----
-
-### k8s_get_ingresses
-
-Get ingresses in a namespace or across all namespaces.
-
-__Parameters:__
-
-- `namespace` (optional): Namespace to query
-
-__Returns:__
-
-```json
-[
-  {
-    "name": "grafana-ingress",
-    "namespace": "monitoring",
-    "hosts": ["grafana.nerdsbythehour.com"],
-    "paths": [
-      {
-        "path": "/",
-        "backend": "grafana-service"
-      }
-    ]
-  }
-]
-```
-
----
-
-## Flux GitOps Tools
+## Flux
 
 ### flux_get_status
 
-Get status of all Flux resources or specific kustomizations.
+Get Flux resource status by running the `flux` CLI.
 
 __Parameters:__
 
-- `resource` (optional): Specific resource type ('kustomization', 'helmrelease')
-- `namespace` (optional): Namespace to query (default: flux-system)
+- `resource` (optional): resource type, for example `kustomization` or `helmrelease`. If omitted (or `all`), runs `flux get all --all-namespaces`.
+- `namespace` (optional): used only when `resource` is set. Default: `flux-system`.
 
 __Examples:__
 
 ```json
-// All Flux resources
 {}
+```
 
-// Just kustomizations
+```json
 {"resource": "kustomization"}
+```
 
-// Specific namespace
+```json
 {"resource": "kustomization", "namespace": "flux-system"}
 ```
 
-__Returns:__ Text output from `flux get` command
+__Returns:__ text from `flux get`.
+
+__Needs:__ the `flux` CLI on the machine running the server. The container image does not include it.
 
 ---
 
 ### flux_reconcile
 
-Force reconciliation of a Flux resource.
+__Changes things.__ Force a Flux object to reconcile now. Runs `flux reconcile <kind> <name> -n <namespace>`, and adds `--with-source` when asked. That patches the object.
 
 __Parameters:__
 
-- `kind` (required): 'kustomization', 'helmrelease', or 'gitrepository'
-- `name` (required): Name of the resource
-- `namespace` (optional): Namespace (default: flux-system)
-- `withSource` (optional): Also reconcile source (default: false)
+- `kind` (required): `kustomization`, `helmrelease`, or `gitrepository`
+- `name` (required): resource name
+- `namespace` (optional): default `flux-system`
+- `withSource` (optional): also reconcile the source. Default: false
 
 __Example:__
 
@@ -198,18 +60,20 @@ __Example:__
 }
 ```
 
+__Needs:__ the `flux` CLI. The in-cluster ServiceAccount may patch Kustomizations and HelmReleases, but not GitRepositories. A local run that uses Jim's kubeconfig is not limited by that ClusterRole.
+
 ---
 
-## Application Management Tools
+## Application health
 
 ### app_health_check
 
-Comprehensive health check for an application (pods + service + ingress).
+Health for one application: matching pods, the Service of the same name, and an Ingress whose backend service name matches.
 
 __Parameters:__
 
-- `app` (required): Application name
-- `namespace` (required): Namespace
+- `app` (required): application name (also the Service name and the `app=` label)
+- `namespace` (required): namespace
 
 __Example:__
 
@@ -220,314 +84,202 @@ __Example:__
 }
 ```
 
-__Returns:__
+__Returns:__ JSON with `app`, `namespace`, `pods` (name, status, ready, restarts), `service` (name, type, clusterIP, or `null`), and `ingress` (name, hosts, or omitted / `null`).
 
-```json
-{
-  "app": "grafana",
-  "namespace": "monitoring",
-  "pods": [
-    {
-      "name": "grafana-5d7f8c9b6d-abc123",
-      "status": "Running",
-      "ready": "True",
-      "restarts": 0
-    }
-  ],
-  "service": {
-    "name": "grafana-service",
-    "type": "ClusterIP",
-    "clusterIP": "10.43.123.45"
-  },
-  "ingress": {
-    "name": "grafana-ingress",
-    "hosts": ["grafana.nerdsbythehour.com"]
-  }
-}
-```
+Pods are listed with label selector `app=<app>`. Apps that use a different label may return an empty pod list.
+
+---
+
+### app_health_check_all
+
+Discover applications from Ingress backends and run a shorter health check on each.
+
+__Parameters:__
+
+- `namespace` (optional): only Ingresses in that namespace. If omitted, all namespaces.
+
+__Returns:__ JSON summary: `total`, `healthy`, `degraded`, `noPods`, `errors`, and `apps`. Each app has `status` (`Degraded`, `No pods`, `Healthy`, or `Error`), pod counts, restart sum, and whether a Service and Ingress were found. Results are sorted Degraded, No pods, Healthy, then Error, then by name.
 
 ---
 
 ### app_get_urls
 
-Get all URLs/ingresses for applications in the cluster.
+List application URLs from Ingress rules.
 
 __Parameters:__
 
-- `namespace` (optional): Filter by namespace
+- `namespace` (optional): filter by namespace
 
 __Returns:__
 
 ```json
 [
   {
-    "app": "grafana-ingress",
+    "app": "grafana",
     "namespace": "monitoring",
     "url": "https://grafana.nerdsbythehour.com",
-    "paths": ["/"]
-  },
-  {
-    "app": "teslamate",
-    "namespace": "teslamate",
-    "url": "https://teslamate.nerdsbythehour.com",
     "paths": ["/"]
   }
 ]
 ```
 
+`app` is the Ingress name. The URL is `https` when that host appears in the Ingress TLS list, otherwise `http`.
+
 ---
+
+## Authentik (read)
+
+These Authentik tools (read and write) load `AUTHENTIK_BASE_URL` and `AUTHENTIK_TOKEN` by decrypting `.env.secret.mcp-authentik.encrypted` from the hardcoded path `~/Documents/mj-infra-flux`. They do not read those variables from the environment. See the [README secrets section](README.md#secrets).
 
 ### authentik_get_info
 
-Get information about Authentik deployment and API endpoint.
+Authentik deployment info and URLs. No Authentik API token is used; this is a Kubernetes read.
 
-__Parameters:__ None
+__Parameters:__ none
 
-__Returns:__
-
-```json
-{
-  "namespace": "authentik",
-  "pods": [
-    {
-      "name": "authentik-server-xyz",
-      "status": "Running",
-      "ready": "True"
-    }
-  ],
-  "apiUrl": "https://auth.nerdsbythehour.com/api/v3/",
-  "adminUrl": "https://auth.nerdsbythehour.com/if/admin/"
-}
-```
-
----
-
-## Authentik Management Tools
-
-### authentik_create_homeassistant_app
-
-Create a complete Authentik setup for Home Assistant (proxy provider + application).
-
-__Parameters:__ None (uses hardcoded configuration for ha.nerdsbythehour.com)
-
-__What it does:__
-
-1. Creates a Proxy Provider with:
-   - External host: `https://ha.nerdsbythehour.com`
-   - Internal host: `https://192.168.68.20:8123`
-   - Forward auth mode enabled
-   - SSL validation disabled (for self-signed cert)
-2. Creates an Application linked to the provider
-3. Returns URLs for admin configuration
-
-__Returns:__
-
-```json
-{
-  "provider": {
-    "pk": 123,
-    "name": "Home Assistant Provider",
-    "external_host": "https://ha.nerdsbythehour.com"
-  },
-  "application": {
-    "pk": "...",
-    "slug": "homeassistant",
-    "name": "Home Assistant"
-  },
-  "urls": {
-    "app": "https://auth.nerdsbythehour.com/if/admin/#/core/applications/homeassistant",
-    "provider": "https://auth.nerdsbythehour.com/if/admin/#/core/providers/123"
-  }
-}
-```
-
-__Example:__
-
-```json
-{}
-```
+__Returns:__ JSON with namespace `authentik`, pods matching `app.kubernetes.io/name=authentik`, `apiUrl` (`https://<host>/api/v3/`) and `adminUrl` (`https://<host>/if/admin/`) from the Ingress named `authentik`, or `"Not found"`.
 
 ---
 
 ### authentik_list_applications
 
-List all applications configured in Authentik.
+List Authentik applications (`GET /api/v3/core/applications/`).
 
-__Parameters:__ None
+__Parameters:__ none
 
-__Returns:__
-
-```json
-[
-  {
-    "pk": "...",
-    "name": "Home Assistant",
-    "slug": "homeassistant",
-    "provider": 123,
-    "meta_launch_url": ""
-  }
-]
-```
+__Returns:__ the API `results` list (id, name, slug, provider, and so on).
 
 ---
 
 ### authentik_list_providers
 
-List all providers configured in Authentik.
+List Authentik providers (`GET /api/v3/providers/all/`).
 
-__Parameters:__ None
+__Parameters:__ none
 
-__Returns:__
-
-```json
-[
-  {
-    "pk": 123,
-    "name": "Home Assistant Provider",
-    "type": "proxy",
-    "external_host": "https://ha.nerdsbythehour.com"
-  }
-]
-```
+__Returns:__ the API `results` list (including numeric `pk`).
 
 ---
 
-## Financial Data Tools
+### authentik_list_outposts
 
-### stocks_get_price
+List Authentik outposts (`GET /api/v3/outposts/instances/`).
 
-Get the latest stock quote using Alpha Vantage's GLOBAL_QUOTE function.
+__Parameters:__ none
+
+__Returns:__ the API `results` list.
+
+---
+
+## Authentik (write)
+
+These change Authentik. Verify the slug or `pk` with the list tools before delete or retire.
+
+### authentik_create_homeassistant_app
+
+__Changes things.__ Creates the Home Assistant proxy provider and application. Inputs are hardcoded; there are no parameters.
+
+What it creates:
+
+1. A proxy provider named `Home Assistant Provider`:
+   - external host: `https://ha.nerdsbythehour.com`
+   - internal host: `https://192.168.68.20:8123`
+   - forward-auth at domain level
+   - TLS validation to HA disabled (self-signed certificate)
+2. An application named `Home Assistant`, slug `homeassistant`, linked to that provider
+
+It does not bind the provider to an outpost. Call __authentik_bind_provider_to_outpost__ next if ForwardAuth should go live.
+
+__Parameters:__ none (`{}`)
+
+__Returns:__ the created provider and application, plus admin URLs for both.
+
+---
+
+### authentik_bind_provider_to_outpost
+
+__Changes things.__ Binds a provider to an outpost (needed for ForwardAuth). If the provider is already on the outpost, this is a no-op.
 
 __Parameters:__
 
-- `symbol` (required): Stock ticker symbol (e.g., 'AAPL', 'TSLA', 'MSFT')
+- `providerId` (required): numeric provider id
+- `outpostId` (optional): outpost id. If omitted, uses the embedded outpost (name contains `embedded`, or `managed` is `goauthentik.io/outposts/embedded`)
 
 __Example:__
 
 ```json
-{
-  "symbol": "AAPL"
-}
+{"providerId": 123}
 ```
 
-__Returns:__
+---
+
+### authentik_retire_application
+
+__Changes things, irreversible.__ Retire a service from SSO end to end: look up the application by slug, delete the application first (drops policy bindings), then delete its bound provider if there is one.
+
+__Parameters:__
+
+- `slug` (required): application slug (for example `jimswiki`)
+
+__Example:__
 
 ```json
-{
-  "01. symbol": "AAPL",
-  "02. open": "243.45",
-  "03. high": "244.89",
-  "04. low": "242.50",
-  "05. price": "244.12",
-  "06. volume": "52834100",
-  "07. latest trading day": "2024-11-29",
-  "08. previous close": "242.84",
-  "09. change": "1.28",
-  "10. change percent": "0.53%"
-}
+{"slug": "jimswiki"}
 ```
 
-__Requirements:__
-
-- `ALPHA_VANTAGE_KEY` environment variable must be set
-- See "Setup" section below for configuration
-
-__Rate Limits:__
-
-- Free tier: 5 requests per minute, 500 per day
-- Premium tier: Higher limits available
+__Returns:__ a short text summary of what was deleted or already gone. If the application had no provider (or was already gone before lookup), no provider delete is attempted. The Authentik embedded-outpost Ingress may take about 30 seconds to drop the host; if it does not, the note in the tool output says to restart `authentik-worker`.
 
 ---
 
-## Setup
+### authentik_delete_application
 
-### Alpha Vantage API Key Configuration
+__Changes things, irreversible.__ Delete one application by slug (`DELETE /api/v3/core/applications/{slug}/`). Prefer __authentik_retire_application__ if the provider should go too.
 
-To enable the `stocks_get_price` tool, you need to set the `ALPHA_VANTAGE_KEY` environment variable.
+__Parameters:__
 
-#### Option 1: Local Development (.env file)
+- `slug` (required): application slug
 
-1. Create a `.env.secret.stocks` file in the jimsmcp directory:
-
-```bash
-cd /home/jim/Documents/mj-infra-flux/apps/production/jimsmcp
-echo "ALPHA_VANTAGE_KEY=your_api_key_here" > .env.secret.stocks
-```
-
-1. Encrypt it with SOPS:
-
-```bash
-./scripts/encrypt-env-files.sh apps/production/jimsmcp/
-```
-
-1. Load the environment before running jimsmcp:
-
-```bash
-export ALPHA_VANTAGE_KEY=$(cat .env.secret.stocks)
-npm run dev
-```
-
-#### Option 2: Shell Profile (macOS/Linux)
-
-Add to your `~/.zshrc` or `~/.bash_profile`:
-
-```bash
-export ALPHA_VANTAGE_KEY="your_api_key_here"
-```
-
-Then reload your shell:
-
-```bash
-source ~/.zshrc  # or ~/.bash_profile
-```
-
-#### Option 3: Docker/Kubernetes Deployment
-
-If running jimsmcp as a container, use a Kubernetes Secret:
-
-```bash
-kubectl create secret generic jimsmcp-secrets \
-  -n jimsmcp \
-  --from-literal=ALPHA_VANTAGE_KEY="your_api_key_here"
-```
-
-Then reference in the deployment env:
-
-```yaml
-env:
-  - name: ALPHA_VANTAGE_KEY
-    valueFrom:
-      secretKeyRef:
-        name: jimsmcp-secrets
-        key: ALPHA_VANTAGE_KEY
-```
+__Returns:__ deleted, or already gone (HTTP 404).
 
 ---
 
-## Usage with Claude Code
+### authentik_delete_provider
 
-After configuring jimsmcp in Claude Code, you can ask natural language questions:
+__Changes things, irreversible.__ Delete one provider by primary key (`DELETE /api/v3/providers/all/{pk}/`). Deleting a provider that is still bound to a live application can break ForwardAuth.
 
-- "Show me all pods in the monitoring namespace"
-- "Get logs from the grafana pod"
-- "Check the health of the teslamate application"
-- "What are all the application URLs in my cluster?"
-- "Reconcile the apps kustomization with source"
-- "Give me the Authentik admin URL"
-- "What's the current price of Apple stock?"
-- "Get me Tesla and Microsoft stock quotes"
+__Parameters:__
 
-Claude will automatically use the appropriate jimsmcp tools to answer your questions.
+- `pk` (required): numeric provider primary key
+
+__Returns:__ deleted, or already gone (HTTP 404).
 
 ---
 
-## Tool Naming Convention
+## Stocks
 
-In Claude Code, tools are prefixed with `mcp__jimsmcp__`:
+### stocks_get_price
 
-- `mcp__jimsmcp__k8s_get_pods`
-- `mcp__jimsmcp__flux_get_status`
-- `mcp__jimsmcp__app_health_check`
-- etc.
+Latest quote from Alpha Vantage `GLOBAL_QUOTE`.
 
-This prevents naming conflicts with other MCP servers.
+__Parameters:__
+
+- `symbol` (required): ticker, for example `AAPL`. It is trimmed and uppercased.
+
+__Example:__
+
+```json
+{"symbol": "AAPL"}
+```
+
+__Returns:__ the `Global Quote` object (price, open, high, low, volume, change, and so on), or the raw JSON if that field is missing.
+
+__Needs:__ environment variable `ALPHA_VANTAGE_KEY`. If it is unset, the tool returns an error. The in-cluster Deployment does not set this variable.
+
+Alpha Vantage free-tier rate limits apply (commonly 5 requests per minute and 500 per day; confirm against their current docs).
+
+---
+
+## See also
+
+- [README.md](README.md) — deployment, secrets, and setup scripts
+- [SETUP.md](SETUP.md) — local stdio wiring

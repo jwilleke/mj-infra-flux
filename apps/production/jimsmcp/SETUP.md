@@ -1,153 +1,100 @@
-# jimsmcp Setup Guide
+# jimsmcp local setup
 
-## Quick Start
+How to run jimsmcp as a local stdio MCP server (for example from Claude Code). The cluster already runs the HTTP server at <https://jimsmcp.nerdsbythehour.com/mcp>. For what the 15 tools do, and which ones change things, see [TOOLS.md](TOOLS.md) and [README.md](README.md).
 
-The jimsmcp MCP server has been built and is ready to use!
+## Checkouts
 
-### Step 1: Configure Claude Code
+- Mac: `/Volumes/hd2A/workspaces/github/mj-infra-flux`
+- deby: `~/Documents/mj-infra-flux`
 
-Add jimsmcp to your Claude Code MCP configuration:
+Build from a repo-relative path:
 
-__File location:__ `~/.config/claude-code/mcp.json`
+```bash
+cd apps/production/jimsmcp
+npm install
+npm run build
+```
+
+The MCP client config still needs an __absolute__ path to `apps/production/jimsmcp/dist/index.js` in whichever checkout you are using.
+
+## Claude Code config
+
+File: `~/.config/claude-code/mcp.json`
+
+Example (Mac checkout). On deby, point `args` at `.../Documents/mj-infra-flux/apps/production/jimsmcp/dist/index.js` instead. An official Kubernetes MCP server can sit alongside this one; it is optional and handles ordinary kubectl-style queries.
 
 ```json
 {
   "mcpServers": {
+    "kubernetes": {
+      "command": "npx",
+      "args": ["-y", "kubernetes-mcp-server@latest"]
+    },
     "jimsmcp": {
       "command": "node",
-      "args": ["/home/jim/Documents/mj-infra-flux/apps/production/jimsmcp/dist/index.js"]
+      "args": [
+        "/Volumes/hd2A/workspaces/github/mj-infra-flux/apps/production/jimsmcp/dist/index.js"
+      ]
     }
   }
 }
 ```
 
-Or copy the example config:
+`mcp-config-example.json` in this folder is a stub of the same shape; edit the path before copying it.
+
+Restart Claude Code after changing the file. You should then see `mcp__jimsmcp__*` tools (15 of them).
+
+### Authentik and stock tools locally
+
+Authentik tools decrypt `.env.secret.mcp-authentik.encrypted` from `~/Documents/mj-infra-flux` (keys `AUTHENTIK_BASE_URL` and `AUTHENTIK_TOKEN`). That is the deby checkout. On the Mac, those tools will fail unless that same path exists and has the age key. Details: [README secrets](README.md#secrets) and [MCP-SETUP.md](../../../MCP-SETUP.md).
+
+For `stocks_get_price`, export `ALPHA_VANTAGE_KEY` in the environment of the process that starts the server.
+
+Flux tools need the `flux` CLI on your `PATH`, and Kubernetes tools use your default kubeconfig.
+
+## Smoke test
 
 ```bash
-mkdir -p ~/.config/claude-code
-cp /home/jim/Documents/mj-infra-flux/apps/production/jimsmcp/mcp-config-example.json ~/.config/claude-code/mcp.json
-```
-
-### Step 2: Restart Claude Code
-
-After adding the configuration, restart Claude Code for the changes to take effect.
-
-### Step 3: Verify Connection
-
-Once Claude Code restarts, you should see `mcp__jimsmcp__*` tools available. Try asking Claude:
-
-```
-"Show me all pods in the monitoring namespace"
-```
-
-Or:
-
-```
-"What's the health status of the grafana application?"
-```
-
-## Available Tools
-
-jimsmcp provides 10 tools for managing your infrastructure:
-
-### Kubernetes Management (5 tools)
-
-- `mcp__jimsmcp__k8s_get_pods` - List pods with status
-- `mcp__jimsmcp__k8s_get_pod_logs` - Get pod logs
-- `mcp__jimsmcp__k8s_get_deployments` - View deployments
-- `mcp__jimsmcp__k8s_get_services` - List services
-- `mcp__jimsmcp__k8s_get_ingresses` - View ingresses
-
-### Flux GitOps (2 tools)
-
-- `mcp__jimsmcp__flux_get_status` - Check Flux resource status
-- `mcp__jimsmcp__flux_reconcile` - Force reconciliation
-
-### Application Management (3 tools)
-
-- `mcp__jimsmcp__app_health_check` - Comprehensive health check
-- `mcp__jimsmcp__app_get_urls` - List all application URLs
-- `mcp__jimsmcp__authentik_get_info` - Get Authentik info
-
-## Testing
-
-Test the MCP server manually:
-
-```bash
-cd /home/jim/Documents/mj-infra-flux/apps/production/jimsmcp
-
-# Test that server responds to MCP protocol
+cd apps/production/jimsmcp
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | node dist/index.js
 ```
 
-You should see a JSON response listing all 10 tools.
+You should get a JSON list of all 15 tools.
 
-## Rebuilding
-
-If you make changes to the TypeScript source:
-
-```bash
-cd /home/jim/Documents/mj-infra-flux/apps/production/jimsmcp
-npm run build
-```
-
-For development with auto-rebuild:
-
-```bash
-npm run watch
-```
+Rebuild after editing TypeScript with `npm run build`, or use `npm run watch`.
 
 ## Troubleshooting
 
-### "Cannot find module"
-
-Make sure dependencies are installed:
+### Cannot find module
 
 ```bash
-cd /home/jim/Documents/mj-infra-flux/apps/production/jimsmcp
+cd apps/production/jimsmcp
 npm install
+npm run build
 ```
 
-### "Unable to connect to cluster"
+### Unable to connect to the cluster
 
-jimsmcp uses your default kubeconfig. Verify kubectl works:
+jimsmcp uses the default kubeconfig. Check `kubectl get nodes`, or on this network `ssh deby 'sudo -n k3s kubectl get nodes'`.
 
-```bash
-kubectl get nodes
-```
+### Flux command not found
 
-### "Flux command not found"
+Install the Flux CLI and keep it on `PATH`: <https://fluxcd.io/flux/installation/>
 
-Ensure flux CLI is installed and in PATH:
+### Authentik tools fail to load config
 
-```bash
-flux version
-```
+The client is looking for `~/Documents/mj-infra-flux/.env.secret.mcp-authentik.encrypted` and `home-infra-private.agekey`. That path is hardcoded. See [README secrets](README.md#secrets).
 
-### Claude Code doesn't see the tools
+### Claude Code does not see the tools
 
-1. Check that `~/.config/claude-code/mcp.json` exists and has the correct path
-2. Restart Claude Code completely
-3. Check Claude Code logs for MCP connection errors
+1. Confirm `~/.config/claude-code/mcp.json` has an absolute path to `dist/index.js` in this folder.
+2. Restart Claude Code.
+3. Check Claude Code logs for MCP connection errors.
 
-## Security Notes
+## Security
 
-jimsmcp runs with the same permissions as your kubectl/kubeconfig. It can:
+Local stdio jimsmcp uses your kubeconfig, so it can do whatever that kubeconfig can do, including Flux reconciles if you have those rights.
 
-- ✅ Read all cluster resources
-- ✅ View logs
-- ✅ Trigger Flux reconciliations
-- ❌ Cannot modify or delete resources (read-only)
-- ❌ Cannot execute commands in pods
+The in-cluster server uses ServiceAccount `jimsmcp` and ClusterRole `jimsmcp-reader`: read pods, services, namespaces, deployments, ingresses and GitRepositories; get/list/watch/patch Kustomizations and HelmReleases. It cannot exec into pods.
 
-## Next Steps
-
-Once jimsmcp is working with Claude Code, you can:
-
-1. Ask Claude to check the health of all your applications
-2. Query Flux status to see if deployments are up to date
-3. Get logs from pods for troubleshooting
-4. List all application URLs
-5. Get Authentik API information for integration work
-
-Enjoy your new infrastructure management capabilities!
+Authentik create, bind, retire and delete tools change SSO config. Retire and delete are irreversible. The in-cluster Deployment does not currently provide the Authentik token, so those tools are a local-checkout concern today.
